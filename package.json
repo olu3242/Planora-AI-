@@ -1,0 +1,49 @@
+{
+  "name": "planora",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Governed financial planning, analysis, and decision intelligence platform.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:financial": "vitest run tests/financial-calculations",
+    "test:excel": "vitest run tests/excel",
+    "test:security": "vitest run tests/security tests/auth tests/rbac",
+    "test:e2e": "playwright test",
+    "test:e2e:responsive": "playwright test --grep @responsive",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:seed": "tsx database/seeds/index.ts",
+    "db:generate": "prisma generate",
+    "certify": "npm run lint && npm run typecheck && npm run build && npm run test && npm run test:financial && npm run test:excel && npm run test:security && npm run test:e2e"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "@prisma/client": "^5.20.0",
+    "zod": "^3.23.0",
+    "exceljs": "^4.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.0.0",
+    "prisma": "^5.20.0",
+    "vitest": "^2.1.0",
+    "@playwright/test": "^1.48.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
