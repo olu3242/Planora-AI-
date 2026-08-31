@@ -21,3 +21,11 @@ Variance Agent and Scenario Agent use already-certified engines first, followed 
 ## Failure behavior
 
 Insufficient data produces a logged `insufficient_data` run and no recommendation. Dependency errors produce `error` and cooldown. Ambiguous authorization produces `authorization_undetermined` and fails closed.
+
+## Implemented Forecast MVP boundary
+
+The Forecast MVP implements four deterministic, provider-independent assistants: Workflow, Variance, Commentary, and Review. They use A1 RECOMMEND or A2 ASSIST authority only. Their typed tool allow-lists contain tenant-scoped reads and commentary preparation; no financial write, mapping, workflow approval, lock, validation override, or identity tool exists.
+
+`AgentDefinition`, `AgentRun`, `AgentRecommendation`, and `AgentFeedback` persist version, authenticated actor/organization, workflow context, evidence, output, and human decision. Feedback is evaluation data only. It carries `requiresVersionChange = true` and cannot silently mutate prompts, accounting logic, permissions, workflow rules, or the running definition.
+
+Human workflow transitions use `PLANORA.RUNTIME.COMMAND.EXECUTOR` through `RuntimeExecution`. The runtime supplies idempotency, bounded safe retries, failure classification, correlation, and append-only audit events. It cannot elevate identity, alter governance, or heal financial data. The deterministic workflow remains available when assistants are read-only or disabled.

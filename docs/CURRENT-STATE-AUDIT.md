@@ -1,5 +1,7 @@
 # Planora Current-State Audit
 
+> Update — 2026-08-31: The original audit below is the historical Phase 0 baseline. The repository now contains the certified Next.js/Prisma Forecast MVP described in `docs/MVP-CERTIFICATION.md`, plus a bounded Agentic OS and execution runtime. Current implementation includes server-session authentication, membership-derived RBAC/tenant scope, eight migrations, append-only audit, XLSX/CSV import and export, forecast workflow, four deterministic A1/A2 assistants, persisted recommendation feedback, idempotent workflow execution, and bounded recovery. No preview or production environment was changed.
+
 Status: Phase 0 baseline audit
 Audited: 2026-08-30
 Baseline: `chore/planora-project-bootstrap` at `faead923bd098bae06f342c38c64fddb9f985f9a`

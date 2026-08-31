@@ -30,8 +30,8 @@ Status terms: `SPECIFIED`, `NOT_STARTED`, `SCAFFOLDED`, `PARTIAL`, `FUNCTIONAL`,
 | G-024 | Action/outcome | SPECIFIED | CERTIFIED | No ownership or measurement flow | Decision | 8 | $4.1M outcome journey |
 | G-025 | Realization/reforecast | SPECIFIED | CERTIFIED | No 87.2% calculation or feedback | Outcome, forecast versioning | 8 | Exact fixed-point test |
 | G-026 | Copilot | SPECIFIED | CERTIFIED | No authorized grounded query flow | Trusted deterministic engines | 9 | Evidence equality and denial tests |
-| G-027 | Governed agents | SPECIFIED | CERTIFIED | No runs/recommendations/tools | Trusted engines, audit | 9 | Approval-gate/evidence tests |
+| G-027 | Governed agents | CERTIFIED | CERTIFIED | None for bounded Forecast MVP assistants | Tenant-scoped deterministic tools, evidence, feedback and audit | 31 | Unit/integration/security/browser approval-gate and evidence tests |
 | G-028 | Reporting | SPECIFIED | CERTIFIED | No draft/approval/publish workflow | Certified metrics, decisions | 10 | Publish denial and pack E2E |
 | G-029 | Excel export/re-import | SPECIFIED | CERTIFIED | No metadata, diff, approval/version flow | Mapping and versioning | 10 | Round-trip change-review E2E |
 | G-030 | Production controls | NOT_STARTED | CERTIFIED | No observability, performance, backup or runbooks | Runtime complete | 10 | Security/perf/ops certification |
-| G-031 | Full E2E | SPECIFIED | CERTIFIED | No runtime stages exist | Phases 1-10 | 10 | Unmocked browser journey |
+| G-031 | Full E2E | CERTIFIED | CERTIFIED | External pilot remains | Phases 1-10 and 31 | 31 | Unmocked deterministic and agent-assisted browser journey |

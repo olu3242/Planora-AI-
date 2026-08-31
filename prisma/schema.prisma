@@ -122,46 +122,111 @@ enum ImportBatchStatus {
   FAILED
 }
 
+enum AgentAuthorityClass {
+  A0_OBSERVE
+  A1_RECOMMEND
+  A2_ASSIST
+  A3_EXECUTE
+  A4_GOVERNED
+  A5_RESERVED
+}
+
+enum AgentKillSwitch {
+  ENABLED
+  READ_ONLY
+  DISABLED
+}
+
+enum AgentRunStatus {
+  RUNNING
+  SUCCEEDED
+  NO_RECOMMENDATION
+  INSUFFICIENT_DATA
+  AUTHORIZATION_UNDETERMINED
+  ERROR
+}
+
+enum AgentRecommendationStatus {
+  PENDING
+  ACCEPTED
+  EDITED
+  REJECTED
+}
+
+enum AgentFeedbackDecision {
+  ACCEPTED
+  EDITED
+  REJECTED
+}
+
+enum RuntimeExecutionStatus {
+  PENDING
+  RUNNING
+  RETRY_PENDING
+  SUCCEEDED
+  FAILED
+  RECOVERED
+}
+
+enum RuntimeErrorCategory {
+  TRANSIENT
+  VALIDATION
+  AUTHORIZATION
+  DATA_INTEGRITY
+  DEPENDENCY
+  LOGIC
+  UNKNOWN
+}
+
 model User {
-  id               String                   @id @default(uuid()) @db.Uuid
-  email            String                   @unique
-  name             String
-  passwordHash     String
-  active           Boolean                  @default(true)
-  memberships      OrganizationMembership[]
-  sessions         Session[]
-  auditEvents      AuditEvent[]             @relation("AuditActor")
-  mappingDecisions MappingDecision[]
-  importBatches    ImportBatch[]
-  forecastComments ForecastComment[]
-  createdAt        DateTime                 @default(now())
-  updatedAt        DateTime                 @updatedAt
+  id                      String                   @id @default(uuid()) @db.Uuid
+  email                   String                   @unique
+  name                    String
+  passwordHash            String
+  active                  Boolean                  @default(true)
+  memberships             OrganizationMembership[]
+  sessions                Session[]
+  auditEvents             AuditEvent[]             @relation("AuditActor")
+  mappingDecisions        MappingDecision[]
+  importBatches           ImportBatch[]
+  forecastComments        ForecastComment[]
+  agentRuns               AgentRun[]
+  recommendations         AgentRecommendation[]    @relation("RecommendationActor")
+  recommendationDecisions AgentRecommendation[]    @relation("RecommendationDecisionMaker")
+  agentFeedback           AgentFeedback[]
+  runtimeExecutions       RuntimeExecution[]
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
 }
 
 model Organization {
-  id                String                   @id @default(uuid()) @db.Uuid
-  code              String                   @unique
-  name              String
-  memberships       OrganizationMembership[]
-  auditEvents       AuditEvent[]
-  legalEntities     LegalEntity[]
-  businessUnits     BusinessUnit[]
-  geographies       Geography[]
-  products          Product[]
-  customers         Customer[]
-  costCenters       CostCenter[]
-  accounts          Account[]
-  fiscalCalendars   FiscalCalendar[]
-  financialFacts    FinancialFact[]
-  metricDefinitions MetricDefinition[]
-  metricValues      MetricValue[]
-  plans             Plan[]
-  forecasts         Forecast[]
-  excelWorkbooks    ExcelWorkbook[]
-  mappingTemplates  MappingTemplate[]
-  importBatches     ImportBatch[]
-  createdAt         DateTime                 @default(now())
-  updatedAt         DateTime                 @updatedAt
+  id                   String                   @id @default(uuid()) @db.Uuid
+  code                 String                   @unique
+  name                 String
+  memberships          OrganizationMembership[]
+  auditEvents          AuditEvent[]
+  legalEntities        LegalEntity[]
+  businessUnits        BusinessUnit[]
+  geographies          Geography[]
+  products             Product[]
+  customers            Customer[]
+  costCenters          CostCenter[]
+  accounts             Account[]
+  fiscalCalendars      FiscalCalendar[]
+  financialFacts       FinancialFact[]
+  metricDefinitions    MetricDefinition[]
+  metricValues         MetricValue[]
+  plans                Plan[]
+  forecasts            Forecast[]
+  excelWorkbooks       ExcelWorkbook[]
+  mappingTemplates     MappingTemplate[]
+  importBatches        ImportBatch[]
+  agentRuns            AgentRun[]
+  agentRecommendations AgentRecommendation[]
+  agentFeedback        AgentFeedback[]
+  runtimeExecutions    RuntimeExecution[]
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
 }
 
 model ExcelWorkbook {
@@ -638,22 +703,25 @@ model Forecast {
 }
 
 model ForecastVersion {
-  id             String                @id @default(uuid()) @db.Uuid
-  forecastId     String                @db.Uuid
-  version        Int
-  status         ForecastVersionStatus @default(DRAFT)
-  correctionOfId String?               @db.Uuid
-  reason         String?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  forecast       Forecast              @relation(fields: [forecastId], references: [id], onDelete: Restrict)
-  correctionOf   ForecastVersion?      @relation("ForecastCorrections", fields: [correctionOfId], references: [id], onDelete: Restrict)
-  corrections    ForecastVersion[]     @relation("ForecastCorrections")
-  submittedAt    DateTime?
-  approvedAt     DateTime?
-  lockedAt       DateTime?
-  lines          ForecastLine[]
-  comments       ForecastComment[]
+  id                   String                @id @default(uuid()) @db.Uuid
+  forecastId           String                @db.Uuid
+  version              Int
+  status               ForecastVersionStatus @default(DRAFT)
+  correctionOfId       String?               @db.Uuid
+  reason               String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  forecast             Forecast              @relation(fields: [forecastId], references: [id], onDelete: Restrict)
+  correctionOf         ForecastVersion?      @relation("ForecastCorrections", fields: [correctionOfId], references: [id], onDelete: Restrict)
+  corrections          ForecastVersion[]     @relation("ForecastCorrections")
+  submittedAt          DateTime?
+  approvedAt           DateTime?
+  lockedAt             DateTime?
+  lines                ForecastLine[]
+  comments             ForecastComment[]
+  agentRuns            AgentRun[]
+  agentRecommendations AgentRecommendation[]
+  runtimeExecutions    RuntimeExecution[]
 
   @@unique([forecastId, version])
 }
@@ -753,4 +821,134 @@ model LoginThrottle {
   windowStartedAt DateTime  @default(now())
   blockedUntil    DateTime?
   updatedAt       DateTime  @updatedAt
+}
+
+model AgentDefinition {
+  id                       String                  @id @default(uuid()) @db.Uuid
+  agentId                  String                  @unique
+  displayName              String
+  version                  Int                     @default(1)
+  purpose                  String
+  persona                  String
+  tenantScope              String                  @default("AUTHENTICATED_ORGANIZATION")
+  authorityClass           AgentAuthorityClass
+  allowedTools             String[]
+  forbiddenActions         String[]
+  requiredContext          String[]
+  workflowStates           ForecastVersionStatus[]
+  humanApprovalRequired    Boolean                 @default(true)
+  financialWritePermission Boolean                 @default(false)
+  retryPolicy              Json
+  memoryPolicy             Json
+  learningPolicy           Json
+  failurePolicy            Json
+  auditPolicy              Json
+  killSwitch               AgentKillSwitch         @default(ENABLED)
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  runs                     AgentRun[]
+  runtimeExecutions        RuntimeExecution[]
+}
+
+model AgentRun {
+  id                String                @id @default(uuid()) @db.Uuid
+  agentDefinitionId String                @db.Uuid
+  organizationId    String                @db.Uuid
+  actorId           String                @db.Uuid
+  forecastVersionId String?               @db.Uuid
+  trigger           String
+  task              String
+  inputReferences   Json
+  toolTrace         Json
+  evidence          Json
+  output            Json?
+  status            AgentRunStatus        @default(RUNNING)
+  confidence        Decimal?              @db.Decimal(5, 4)
+  errorCode         String?
+  startedAt         DateTime              @default(now())
+  completedAt       DateTime?
+  agentDefinition   AgentDefinition       @relation(fields: [agentDefinitionId], references: [id], onDelete: Restrict)
+  organization      Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor             User                  @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  forecastVersion   ForecastVersion?      @relation(fields: [forecastVersionId], references: [id], onDelete: Restrict)
+  recommendations   AgentRecommendation[]
+
+  @@index([organizationId, startedAt])
+  @@index([forecastVersionId, startedAt])
+}
+
+model AgentRecommendation {
+  id                String                    @id @default(uuid()) @db.Uuid
+  runId             String                    @db.Uuid
+  organizationId    String                    @db.Uuid
+  actorId           String                    @db.Uuid
+  forecastVersionId String?                   @db.Uuid
+  type              String
+  summary           String
+  proposedContent   String?
+  observedFacts     Json
+  evidence          Json
+  unsupportedClaim  Boolean                   @default(false)
+  status            AgentRecommendationStatus @default(PENDING)
+  decidedById       String?                   @db.Uuid
+  decidedAt         DateTime?
+  decisionReason    String?
+  createdAt         DateTime                  @default(now())
+  run               AgentRun                  @relation(fields: [runId], references: [id], onDelete: Restrict)
+  organization      Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor             User                      @relation("RecommendationActor", fields: [actorId], references: [id], onDelete: Restrict)
+  decidedBy         User?                     @relation("RecommendationDecisionMaker", fields: [decidedById], references: [id], onDelete: Restrict)
+  forecastVersion   ForecastVersion?          @relation(fields: [forecastVersionId], references: [id], onDelete: Restrict)
+  feedback          AgentFeedback[]
+
+  @@index([organizationId, createdAt])
+  @@index([forecastVersionId, createdAt])
+}
+
+model AgentFeedback {
+  id                    String                @id @default(uuid()) @db.Uuid
+  recommendationId      String                @db.Uuid
+  organizationId        String                @db.Uuid
+  actorId               String                @db.Uuid
+  decision              AgentFeedbackDecision
+  originalContent       String?
+  finalContent          String?
+  candidateImprovement  Json?
+  requiresVersionChange Boolean               @default(true)
+  createdAt             DateTime              @default(now())
+  recommendation        AgentRecommendation   @relation(fields: [recommendationId], references: [id], onDelete: Restrict)
+  organization          Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor                 User                  @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, createdAt])
+}
+
+model RuntimeExecution {
+  id                String                 @id @default(uuid()) @db.Uuid
+  correlationId     String
+  idempotencyKey    String
+  agentDefinitionId String?                @db.Uuid
+  agentVersion      Int?
+  actorId           String                 @db.Uuid
+  organizationId    String                 @db.Uuid
+  forecastVersionId String?                @db.Uuid
+  command           String
+  targetId          String
+  status            RuntimeExecutionStatus @default(PENDING)
+  attempt           Int                    @default(0)
+  retrySafe         Boolean                @default(false)
+  request           Json
+  result            Json?
+  errorCategory     RuntimeErrorCategory?
+  errorCode         String?
+  startedAt         DateTime               @default(now())
+  completedAt       DateTime?
+  agentDefinition   AgentDefinition?       @relation(fields: [agentDefinitionId], references: [id], onDelete: Restrict)
+  actor             User                   @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  organization      Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  forecastVersion   ForecastVersion?       @relation(fields: [forecastVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, command, idempotencyKey])
+  @@index([organizationId, startedAt])
+  @@index([correlationId])
 }

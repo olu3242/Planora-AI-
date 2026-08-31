@@ -3,6 +3,7 @@ import { AccountType, FinancialScenario, FinancialSourceType, MetricUnit, Normal
 import { hashPassword } from "../../src/auth/password";
 import { calculateMetrics, metricGraph, type MetricCode } from "../../src/domain/financial/calculation-engine";
 import { dimensionKey, financialFactGrain } from "../../src/domain/financial/lineage";
+import { agentDefinitions, sharedAgentPolicy } from "../../src/agents/definitions";
 
 const prisma = new PrismaClient();
 
@@ -97,6 +98,29 @@ async function main() {
   await seedFinancialFixture(northstar.id);
   await seedFinancialFixture(horizon.id);
   await seedFinancialFixture(demo.id);
+  for (const definition of agentDefinitions) {
+    const data = {
+      displayName: definition.displayName,
+      version: definition.version,
+      purpose: definition.purpose,
+      persona: definition.persona,
+      tenantScope: definition.tenantScope,
+      authorityClass: definition.authorityClass,
+      allowedTools: [...definition.allowedTools],
+      forbiddenActions: [...sharedAgentPolicy.forbiddenActions],
+      requiredContext: [...sharedAgentPolicy.requiredContext],
+      workflowStates: [...sharedAgentPolicy.workflowStates],
+      humanApprovalRequired: sharedAgentPolicy.humanApprovalRequired,
+      financialWritePermission: sharedAgentPolicy.financialWritePermission,
+      retryPolicy: sharedAgentPolicy.retryPolicy,
+      memoryPolicy: sharedAgentPolicy.memoryPolicy,
+      learningPolicy: sharedAgentPolicy.learningPolicy,
+      failurePolicy: sharedAgentPolicy.failurePolicy,
+      auditPolicy: sharedAgentPolicy.auditPolicy,
+      killSwitch: "ENABLED" as const,
+    };
+    await prisma.agentDefinition.upsert({ where: { agentId: definition.agentId }, update: data, create: { agentId: definition.agentId, ...data } });
+  }
 }
 
 main().finally(() => prisma.$disconnect());

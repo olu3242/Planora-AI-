@@ -21,6 +21,9 @@ Scope: the canonical forecast cycle only. Status is based on executable reposito
 | Export | PASS | Director/CFO-only XLSX/CSV; approved/locked states; explicit export audit; E2E reads XLSX and reconciles totals. |
 | Tenant isolation | PASS | repositories scope opaque IDs by session organization; cross-tenant workbook/forecast/comment tests return 404. |
 | Performance | PASS | 10,000-row parse/profile/map and 1,000-row full import; bulk facts/lineage, chunked line upserts, paged UI. |
+| Agentic OS | PASS | Four deterministic A1/A2 assistants; persisted runs/evidence/recommendations; Accept/Edit/Reject; prompt-injection, role and tenant denials. |
+| Execution runtime | PASS | Correlated execution records, stable UI idempotency keys, duplicate prevention, bounded safe retry/recovery and fail-closed error classes. |
+| Governed learning | PASS | Tenant-scoped feedback stores original/final output and requires an approved future version; live definitions are not silently mutated. |
 | Deployment | BLOCKED | No preview/production target or credentials. Production promotion was not authorized and is not required for local user validation. |
 
 ## Canonical paths
