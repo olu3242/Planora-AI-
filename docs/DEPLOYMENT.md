@@ -30,3 +30,4 @@ Preview: not configured.
 Production: not configured.
 Promotion: not authorized.
 Hosted certification: `HOSTED_BLOCKED` pending infrastructure and credentials; local work can continue.
+Local: PostgreSQL 18 via `compose.yaml`; Next.js standalone build PASS; health route `/api/health` PASS during browser tests.

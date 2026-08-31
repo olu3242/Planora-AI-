@@ -6,11 +6,11 @@ Status terms: `SPECIFIED`, `NOT_STARTED`, `SCAFFOLDED`, `PARTIAL`, `FUNCTIONAL`,
 |---|---|---|---|---|---|---:|---|
 | G-001 | Repository baseline | SCAFFOLDED | CERTIFIED | Missing implementation history, CI and release evidence | None | 0 | Git/PR audit and Phase 0 docs |
 | G-002 | Target architecture | SPECIFIED | CERTIFIED | Boundaries not previously consolidated | Audit | 0 | Architecture review |
-| G-003 | Login/session | NOT_STARTED | CERTIFIED | No auth runtime | Phase 0 | 1 | Login E2E; unauthenticated denial |
-| G-004 | Organizations/memberships | NOT_STARTED | CERTIFIED | No persistence or tenant context | Login, database | 1 | Integration and tenant tests |
-| G-005 | RBAC | SPECIFIED | CERTIFIED | No permission engine or enforcement | Session, memberships | 1 | Direct API permission tests |
-| G-006 | Audit | SPECIFIED | CERTIFIED | No immutable audit persistence | Auth, database | 1 | Mutation audit tests |
-| G-007 | App shell | NOT_STARTED | FUNCTIONAL | Static marketing page only | Auth | 1 | Responsive browser test |
+| G-003 | Login/session | CERTIFIED | CERTIFIED | None for local Phase 1 | Phase 0 | 1 | `foundation.e2e.ts`; 8/8 E2E |
+| G-004 | Organizations/memberships | CERTIFIED | CERTIFIED | None for local Phase 1 | Login, database | 1 | 4/4 integration; clean seed |
+| G-005 | RBAC | CERTIFIED | CERTIFIED | Tenant-configurable custom roles deferred | Session, memberships | 1 | 2/2 security plus unit tests |
+| G-006 | Audit | CERTIFIED | CERTIFIED | None for local Phase 1 | Auth, database | 1 | Append/write and DB mutation-denial test |
+| G-007 | App shell | FUNCTIONAL | FUNCTIONAL | Later modules intentionally unavailable | Auth | 1 | 5-view responsive browser test |
 | G-008 | Canonical dimensions/facts | SPECIFIED | CERTIFIED | No schema, repositories, or constraints | Foundation | 2 | Clean migration and domain tests |
 | G-009 | Decimal calculations | SPECIFIED | CERTIFIED | No deterministic engine | Canonical model | 2 | Exact $87M EBITDA test |
 | G-010 | Lineage | SPECIFIED | CERTIFIED | No source reference implementation | Facts | 2 | Metric-to-source traversal test |

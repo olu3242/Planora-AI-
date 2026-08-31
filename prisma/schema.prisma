@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleCode {
+  CFO
+  FPA_DIRECTOR
+  ANALYST
+}
+
+model User {
+  id           String                   @id @default(uuid()) @db.Uuid
+  email        String                   @unique
+  name         String
+  passwordHash String
+  active       Boolean                  @default(true)
+  memberships  OrganizationMembership[]
+  sessions     Session[]
+  auditEvents  AuditEvent[]             @relation("AuditActor")
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+}
+
+model Organization {
+  id          String                   @id @default(uuid()) @db.Uuid
+  code        String                   @unique
+  name        String
+  memberships OrganizationMembership[]
+  auditEvents AuditEvent[]
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+}
+
+model OrganizationMembership {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @db.Uuid
+  organizationId String       @db.Uuid
+  role           RoleCode
+  active         Boolean      @default(true)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sessions       Session[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([userId, organizationId])
+  @@index([organizationId, role])
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  tokenHash    String   @unique
+  userId       String   @db.Uuid
+  membershipId String   @db.Uuid
+  expiresAt    DateTime
+  lastSeenAt   DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  membership   OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@index([userId, expiresAt])
+}
+
+model AuditEvent {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  actorId        String?      @db.Uuid
+  action         String
+  entityType     String
+  entityId       String
+  previousState  Json?
+  newState       Json?
+  metadata       Json?
+  correlationId  String
+  occurredAt     DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor          User?        @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, occurredAt])
+  @@index([entityType, entityId])
+}
+
+model LoginThrottle {
+  key             String    @id
+  failedCount     Int       @default(0)
+  windowStartedAt DateTime  @default(now())
+  blockedUntil    DateTime?
+  updatedAt       DateTime  @updatedAt
+}

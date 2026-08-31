@@ -66,11 +66,15 @@ The stack below is the proposed baseline for a new implementation. If this repos
 
 ```bash
 npm install
-cp .env.example .env.local   # fill in DATABASE_URL and other required values
+docker compose up -d postgres
+cp .env.example .env.local
+cp .env.example .env
 npm run db:migrate
 npm run db:seed
 npm run dev
 ```
+
+The local seed creates `cfo@planora.local`, `director@planora.local`, and `analyst@planora.local` with password `Planora!2026`. These credentials are development fixtures only.
 
 ## Common commands
 
@@ -156,4 +160,4 @@ Planora/
 
 ## Current implementation status
 
-See `docs/IMPLEMENTATION-STATUS.md` for the live phase breakdown and `docs/TRACEABILITY-MATRIX.md` for the pain-point-to-evidence chain. Phase 0 is certified as an architecture baseline; Phase 1 runtime implementation is in progress.
+See `docs/IMPLEMENTATION-STATUS.md` for the live phase breakdown and `docs/TRACEABILITY-MATRIX.md` for the pain-point-to-evidence chain. Phase 0 and Phase 1 are certified locally; Phase 2 is ready to begin.

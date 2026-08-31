@@ -56,8 +56,8 @@ This target matrix prevents orphaned requirements before executable paths exist.
 
 | Requirement | Phase | Domain object(s) | Implementation target | Test target | Status |
 |---|---:|---|---|---|---|
-| Login, tenant and permission enforcement | 1 | User, Organization, Membership, Role, Permission | `src/auth`, `src/permissions`, tenant repositories | login/RBAC/tenant E2E | SPECIFIED |
-| Append-only audit | 1 | AuditEvent | `src/audit`, database trigger/policy | audit immutability integration | SPECIFIED |
+| Login, tenant and permission enforcement | 1 | User, OrganizationMembership, RoleCode, Session | `src/auth`, `src/permissions`, `src/repositories/organization-repository.ts` | `environment.test`, `permissions.test`, `authorization.test`, `foundation.e2e` | COMPLETE |
+| Append-only audit | 1 | AuditEvent | `src/audit/audit.ts`, migration trigger | `audit.test`, `foundation.test` | COMPLETE |
 | Canonical financial truth and metrics | 2 | FinancialFact, MetricDefinition, MetricValue | domain calculation engine/repositories | $87M financial fixture | SPECIFIED |
 | Lineage and version immutability | 2 | LineageReference, PlanVersion, ForecastVersion | application policies/database constraints | lineage and mutation-denial tests | SPECIFIED |
 | Excel profiling and mapping | 3 | WorkbookProfile, MappingVersion, MappingDecision | spreadsheet adapter and review UI | wide/long/unmapped/drift E2E | SPECIFIED |

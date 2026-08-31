@@ -10,12 +10,14 @@ dist/
 coverage/
 playwright-report/
 test-results/
+*.tsbuildinfo
 
 # environment
 .env
 .env.local
 .env.*.local
 !.env.example
+storage/uploads/
 
 # logs
 npm-debug.log*
@@ -28,6 +30,7 @@ pnpm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
+workspace.code-workspace
 
 # Prisma/local databases
 *.db
@@ -35,3 +38,4 @@ Thumbs.db
 
 # generated delivery archives
 planora-e2e.zip
+planora-docs.zip

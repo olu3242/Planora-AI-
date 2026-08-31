@@ -25,6 +25,8 @@
 - Reason: satisfies tenant isolation and avoids handler-level role-name checks.
 - Consequence: every protected query/mutation accepts an authorization context, not a client tenant ID.
 
+Implementation note: Phase 1 uses first-party scrypt password verification and random hashed database sessions so local certification has no third-party credential dependency. Identity remains an adapter boundary for later enterprise SSO.
+
 ## ADR-005: One deterministic financial graph
 
 - Decision: Metrics, plans, forecasts, and scenarios share one pure Decimal calculation graph.
