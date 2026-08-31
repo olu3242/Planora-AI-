@@ -108,9 +108,9 @@ Full spec: `docs/EXCEL-INTEROPERABILITY.md`.
 ## The full E2E demonstration journey
 
 ```
-LOGIN → COMMAND CENTER → EXCEL IMPORT → MAPPING → RECONCILIATION →
-FORECAST → VARIANCE → ROOT CAUSE → SCENARIO → RECOMMENDATION →
-DECISION → ACTION → OUTCOME → EXPORT
+LOGIN → FORECAST CYCLE → EXCEL/CSV IMPORT → MAPPING → VALIDATION →
+FORECAST → VARIANCE → COMMENTARY → SUBMIT → REVISION → APPROVE →
+CFO VIEW → AUDIT → LOCK → EXPORT
 ```
 
 This is the literal automated test path Planora must pass to be classified E2E complete. Full detail and a worked example: `docs/E2E-ACCEPTANCE.md`.
@@ -160,4 +160,4 @@ Planora/
 
 ## Current implementation status
 
-See `docs/IMPLEMENTATION-STATUS.md` for the live phase breakdown and `docs/TRACEABILITY-MATRIX.md` for the pain-point-to-evidence chain. Phases 0-2 are certified locally. The authenticated `/actuals` route exposes the canonical Phase 2 P&L, exact Decimal metrics, filters, and source lineage; Phase 3 is the next implementation boundary.
+See `docs/MVP-CERTIFICATION.md` for the evidence-backed Forecast MVP matrix and `docs/USER-VALIDATION-KIT.md` for the external FP&A test. The complete canonical forecast cycle is implemented locally; hosted deployment remains unconfigured and production promotion is not authorized.

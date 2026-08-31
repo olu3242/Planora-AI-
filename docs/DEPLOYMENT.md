@@ -32,4 +32,6 @@ Promotion: not authorized.
 Hosted certification: `HOSTED_BLOCKED` pending infrastructure and credentials; local work can continue.
 Local: PostgreSQL 18 via `compose.yaml`; Next.js standalone build PASS; health route `/api/health` PASS during browser tests.
 
-Phase 2: migration `20260831110936_phase2_financial_core` was verified from an empty local database and the production Next.js build passed. No preview deployment or production promotion was attempted.
+MVP certification: all six migrations through `20260831121058_forecast_mvp_workflow` are verified from an empty local database. The deterministic seed includes two isolated organizations and Northstar Analyst, FP&A Director, and CFO identities. Valid XLSX/CSV, compatible-revision, and invalid CSV fixtures cover the controlled pilot workflow. The standalone production build and `/api/health` pass locally. See `MVP-CERTIFICATION.md` and `USER-VALIDATION-KIT.md`.
+
+No preview deployment or production promotion was attempted. Hosted object storage, malware scanning, backups, monitoring, and rollback rehearsal must be configured for a hosted pilot; they do not block local real-user validation with non-sensitive demo data.

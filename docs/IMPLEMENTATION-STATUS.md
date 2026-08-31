@@ -2,50 +2,32 @@
 
 Updated: 2026-08-31
 
-| Phase | Name | State | Evidence | Certification |
-|---:|---|---|---|---|
-| 0 | BASELINE | CERTIFIED | Audit, gap, architecture, domain, security, governance, test and implementation contracts | PASS |
-| 1 | FOUNDATION | CERTIFIED | Next.js runtime, PostgreSQL migrations/seed, secure sessions, tenants, permissions, append-only audit, shell, CI and browser evidence | PASS |
-| 2 | FINANCIAL_CORE | CERTIFIED | Canonical dimensions/facts, Decimal graph, $87M EBITDA, lineage, version guards, Actuals UI/API | PASS |
-| 3 | EXCEL_IMPORT | READY | Specifications and certified Phase 2 dependency | Not yet started |
-| 4 | DATA_CERTIFICATION | NOT_STARTED | Specifications only | BLOCKED by Phase 3 gate |
-| 5 | PLANNING | NOT_STARTED | Specifications only | BLOCKED by Phase 4 gate |
-| 6 | VARIANCE | NOT_STARTED | Specifications only | BLOCKED by Phase 5 gate |
-| 7 | DECISION_INTELLIGENCE | NOT_STARTED | Specifications only | BLOCKED by Phase 6 gate |
-| 8 | CLOSED_LOOP | NOT_STARTED | Specifications only | BLOCKED by Phase 7 gate |
-| 9 | AGENTIC_FPA | NOT_STARTED | Specifications only | BLOCKED by Phase 8 gate |
-| 10 | PRODUCTION_E2E | NOT_STARTED | Specifications only | BLOCKED by Phase 9 gate |
+| Phase | Scope | State | Evidence |
+|---:|---|---|---|
+| 0 | Baseline architecture | PASS | Commit `bca2434` and Phase 0 contracts |
+| 1 | Authenticated tenant foundation | PASS | Commit `ac4aeaf`, migration/seed/security/browser evidence |
+| 2 | Canonical financial core | PASS | Commit `ea3692e`, exact $87M fixture and lineage evidence |
+| 3 | Prior handoff boundary | PASS | Superseded by the scoped Forecast MVP delivery plan |
+| 4 | XLSX/CSV import and reusable mapping | PASS | Persisted files/profile/preview, editable versioned mapping, compatible reuse, tenant tests |
+| 5 | Validation | PASS | Persisted severity/context/guidance, duplicate/numeric/period/dimension issues, blocking E2E |
+| 6 | Forecast and variance | PASS | Decimal workspace edits, filters, pagination, actual variance and prior movement |
+| 7 | Commentary and submission | PASS | Version context, actor/time, audit and blocking submission gates |
+| 8 | Review/revision/approval | PASS | Server state matrix, separated approval, revision/resubmission E2E |
+| 9 | CFO, audit and lock | PASS | Management totals/rankings, reconstructable audit, CFO lock and database triggers |
+| 10 | Export/E2E | PASS | Authorized XLSX/CSV, audited export, exact `$213,750,000` browser reconciliation |
+| 11-20 | Certification and hardening | PASS | `MVP-CERTIFICATION.md`; 22 browser tests and all quality gates |
+| 21-24 | Pilot evidence preparation | PARTIAL | Repeatable baseline/session/feedback records exist; real participant data is insufficient |
+| 25 | Evidence-based UX iteration | NOT_STARTED | Correctly gated on repeated pilot evidence |
+| 26 | Exception/recovery | PASS | Invalid, duplicate, drift, authorization, transition and lock paths tested |
+| 27 | Controlled pilot tenant | PARTIAL | Local `PLANORA-DEMO` ready; hosted environment unconfigured |
+| 28 | Pilot support | PASS | Correlation IDs, safe logs, health check and support runbook |
+| 29 | Product decision | PASS | `CONTINUE_MVP_PILOT` |
+| 30 | Validation certification | PARTIAL | `MVP_PARTIALLY_VALIDATED`; external usability/value/adoption evidence required |
 
-## Phase 0 certification
+## Current decision
 
-Dependencies: baseline contracts and remote PR evidence available.
-Implemented: documentation/architecture baseline only.
-Database/migrations/services/UI: not implemented.
-Security/financial controls: defined as implementation contracts, not runtime controls.
-Tests/E2E/responsive: not implemented; no false execution claim.
-Branch: `feat/phase-1-foundation`; Phase 0 commit `bca2434`.
-PR: #1 is baseline-only, draft/open; no implementation PR created.
-Preview/production: unavailable/not promoted.
-Known gaps: see `docs/KNOWN-GAPS.md`.
-Certification: PASS for Phase 0 architecture readiness only.
+Phase 20: `READY_FOR_USER_VALIDATION`.
 
-## Phase 1 certification
+Phase 30: `MVP_PARTIALLY_VALIDATED` because no real FP&A pilot results exist. Continue the controlled MVP pilot; do not expand the product or claim beta readiness.
 
-Dependencies: Phase 0 PASS; PostgreSQL 18 container healthy.
-Implemented: Next.js 16 App Router, strict environment validation, two Prisma migrations, idempotent seed, first-party scrypt credentials, hashed database sessions, memberships, permission catalog, tenant-scoped resource access, database-backed login throttle, append-only audit trigger, safe errors, security headers, structured events, accessible responsive shell and CI.
-Tests: lint PASS; typecheck PASS; unit 7/7; integration 4/4; security 2/2; E2E 8/8; build PASS; dependency audit 0 vulnerabilities.
-Database: empty `planora_phase1_cert` applied both migrations and seeded 2 organizations, 4 users and 4 memberships.
-E2E: unauthenticated redirect, login, authenticated shell, direct Tenant A -> Tenant B ID denial, no browser console/overlay error, and no page overflow at 375/430/768/1024/1440.
-Evidence: `evidence/phase-1/CERTIFICATION.md`, `evidence/phase-1/command-center-1440.png`.
-Preview/production: not configured/not promoted.
-Certification: PASS locally. Hosted preview remains unavailable but is not a Phase 2 local implementation blocker.
-
-## Phase 2 certification
-
-Dependencies: Phase 1 PASS; PostgreSQL 18 container healthy.
-Implemented: tenant-owned canonical dimensions, fiscal calendar, chart of accounts, unique financial-fact grain, exact Decimal calculation graph, metric registry/cache/dependencies, structured fact and metric lineage, approved PlanVersion/published ForecastVersion immutability, audited correction draft service, tenant-scoped repositories/APIs, and the responsive `/actuals` P&L with filters and EBITDA evidence.
-Fixture: Revenue $150M; COGS $40M; Gross Profit $110M; Opex $23M; EBITDA $87M; Gross Margin 73.3333%; EBITDA Margin 58%. Revenue geography/product children sum exactly to $150M.
-Tests: lint PASS; typecheck PASS; unit 15/15; financial 8/8; integration 9/9; security 3/3; E2E 14/14; responsive 375/430/768/1024/1440 PASS; build PASS; dependency audit 0 vulnerabilities.
-Database: empty `planora_phase2_cert` applied all three migrations and seeded canonical fixture data for two isolated organizations.
-E2E evidence: `evidence/phase-2/CERTIFICATION.md`, `evidence/phase-2/actuals-1440.png`.
-Certification: PASS locally. Phase 3 is ready; no merge or production promotion performed.
+No PR, merge, preview deployment, production deployment, or production data change was performed.

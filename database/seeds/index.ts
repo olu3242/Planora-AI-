@@ -37,6 +37,7 @@ async function seedFinancialFixture(organizationId: string) {
   const entity = await prisma.legalEntity.upsert({ where: { organizationId_code: { organizationId, code: "US01" } }, update: {}, create: { organizationId, code: "US01", name: "Northstar Holdings", effectiveFrom } });
   const unit = await prisma.businessUnit.upsert({ where: { organizationId_code: { organizationId, code: "CORE" } }, update: {}, create: { organizationId, code: "CORE", name: "Core Operations", effectiveFrom } });
   const costCenter = await prisma.costCenter.upsert({ where: { organizationId_code: { organizationId, code: "CORP" } }, update: {}, create: { organizationId, code: "CORP", name: "Corporate", effectiveFrom } });
+  for (const [code, name] of [["NA-IND", "North America Industrial"], ["NA-SVC", "North America Services"], ["EU-IND", "Europe Industrial"], ["EU-SVC", "Europe Services"]]) await prisma.costCenter.upsert({ where: { organizationId_code: { organizationId, code } }, update: { name }, create: { organizationId, code, name, effectiveFrom, parentId: costCenter.id } });
   const geographies = Object.fromEntries(await Promise.all([["NA", "North America"], ["EU", "Europe"]].map(async ([code, name]) => {
     const row = await prisma.geography.upsert({ where: { organizationId_code: { organizationId, code } }, update: {}, create: { organizationId, code, name, effectiveFrom } }); return [code, row];
   })));
@@ -85,12 +86,17 @@ async function seedFinancialFixture(organizationId: string) {
 async function main() {
   const northstar = await seedOrganization("NORTHSTAR", "Northstar Manufacturing");
   const horizon = await seedOrganization("HORIZON", "Horizon Services");
+  const demo = await seedOrganization("PLANORA-DEMO", "Planora Demo Company");
   await seedUser("cfo@planora.local", "Morgan Lee", RoleCode.CFO, northstar.id);
   await seedUser("director@planora.local", "Jordan Patel", RoleCode.FPA_DIRECTOR, northstar.id);
   await seedUser("analyst@planora.local", "Casey Rivera", RoleCode.ANALYST, northstar.id);
   await seedUser("cfo@horizon.local", "Avery Chen", RoleCode.CFO, horizon.id);
+  await seedUser("analyst@demo.planora.local", "Demo Analyst", RoleCode.ANALYST, demo.id);
+  await seedUser("director@demo.planora.local", "Demo FP&A Director", RoleCode.FPA_DIRECTOR, demo.id);
+  await seedUser("cfo@demo.planora.local", "Demo CFO", RoleCode.CFO, demo.id);
   await seedFinancialFixture(northstar.id);
   await seedFinancialFixture(horizon.id);
+  await seedFinancialFixture(demo.id);
 }
 
 main().finally(() => prisma.$disconnect());

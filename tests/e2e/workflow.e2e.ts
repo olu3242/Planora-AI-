@@ -1,0 +1,60 @@
+import { expect, test } from "@playwright/test";
+import ExcelJS from "exceljs";
+import { PrismaClient } from "@prisma/client";
+import { mkdir } from "node:fs/promises";
+import { resolve } from "node:path";
+
+async function signIn(page: import("@playwright/test").Page, email: string) {
+  await page.goto("/login"); await page.getByLabel("Email").fill(email); await page.getByLabel("Password").fill("Planora!2026"); await page.getByRole("button", { name: "Sign in" }).click(); await expect(page).toHaveURL(/\/command-center$/);
+}
+
+async function switchUser(page: import("@playwright/test").Page, email: string) {
+  await page.getByRole("button", { name: "Sign out" }).click(); await expect(page).toHaveURL(/\/login$/); await signIn(page, email);
+}
+
+async function act(page: import("@playwright/test").Page, label: string, reason: string) {
+  await page.getByLabel(`${label} reason`).fill(reason); await page.getByRole("button", { name: label }).click();
+}
+
+test.describe.serial("canonical forecast cycle", () => {
+  test("analyst imports and reuses mapping, director revises and approves, CFO locks and reconciles export", async ({ page }) => {
+    test.setTimeout(120_000); const consoleErrors: string[] = []; page.on("console", (message) => { const text = message.text(); if (message.type() === "error" && !(text.includes("hydrated") && text.includes("caret-color"))) consoleErrors.push(text); });
+    await page.setViewportSize({ width: 1440, height: 1000 }); await signIn(page, "analyst@planora.local"); await page.getByRole("link", { name: "Excel" }).click();
+    await page.getByLabel("Workbook").setInputFiles(resolve("tests/fixtures/FY26_Forecast.xlsx")); await page.getByRole("button", { name: "Upload and profile" }).click();
+    await expect(page.getByRole("heading", { name: "FY26_Forecast.xlsx" })).toBeVisible(); await expect(page.getByRole("heading", { name: "Source preview" })).toBeVisible(); await expect(page.getByText("Shared Programs", { exact: true })).toBeVisible(); await page.getByRole("button", { name: "Save field mapping" }).first().click(); await expect(page.getByRole("heading", { name: "Suggested mappings" })).toBeVisible();
+    await page.getByLabel("Canonical account").selectOption({ label: "6000 · Operating expense" }); await page.getByRole("button", { name: "Approve correction" }).click(); await expect(page.locator(".section-heading .status")).toHaveText("APPROVED");
+    await page.getByRole("link", { name: "Excel imports" }).click(); await expect(page).toHaveURL(/\/excel$/); await page.locator('input[type="file"]').setInputFiles(resolve("tests/fixtures/FY26_Forecast_Revision.xlsx")); await page.getByRole("button", { name: "Upload and profile" }).click();
+    await expect(page.getByRole("heading", { name: "FY26_Forecast_Revision.xlsx" })).toBeVisible(); await expect(page.getByText("Reused approved template mapping", { exact: true }).first()).toBeVisible(); await expect(page.getByText("APPROVED", { exact: true }).first()).toBeVisible();
+    await page.getByRole("button", { name: "Validate and import" }).click(); await expect(page).toHaveURL(/imported=1/); await expect(page.getByText("Canonical import completed with workbook lineage.")).toBeVisible();
+    await mkdir("evidence/phase-4", { recursive: true }); await page.screenshot({ path: "evidence/phase-4/import-mapping-1440.png" });
+    await page.getByRole("link", { name: "Forecasts" }).click(); await page.getByRole("link", { name: /FY26 Forecast Cycle/ }).click(); await expect(page).toHaveURL(/\/forecasts\/[0-9a-f-]+$/);
+    const forecastUrl = page.url(); const current = page.getByLabel("Current forecast for Revenue NA-IND"); await current.fill("71000000"); await current.locator("..").getByRole("button", { name: "Save" }).click(); await expect(page.getByLabel("Current forecast for Revenue NA-IND")).toHaveValue("71000000");
+    await page.getByLabel("Forecast commentary").fill("North America industrial demand supports the revised revenue outlook."); await page.getByRole("button", { name: "Add commentary" }).click(); await expect(page.getByText("North America industrial demand supports the revised revenue outlook.")).toBeVisible();
+    await act(page, "Submit forecast", "Ready for director review"); await expect(page.getByText("SUBMITTED", { exact: true }).first()).toBeVisible();
+    await switchUser(page, "director@planora.local"); await page.goto(forecastUrl); await act(page, "Begin review", "Starting material variance review"); await act(page, "Request revision", "Refine the industrial revenue assumption"); await expect(page.getByText("REVISION REQUIRED", { exact: true }).first()).toBeVisible();
+    await switchUser(page, "analyst@planora.local"); await page.goto(forecastUrl); await page.getByLabel("Current forecast for Revenue NA-IND").fill("70750000"); await page.getByLabel("Current forecast for Revenue NA-IND").locator("..").getByRole("button", { name: "Save" }).click(); await act(page, "Resubmit forecast", "Revenue revision completed");
+    await switchUser(page, "director@planora.local"); await page.goto(forecastUrl); await act(page, "Begin review", "Reviewing analyst revision"); await act(page, "Approve forecast", "Forecast is supported and complete"); await expect(page.getByText("APPROVED", { exact: true }).first()).toBeVisible();
+    await switchUser(page, "analyst@planora.local"); const deniedExport = await page.request.get(`${forecastUrl.replace("/forecasts/", "/api/forecasts/")}/export`); expect(deniedExport.status()).toBe(403);
+    await switchUser(page, "cfo@planora.local"); const prisma = new PrismaClient(); const foreignVersion = await prisma.forecastVersion.findFirstOrThrow({ where: { forecast: { organization: { code: "HORIZON" } } } }); await prisma.$disconnect(); const foreignResponse = await page.request.get(`/forecasts/${foreignVersion.id}`); expect(foreignResponse.status()).toBe(404);
+    await page.goto(forecastUrl); await expect(page.getByText("Revenue", { exact: true }).first()).toBeVisible(); await expect(page.getByText("Operating expense", { exact: true }).first()).toBeVisible(); await expect(page.getByText("EBITDA", { exact: true }).first()).toBeVisible(); await expect(page.getByText("Top favorable", { exact: true })).toBeVisible(); await expect(page.getByText("Largest movements", { exact: true })).toBeVisible();
+    await expect(page.getByText("FORECAST.APPROVE", { exact: true })).toBeVisible(); await act(page, "Lock forecast", "Final CFO approval and lock"); await expect(page.getByText("LOCKED", { exact: true }).first()).toBeVisible();
+    const downloadPromise = page.waitForEvent("download"); await page.getByRole("link", { name: "Export XLSX" }).click(); const download = await downloadPromise; const path = await download.path(); expect(path).toBeTruthy();
+    const exported = new ExcelJS.Workbook(); await exported.xlsx.readFile(path!); const sheet = exported.getWorksheet("Forecast")!; let exportedCurrent = 0; sheet.eachRow((row, index) => { if (index > 1) exportedCurrent += Number(row.getCell(8).value); }); expect(exportedCurrent).toBe(213_750_000);
+    await page.reload(); await expect(page.getByText("FORECAST.EXPORTED", { exact: true }).first()).toBeVisible(); await mkdir("evidence/phase-9", { recursive: true }); await page.screenshot({ path: "evidence/phase-9/cfo-locked-audit-1440.png", fullPage: true }); expect(consoleErrors).toEqual([]);
+  });
+
+  test("invalid import persists blocking issues and does not progress", async ({ page }) => {
+    await signIn(page, "analyst@planora.local"); await page.getByRole("link", { name: "Excel" }).click(); await page.getByLabel("Workbook").setInputFiles(resolve("tests/fixtures/FY26_Forecast_Invalid.csv")); await page.getByRole("button", { name: "Upload and profile" }).click(); await page.getByRole("button", { name: "Validate and import" }).click();
+    await expect(page.locator(".error-box[role=alert]")).toContainText("blocking issue"); await expect(page.getByRole("heading", { name: "Validation issues" })).toBeVisible(); await expect(page.getByText(/DUPLICATE_FINANCIAL_ROW/)).toBeVisible(); await expect(page.getByRole("code").filter({ hasText: "not-a-number" })).toBeVisible(); await expect(page.getByText(/Keep one row for each account/)).toBeVisible();
+  });
+
+  test("@accessibility canonical controls are labeled and keyboard focus is visible", async ({ page }) => {
+    await signIn(page, "cfo@planora.local"); await page.getByRole("link", { name: "Forecasts" }).click(); await page.getByRole("link", { name: /FY26 Forecast Cycle/ }).click();
+    const unlabeled = await page.locator("input, select, textarea").evaluateAll((controls) => controls.filter((control) => !control.closest("label") && !control.getAttribute("aria-label") && !control.getAttribute("aria-labelledby")).length); expect(unlabeled).toBe(0);
+    await page.getByRole("link", { name: "Planora" }).focus(); await page.keyboard.press("Tab"); const focus = await page.evaluate(() => { const element = document.activeElement as HTMLElement; const style = getComputedStyle(element); return { tag: element.tagName, outline: style.outlineStyle, width: style.outlineWidth }; }); expect(["A", "BUTTON"]).toContain(focus.tag); expect(focus.outline).not.toBe("none"); expect(focus.width).not.toBe("0px");
+  });
+
+  for (const width of [375, 430, 768, 1024, 1440]) test(`@responsive locked CFO workspace has no page overflow at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 950 }); await signIn(page, "cfo@planora.local"); await page.getByRole("link", { name: "Forecasts" }).click(); await page.getByRole("link", { name: /FY26 Forecast Cycle/ }).click(); await expect(page.getByText("LOCKED", { exact: true }).first()).toBeVisible(); expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false); await page.waitForLoadState("networkidle");
+  });
+});

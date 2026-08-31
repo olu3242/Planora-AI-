@@ -2,9 +2,9 @@
 
 ## Security principles
 
-### Phase 2 financial authorization
+### Forecast MVP authorization
 
-`financial.read` protects Actuals pages and statement, lineage, and resource APIs. `financial.write` is granted to CFO, FP&A Director, and Analyst roles for future governed commands; Phase 2 exposes no production fact-write endpoint. Repositories resolve Organization from the authenticated session and combine it with every account, fact, metric, period, and dimension query. Cross-tenant direct identifiers return `RESOURCE_NOT_FOUND` (404) and are covered for accounts, facts, and metrics.
+`financial.read` protects financial views. `financial.write`, `financial.import`, and `mapping.review` permit Analyst draft/import work. Review, approval, lock, audit, and export remain separate server-enforced permissions or transition-role checks. Repositories resolve Organization from the authenticated session and combine it with every workbook, mapping, account, fact, metric, forecast, line, comment, period, and dimension query. Cross-tenant opaque identifiers return `RESOURCE_NOT_FOUND` (404).
 
 - Deny by default; server enforcement is authoritative.
 - Session establishes user identity; active membership establishes organization scope.
@@ -17,11 +17,12 @@
 | Permission | CFO | FP&A Director | Analyst |
 |---|:---:|:---:|:---:|
 | `financial.read` | Yes | Yes | Yes |
-| `excel.upload` / `mapping.edit` | Yes | Yes | Yes |
+| `financial.import` / `mapping.review` | Yes | Yes | Yes |
 | `mapping.approve` | Yes | Yes | No |
 | `certification.approve` | Yes | Yes | No |
-| `plan.edit` / `forecast.edit` | Yes | Yes | Yes |
-| `plan.approve` / `forecast.publish` | Yes | Yes | No |
+| `financial.write` / `forecast.submit` | Yes | Yes | Yes |
+| `forecast.review` / `forecast.approve` | Yes | Yes | No |
+| `forecast.export` | Yes | Yes | No |
 | `scenario.create` | Yes | Yes | Yes |
 | `decision.create` / `decision.approve` | Yes | Yes | No |
 | `action.manage` | Yes | Yes | Yes when owner |

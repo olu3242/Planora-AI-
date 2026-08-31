@@ -43,6 +43,7 @@ enum FinancialScenario {
 enum FinancialSourceType {
   SEED
   MANUAL_TEST_FIXTURE
+  EXCEL_WORKBOOK
   SYSTEM_CALCULATION
 }
 
@@ -64,21 +65,77 @@ enum PlanVersionStatus {
 
 enum ForecastVersionStatus {
   DRAFT
+  SUBMITTED
+  IN_REVIEW
+  REVISION_REQUIRED
+  APPROVED
+  LOCKED
   PUBLISHED
   SUPERSEDED
 }
 
+enum ValidationSeverity {
+  ERROR
+  WARNING
+  INFO
+}
+
+enum WorkbookStatus {
+  UPLOADED
+  PROFILED
+  MAPPING_REVIEW
+  VALIDATED
+  IMPORTED
+  FAILED
+}
+
+enum WorkbookShape {
+  WIDE
+  LONG
+  UNKNOWN
+}
+
+enum MappingVersionStatus {
+  DRAFT
+  REVIEW_REQUIRED
+  APPROVED
+  RETIRED
+}
+
+enum MappingKind {
+  COLUMN
+  MEMBER
+}
+
+enum MappingSuggestionStatus {
+  SUGGESTED
+  REVIEW_REQUIRED
+  APPROVED
+  REJECTED
+  OVERRIDDEN
+}
+
+enum ImportBatchStatus {
+  VALIDATING
+  VALIDATION_FAILED
+  IMPORTED
+  FAILED
+}
+
 model User {
-  id           String                   @id @default(uuid()) @db.Uuid
-  email        String                   @unique
-  name         String
-  passwordHash String
-  active       Boolean                  @default(true)
-  memberships  OrganizationMembership[]
-  sessions     Session[]
-  auditEvents  AuditEvent[]             @relation("AuditActor")
-  createdAt    DateTime                 @default(now())
-  updatedAt    DateTime                 @updatedAt
+  id               String                   @id @default(uuid()) @db.Uuid
+  email            String                   @unique
+  name             String
+  passwordHash     String
+  active           Boolean                  @default(true)
+  memberships      OrganizationMembership[]
+  sessions         Session[]
+  auditEvents      AuditEvent[]             @relation("AuditActor")
+  mappingDecisions MappingDecision[]
+  importBatches    ImportBatch[]
+  forecastComments ForecastComment[]
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
 }
 
 model Organization {
@@ -100,8 +157,165 @@ model Organization {
   metricValues      MetricValue[]
   plans             Plan[]
   forecasts         Forecast[]
+  excelWorkbooks    ExcelWorkbook[]
+  mappingTemplates  MappingTemplate[]
+  importBatches     ImportBatch[]
   createdAt         DateTime                 @default(now())
   updatedAt         DateTime                 @updatedAt
+}
+
+model ExcelWorkbook {
+  id                String           @id @default(uuid()) @db.Uuid
+  organizationId    String           @db.Uuid
+  originalFileName  String
+  sanitizedFileName String
+  mimeType          String
+  byteSize          Int
+  sha256            String
+  content           Bytes
+  status            WorkbookStatus   @default(UPLOADED)
+  uploadedAt        DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  organization      Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  profile           WorkbookProfile?
+  mappingVersions   MappingVersion[]
+  importBatches     ImportBatch[]
+
+  @@unique([organizationId, sha256])
+  @@index([organizationId, uploadedAt])
+}
+
+model WorkbookProfile {
+  id               String        @id @default(uuid()) @db.Uuid
+  workbookId       String        @unique @db.Uuid
+  fingerprint      String
+  primaryShape     WorkbookShape
+  sheetCount       Int
+  formulaCount     Int
+  hiddenSheetCount Int
+  mergedCellCount  Int
+  profile          Json
+  profiledAt       DateTime      @default(now())
+  workbook         ExcelWorkbook @relation(fields: [workbookId], references: [id], onDelete: Cascade)
+
+  @@index([fingerprint])
+}
+
+model MappingTemplate {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @db.Uuid
+  name           String
+  fingerprint    String
+  active         Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  versions       MappingVersion[]
+
+  @@unique([organizationId, fingerprint])
+}
+
+model MappingVersion {
+  id                String               @id @default(uuid()) @db.Uuid
+  templateId        String               @db.Uuid
+  workbookId        String?              @db.Uuid
+  version           Int
+  status            MappingVersionStatus @default(DRAFT)
+  schemaFingerprint String
+  createdAt         DateTime             @default(now())
+  approvedAt        DateTime?
+  template          MappingTemplate      @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  workbook          ExcelWorkbook?       @relation(fields: [workbookId], references: [id], onDelete: Restrict)
+  rules             MappingRule[]
+  suggestions       MappingSuggestion[]
+  importBatches     ImportBatch[]
+
+  @@unique([templateId, version])
+  @@index([workbookId])
+}
+
+model MappingRule {
+  id               String         @id @default(uuid()) @db.Uuid
+  mappingVersionId String         @db.Uuid
+  kind             MappingKind
+  sourceField      String
+  targetConcept    String
+  targetMemberId   String?
+  confidence       Decimal        @db.Decimal(5, 4)
+  reason           String
+  mappingVersion   MappingVersion @relation(fields: [mappingVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([mappingVersionId, kind, sourceField, targetConcept])
+}
+
+model MappingSuggestion {
+  id                String                  @id @default(uuid()) @db.Uuid
+  mappingVersionId  String                  @db.Uuid
+  kind              MappingKind
+  sourceValue       String
+  targetConcept     String
+  suggestedTargetId String?
+  confidence        Decimal                 @db.Decimal(5, 4)
+  reason            String
+  status            MappingSuggestionStatus
+  createdAt         DateTime                @default(now())
+  mappingVersion    MappingVersion          @relation(fields: [mappingVersionId], references: [id], onDelete: Cascade)
+  decision          MappingDecision?
+
+  @@unique([mappingVersionId, kind, sourceValue, targetConcept])
+}
+
+model MappingDecision {
+  id               String                  @id @default(uuid()) @db.Uuid
+  suggestionId     String                  @unique @db.Uuid
+  decidedById      String                  @db.Uuid
+  decision         MappingSuggestionStatus
+  selectedTargetId String
+  reason           String
+  decidedAt        DateTime                @default(now())
+  suggestion       MappingSuggestion       @relation(fields: [suggestionId], references: [id], onDelete: Restrict)
+  decidedBy        User                    @relation(fields: [decidedById], references: [id], onDelete: Restrict)
+}
+
+model ImportBatch {
+  id               String            @id @default(uuid()) @db.Uuid
+  organizationId   String            @db.Uuid
+  workbookId       String            @db.Uuid
+  mappingVersionId String            @db.Uuid
+  importedById     String            @db.Uuid
+  status           ImportBatchStatus @default(VALIDATING)
+  rowCount         Int               @default(0)
+  rejectedRowCount Int               @default(0)
+  sourceTotals     Json?
+  resultMetrics    Json?
+  startedAt        DateTime          @default(now())
+  completedAt      DateTime?
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  workbook         ExcelWorkbook     @relation(fields: [workbookId], references: [id], onDelete: Restrict)
+  mappingVersion   MappingVersion    @relation(fields: [mappingVersionId], references: [id], onDelete: Restrict)
+  importedBy       User              @relation(fields: [importedById], references: [id], onDelete: Restrict)
+  errors           ImportError[]
+
+  @@unique([workbookId, mappingVersionId])
+  @@index([organizationId, startedAt])
+}
+
+model ImportError {
+  id                 String             @id @default(uuid()) @db.Uuid
+  importBatchId      String             @db.Uuid
+  rowNumber          Int?
+  code               String
+  field              String?
+  sourceValue        String?
+  message            String
+  blocking           Boolean            @default(true)
+  severity           ValidationSeverity @default(ERROR)
+  resolutionGuidance String?
+  resolvedAt         DateTime?
+  evidence           Json?
+  batch              ImportBatch        @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+
+  @@index([importBatchId, blocking])
 }
 
 model LegalEntity {
@@ -203,6 +417,7 @@ model CostCenter {
   parent         CostCenter?     @relation("CostCenterHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children       CostCenter[]    @relation("CostCenterHierarchy")
   facts          FinancialFact[]
+  forecastLines  ForecastLine[]
 
   @@unique([organizationId, code])
   @@index([organizationId, parentId])
@@ -223,6 +438,7 @@ model Account {
   parent         Account?        @relation("AccountHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children       Account[]       @relation("AccountHierarchy")
   facts          FinancialFact[]
+  forecastLines  ForecastLine[]
 
   @@unique([organizationId, code])
   @@index([organizationId, type])
@@ -260,16 +476,17 @@ model FiscalYear {
 }
 
 model FiscalPeriod {
-  id           String          @id @default(uuid()) @db.Uuid
-  fiscalYearId String          @db.Uuid
-  code         String
-  name         String
-  ordinal      Int
-  startDate    DateTime        @db.Date
-  endDate      DateTime        @db.Date
-  year         FiscalYear      @relation(fields: [fiscalYearId], references: [id], onDelete: Restrict)
-  facts        FinancialFact[]
-  metricValues MetricValue[]
+  id            String          @id @default(uuid()) @db.Uuid
+  fiscalYearId  String          @db.Uuid
+  code          String
+  name          String
+  ordinal       Int
+  startDate     DateTime        @db.Date
+  endDate       DateTime        @db.Date
+  year          FiscalYear      @relation(fields: [fiscalYearId], references: [id], onDelete: Restrict)
+  facts         FinancialFact[]
+  metricValues  MetricValue[]
+  forecastLines ForecastLine[]
 
   @@unique([fiscalYearId, code])
   @@unique([fiscalYearId, ordinal])
@@ -432,8 +649,53 @@ model ForecastVersion {
   forecast       Forecast              @relation(fields: [forecastId], references: [id], onDelete: Restrict)
   correctionOf   ForecastVersion?      @relation("ForecastCorrections", fields: [correctionOfId], references: [id], onDelete: Restrict)
   corrections    ForecastVersion[]     @relation("ForecastCorrections")
+  submittedAt    DateTime?
+  approvedAt     DateTime?
+  lockedAt       DateTime?
+  lines          ForecastLine[]
+  comments       ForecastComment[]
 
   @@unique([forecastId, version])
+}
+
+model ForecastLine {
+  id                  String            @id @default(uuid()) @db.Uuid
+  forecastVersionId   String            @db.Uuid
+  accountId           String            @db.Uuid
+  costCenterId        String            @db.Uuid
+  fiscalPeriodId      String            @db.Uuid
+  actualAmount        Decimal           @db.Decimal(24, 6)
+  priorForecast       Decimal           @db.Decimal(24, 6)
+  currentForecast     Decimal           @db.Decimal(24, 6)
+  sourceImportBatchId String?           @db.Uuid
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  forecastVersion     ForecastVersion   @relation(fields: [forecastVersionId], references: [id], onDelete: Restrict)
+  account             Account           @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  costCenter          CostCenter        @relation(fields: [costCenterId], references: [id], onDelete: Restrict)
+  fiscalPeriod        FiscalPeriod      @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+  comments            ForecastComment[]
+
+  @@unique([forecastVersionId, accountId, costCenterId, fiscalPeriodId])
+  @@index([forecastVersionId, fiscalPeriodId])
+}
+
+model ForecastComment {
+  id                String            @id @default(uuid()) @db.Uuid
+  forecastVersionId String            @db.Uuid
+  forecastLineId    String?           @db.Uuid
+  authorId          String            @db.Uuid
+  body              String
+  context           Json
+  editedFromId      String?           @db.Uuid
+  createdAt         DateTime          @default(now())
+  forecastVersion   ForecastVersion   @relation(fields: [forecastVersionId], references: [id], onDelete: Restrict)
+  forecastLine      ForecastLine?     @relation(fields: [forecastLineId], references: [id], onDelete: Restrict)
+  author            User              @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  editedFrom        ForecastComment?  @relation("CommentEdits", fields: [editedFromId], references: [id], onDelete: Restrict)
+  edits             ForecastComment[] @relation("CommentEdits")
+
+  @@index([forecastVersionId, createdAt])
 }
 
 model OrganizationMembership {

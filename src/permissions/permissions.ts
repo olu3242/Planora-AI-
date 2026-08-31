@@ -3,7 +3,7 @@ import type { RoleCode } from "@prisma/client";
 export const permissions = [
   "financial.read", "financial.write", "financial.import", "mapping.review", "mapping.approve",
   "reconciliation.run", "reconciliation.certify", "forecast.create", "forecast.submit",
-  "forecast.review", "forecast.approve", "forecast.publish", "audit.read", "admin.manage",
+  "forecast.review", "forecast.approve", "forecast.publish", "forecast.export", "audit.read", "admin.manage",
 ] as const;
 export type Permission = (typeof permissions)[number];
 

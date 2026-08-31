@@ -13,6 +13,7 @@ export class AppError extends Error {
 
 export function errorResponse(error: unknown, correlationId: string) {
   if (error instanceof AppError) {
+    if (error.status >= 403) console.warn(JSON.stringify({ level: "warn", event: "request.denied", correlationId, code: error.code, status: error.status }));
     return Response.json({ error: { code: error.code, message: error.message, correlationId } }, { status: error.status });
   }
   console.error(JSON.stringify({ level: "error", correlationId, message: "Unhandled application error" }));

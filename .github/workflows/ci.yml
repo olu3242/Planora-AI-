@@ -34,7 +34,12 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: npm run test:financial
+      - run: npm run test:excel
       - run: npm run test:security
+      - run: npm run test:performance
       - run: npm run build
       - run: npx playwright install --with-deps chromium
+      - run: npm run db:reset:test
+      - run: npm run db:seed
       - run: npm run test:e2e

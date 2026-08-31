@@ -16,6 +16,7 @@
     "test:financial": "vitest run tests/financial-calculations",
     "test:excel": "vitest run tests/excel",
     "test:security": "vitest run tests/security tests/auth tests/rbac",
+    "test:performance": "vitest run tests/performance",
     "test:e2e": "playwright test",
     "test:e2e:responsive": "playwright test --grep @responsive",
     "db:migrate": "prisma migrate deploy",
@@ -23,12 +24,14 @@
     "db:reset:test": "tsx database/reset-test.ts",
     "db:seed": "tsx database/seeds/index.ts",
     "db:generate": "prisma generate",
-    "certify": "npm run lint && npm run typecheck && npm run build && npm run test && npm run test:financial && npm run test:excel && npm run test:security && npm run test:e2e"
+    "certify": "npm run lint && npm run typecheck && npm run build && npm run test && npm run test:financial && npm run test:excel && npm run test:security && npm run test:performance && npm run db:reset:test && npm run db:seed && npm run test:e2e"
   },
   "dependencies": {
     "@prisma/client": "6.19.1",
+    "csv-parse": "^6.1.0",
     "decimal.js": "10.6.0",
     "dotenv": "17.2.3",
+    "exceljs": "^4.4.0",
     "lucide-react": "1.37.0",
     "next": "16.3.3",
     "react": "19.2.8",
@@ -53,6 +56,7 @@
   },
   "overrides": {
     "deepmerge-ts": "8.0.0",
-    "effect": "3.20.0"
+    "effect": "3.20.0",
+    "uuid": "11.1.1"
   }
 }
