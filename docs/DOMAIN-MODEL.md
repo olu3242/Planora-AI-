@@ -71,3 +71,9 @@ Realization rate = Realized Recovery / Expected Recovery
 ```
 
 Reference invariants are $150M - $40M - $23M = $87M EBITDA; variance drivers total -$7M; scenario recovery is +$4.7M; realized recovery is +$4.1M; realization is 87.2% when rounded to one decimal for display.
+
+## Phase 2 implementation
+
+The executable schema now represents `LegalEntity`, `BusinessUnit`, `Geography`, `Product`, `Customer`, `CostCenter`, `Account`, `Currency`, `FiscalCalendar`, `FiscalYear`, `FiscalPeriod`, `FinancialFact`, `LineageReference`, `MetricDefinition`, `CalculationDefinition`, `MetricDependency`, `MetricValue`, `Plan/PlanVersion`, and `Forecast/ForecastVersion`. Dimension members are Organization-scoped and effective-dated; relevant dimensions have self-referencing hierarchies.
+
+`FinancialFact.grainKey` supplies sparse semantic uniqueness (ADR-010). Approved/locked PlanVersions and published/superseded ForecastVersions have both domain guards and PostgreSQL mutation triggers. Corrections create linked draft versions and immutable audit evidence.

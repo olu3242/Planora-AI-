@@ -52,6 +52,20 @@ Implementation note: Phase 1 uses first-party scrypt password verification and r
 - Decision: Realized outcome evidence may seed a new forecast version through explicit workflow, never rewrite historical facts.
 - Reason: organizational learning must remain attributable and reproducible.
 
+## ADR-010: Canonical financial fact grain
+
+- Date: 2026-08-31
+- Decision: Persist a deterministic SHA-256 `grainKey` over account, period, scenario, currency, source/version context, and normalized optional dimension identifiers; enforce uniqueness with `(organizationId, grainKey)`.
+- Reason: PostgreSQL unique constraints treat nullable dimension values as distinct, which can admit semantic duplicates at a sparse multidimensional grain.
+- Consequence: fact writers must use `financialFactGrain`; the database remains the final duplicate guard. The hash contains identifiers only, never monetary values.
+
+## ADR-011: Decimal calculation and presentation policy
+
+- Date: 2026-08-31
+- Decision: Store facts as `Decimal(24,6)`, derived metrics as `Decimal(28,10)`, calculate with Decimal.js at precision 40 and half-even rounding, and round only at presentation boundaries.
+- Reason: deterministic financial results cannot rely on binary JavaScript floating point.
+- Consequence: APIs and services exchange exact decimal strings. Currency presentation uses currency minor units; percentages expose at most four decimal places.
+
 ## Open decisions
 
 - Hosted platform, object storage, malware scanner, telemetry vendor, email provider, and production region require infrastructure selection before hosted certification.

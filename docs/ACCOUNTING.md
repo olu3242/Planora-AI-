@@ -4,6 +4,10 @@ Status: Living document. A practitioner-facing companion to `docs/CANONICAL-FINA
 
 ---
 
+## Phase 2 P&L convention
+
+Revenue accounts carry a credit normal balance; COGS and operating expense accounts carry debit normal balances. Canonical P&L facts are stored as positive presentation amounts in the certified Phase 2 fixture. The calculation graph applies statement semantics explicitly: `Gross Profit = Revenue - COGS`, `EBITDA = Gross Profit - Operating Expense`, and margins divide the related profit measure by Revenue. A zero Revenue denominator yields 0%, never NaN or infinity. Sign normalization for external source ledgers remains an adapter responsibility in Phase 3.
+
 ## 1. Chart of Accounts
 
 Planora does not impose a fixed chart of accounts — it imports and governs the tenant's own. Every `Account` record carries:

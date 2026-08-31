@@ -4,7 +4,7 @@ import type { getSession } from "@/auth/session";
 
 type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;
 const nav = [
-  ["Command Center", "/command-center", Gauge, true], ["Actuals", "/actuals", Database, false],
+  ["Command Center", "/command-center", Gauge, true], ["Actuals", "/actuals", Database, true],
   ["Planning", "/planning", SquareChartGantt, false], ["Forecasts", "/forecasts", WandSparkles, false],
   ["Excel", "/excel", FileSpreadsheet, false], ["Reconciliation", "/reconciliation", GitCompareArrows, false],
   ["Governance", "/governance", Landmark, false], ["Administration", "/administration", Settings, false],

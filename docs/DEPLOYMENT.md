@@ -31,3 +31,5 @@ Production: not configured.
 Promotion: not authorized.
 Hosted certification: `HOSTED_BLOCKED` pending infrastructure and credentials; local work can continue.
 Local: PostgreSQL 18 via `compose.yaml`; Next.js standalone build PASS; health route `/api/health` PASS during browser tests.
+
+Phase 2: migration `20260831110936_phase2_financial_core` was verified from an empty local database and the production Next.js build passed. No preview deployment or production promotion was attempted.

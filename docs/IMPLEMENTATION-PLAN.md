@@ -36,3 +36,5 @@ P0 -> P1 -> P2 -> P3 -> P4 -> P5 -> P6 -> P7 -> P8 -> P9 -> P10
 ```
 
 Security, tenant isolation, RBAC, audit, lineage, precision, accessibility, observability, performance, and documentation are extended in every phase rather than deferred.
+
+Execution status: Phases 0, 1, and 2 are locally certified. Phase 3 is the active next boundary.

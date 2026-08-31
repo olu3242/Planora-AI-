@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hasPermission } from "@/permissions/permissions";
 import { getOrganizationResource } from "@/repositories/organization-repository";
+import { getTenantAccount, getTenantFact, getTenantMetricValue } from "@/repositories/financial-repository";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -17,5 +18,18 @@ describe("authorization boundaries", () => {
     const organizations = await prisma.organization.findMany({ orderBy: { code: "asc" }, take: 2 });
     expect(organizations).toHaveLength(2);
     await expect(getOrganizationResource(organizations[0].id, organizations[1].id)).rejects.toMatchObject({ code: "RESOURCE_NOT_FOUND", status: 404 });
+  });
+
+  it("denies cross-tenant account, fact, and metric IDs without disclosure", async () => {
+    const tenantA = await prisma.organization.findUniqueOrThrow({ where: { code: "NORTHSTAR" } });
+    const tenantB = await prisma.organization.findUniqueOrThrow({ where: { code: "HORIZON" } });
+    const [account, fact, metric] = await Promise.all([
+      prisma.account.findFirstOrThrow({ where: { organizationId: tenantB.id } }),
+      prisma.financialFact.findFirstOrThrow({ where: { organizationId: tenantB.id } }),
+      prisma.metricValue.findFirstOrThrow({ where: { organizationId: tenantB.id } }),
+    ]);
+    await expect(getTenantAccount(tenantA.id, account.id)).rejects.toMatchObject({ status: 404 });
+    await expect(getTenantFact(tenantA.id, fact.id)).rejects.toMatchObject({ status: 404 });
+    await expect(getTenantMetricValue(tenantA.id, metric.id)).rejects.toMatchObject({ status: 404 });
   });
 });

@@ -119,3 +119,9 @@ Every fact carries its transaction currency. Reporting currency translation is a
 ## 10. Relationship to Domain Model
 
 This document describes the conceptual model. The concrete entity list and relationships (tables/collections, foreign keys, required fields) live in `docs/DOMAIN-MODEL.md` and must stay consistent with the concepts here. If they diverge, this document wins for concept and intent; `docs/DOMAIN-MODEL.md` wins for implementation detail — but a divergence should be resolved, not left standing.
+
+## 11. Phase 2 executable mapping
+
+The canonical core is implemented in `prisma/schema.prisma`. Sparse `FinancialFact` dimension combinations use the normalized deterministic grain policy in ADR-010 and are unique within an Organization. Source facts store exact `Decimal(24,6)` amounts and structured `LineageReference` records. `MetricValue` is derived only by `src/domain/financial/calculation-engine.ts`, cached at `Decimal(28,10)`, and carries calculation provenance.
+
+The first registered graph contains Revenue, COGS, Gross Profit, Operating Expense, EBITDA, Gross Margin %, and EBITDA Margin %. Statement aggregation is executed in PostgreSQL by account class before the pure calculation graph runs; the UI never calculates a financial result.

@@ -160,4 +160,4 @@ Planora/
 
 ## Current implementation status
 
-See `docs/IMPLEMENTATION-STATUS.md` for the live phase breakdown and `docs/TRACEABILITY-MATRIX.md` for the pain-point-to-evidence chain. Phase 0 and Phase 1 are certified locally; Phase 2 is ready to begin.
+See `docs/IMPLEMENTATION-STATUS.md` for the live phase breakdown and `docs/TRACEABILITY-MATRIX.md` for the pain-point-to-evidence chain. Phases 0-2 are certified locally. The authenticated `/actuals` route exposes the canonical Phase 2 P&L, exact Decimal metrics, filters, and source lineage; Phase 3 is the next implementation boundary.

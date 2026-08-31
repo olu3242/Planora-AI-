@@ -2,6 +2,14 @@
 
 ## Test layers
 
+### Phase 2 executable suites
+
+- Unit: Decimal precision and half-even rounding, hierarchy/fiscal validation, dependency cycle detection, zero division, grain stability, and version rules.
+- Financial: exact $150M/$40M/$110M/$23M/$87M fixture, margins, and dimension reconciliation.
+- Integration: database aggregation/cache, lineage, duplicate-grain rejection, protected-version triggers, correction draft, and audit.
+- Security: cross-tenant Organization, Account, FinancialFact, and MetricValue denial.
+- Browser: login to Actuals, visible $87M EBITDA, expanded source evidence, and responsive checks at 375/430/768/1024/1440.
+
 | Layer | Purpose | Gate examples |
 |---|---|---|
 | Unit/domain | Pure policies and calculations | Decimal money, workflow transitions, permission decisions |

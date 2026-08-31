@@ -24,3 +24,7 @@ Production requires automated database backups, tested restore, object versionin
 ## Operational readiness gate
 
 Health/readiness endpoints, alert routing, support ownership, backup restore evidence, migration recovery, rate/resource controls, security review, dependency audit, browser compatibility and large-workbook tests must pass before production authorization is requested.
+
+## Phase 2 local runbook evidence
+
+The financial-core migration and idempotent fixture seed were exercised from empty PostgreSQL. Operational verification includes exact metric reproduction, database duplicate-grain rejection, protected-version mutation rejection, tenant isolation, health checks, production build, and browser tests. Hosted backup, alerting, and recovery gates remain `HOSTED_BLOCKED` until infrastructure is selected.

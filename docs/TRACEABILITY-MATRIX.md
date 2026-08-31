@@ -71,3 +71,10 @@ This target matrix prevents orphaned requirements before executable paths exist.
 | Copilot and governed agents | 9 | AgentRun, AgentEvidence, AgentRecommendation | authorized deterministic tool adapter | grounding/approval/prohibited action | SPECIFIED |
 | Reporting and Excel round trip | 10 | ReportDraft, ExportBatch, ChangeReview | reporting/export/re-import adapters | publish and new-version E2E | SPECIFIED |
 | Production certification | 10 | DeploymentEvidence | CI/CD, observability and runbooks | security/performance/full E2E | SPECIFIED |
+
+## 6. Phase 2 implemented traceability
+
+| Pain Point | Requirement | Feature | Domain Object(s) | API | UI Route | Tests | E2E Evidence | Status |
+|---|---|---|---|---|---|---|---|---|
+| Numbers are not trusted | Canonical facts produce exact explainable metrics | Financial Core | `Account`, `FiscalPeriod`, `FinancialFact`, `MetricDefinition`, `MetricValue`, `LineageReference` | `GET /api/financial/statement`, `GET /api/metrics/:id/lineage`, tenant-scoped account/fact routes | `/actuals` | `money.test`, `financial-domain.test`, `phase2-fixture.test`, `financial-core.test`, `authorization.test`, `financial-core.e2e` | `evidence/phase-2/actuals-1440.png` | COMPLETE |
+| Approved baselines can be silently changed | Corrections are new attributed drafts | Version Foundations | `Plan`, `PlanVersion`, `Forecast`, `ForecastVersion`, `AuditEvent` | correction service boundary; no mutation API exposed | Version UI deferred to planning phase | `financial-domain.test`, `financial-core.test` | Database trigger and audit evidence in certification | COMPLETE |

@@ -2,6 +2,10 @@
 
 ## Security principles
 
+### Phase 2 financial authorization
+
+`financial.read` protects Actuals pages and statement, lineage, and resource APIs. `financial.write` is granted to CFO, FP&A Director, and Analyst roles for future governed commands; Phase 2 exposes no production fact-write endpoint. Repositories resolve Organization from the authenticated session and combine it with every account, fact, metric, period, and dimension query. Cross-tenant direct identifiers return `RESOURCE_NOT_FOUND` (404) and are covered for accounts, facts, and metrics.
+
 - Deny by default; server enforcement is authoritative.
 - Session establishes user identity; active membership establishes organization scope.
 - Tenant scope is never accepted from a request body/query parameter as authority.

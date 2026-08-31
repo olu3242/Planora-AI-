@@ -13,6 +13,61 @@ enum RoleCode {
   ANALYST
 }
 
+enum AccountType {
+  REVENUE
+  COGS
+  OPERATING_EXPENSE
+  OTHER_INCOME
+  OTHER_EXPENSE
+  ASSET
+  LIABILITY
+  EQUITY
+  STATISTICAL
+}
+
+enum NormalBalance {
+  DEBIT
+  CREDIT
+}
+
+enum FinancialScenario {
+  ACTUAL
+  BUDGET
+  FORECAST
+  PLAN
+  TARGET
+  PRIOR_YEAR
+  SCENARIO
+}
+
+enum FinancialSourceType {
+  SEED
+  MANUAL_TEST_FIXTURE
+  SYSTEM_CALCULATION
+}
+
+enum MetricUnit {
+  CURRENCY
+  PERCENT
+  NUMBER
+}
+
+enum PlanVersionStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  CHANGES_REQUESTED
+  RESUBMITTED
+  APPROVED
+  LOCKED
+}
+
+enum ForecastVersionStatus {
+  DRAFT
+  PUBLISHED
+  SUPERSEDED
+}
+
 model User {
   id           String                   @id @default(uuid()) @db.Uuid
   email        String                   @unique
@@ -27,13 +82,358 @@ model User {
 }
 
 model Organization {
-  id          String                   @id @default(uuid()) @db.Uuid
-  code        String                   @unique
-  name        String
-  memberships OrganizationMembership[]
-  auditEvents AuditEvent[]
-  createdAt   DateTime                 @default(now())
-  updatedAt   DateTime                 @updatedAt
+  id                String                   @id @default(uuid()) @db.Uuid
+  code              String                   @unique
+  name              String
+  memberships       OrganizationMembership[]
+  auditEvents       AuditEvent[]
+  legalEntities     LegalEntity[]
+  businessUnits     BusinessUnit[]
+  geographies       Geography[]
+  products          Product[]
+  customers         Customer[]
+  costCenters       CostCenter[]
+  accounts          Account[]
+  fiscalCalendars   FiscalCalendar[]
+  financialFacts    FinancialFact[]
+  metricDefinitions MetricDefinition[]
+  metricValues      MetricValue[]
+  plans             Plan[]
+  forecasts         Forecast[]
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+}
+
+model LegalEntity {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         LegalEntity?    @relation("LegalEntityHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       LegalEntity[]   @relation("LegalEntityHierarchy")
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, parentId])
+}
+
+model BusinessUnit {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         BusinessUnit?   @relation("BusinessUnitHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       BusinessUnit[]  @relation("BusinessUnitHierarchy")
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, parentId])
+}
+
+model Geography {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         Geography?      @relation("GeographyHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       Geography[]     @relation("GeographyHierarchy")
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, parentId])
+}
+
+model Product {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         Product?        @relation("ProductHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       Product[]       @relation("ProductHierarchy")
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, parentId])
+}
+
+model Customer {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+}
+
+model CostCenter {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         CostCenter?     @relation("CostCenterHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       CostCenter[]    @relation("CostCenterHierarchy")
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, parentId])
+}
+
+model Account {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  type           AccountType
+  normalBalance  NormalBalance
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         Account?        @relation("AccountHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       Account[]       @relation("AccountHierarchy")
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, type])
+}
+
+model Currency {
+  code       String          @id @db.Char(3)
+  name       String
+  minorUnits Int
+  facts      FinancialFact[]
+}
+
+model FiscalCalendar {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  code           String
+  name           String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  years          FiscalYear[]
+
+  @@unique([organizationId, code])
+}
+
+model FiscalYear {
+  id               String         @id @default(uuid()) @db.Uuid
+  fiscalCalendarId String         @db.Uuid
+  code             String
+  name             String
+  startDate        DateTime       @db.Date
+  endDate          DateTime       @db.Date
+  calendar         FiscalCalendar @relation(fields: [fiscalCalendarId], references: [id], onDelete: Restrict)
+  periods          FiscalPeriod[]
+
+  @@unique([fiscalCalendarId, code])
+}
+
+model FiscalPeriod {
+  id           String          @id @default(uuid()) @db.Uuid
+  fiscalYearId String          @db.Uuid
+  code         String
+  name         String
+  ordinal      Int
+  startDate    DateTime        @db.Date
+  endDate      DateTime        @db.Date
+  year         FiscalYear      @relation(fields: [fiscalYearId], references: [id], onDelete: Restrict)
+  facts        FinancialFact[]
+  metricValues MetricValue[]
+
+  @@unique([fiscalYearId, code])
+  @@unique([fiscalYearId, ordinal])
+}
+
+model FinancialFact {
+  id               String              @id @default(uuid()) @db.Uuid
+  organizationId   String              @db.Uuid
+  accountId        String              @db.Uuid
+  fiscalPeriodId   String              @db.Uuid
+  legalEntityId    String?             @db.Uuid
+  businessUnitId   String?             @db.Uuid
+  geographyId      String?             @db.Uuid
+  productId        String?             @db.Uuid
+  customerId       String?             @db.Uuid
+  costCenterId     String?             @db.Uuid
+  scenario         FinancialScenario
+  currencyCode     String              @db.Char(3)
+  amount           Decimal             @db.Decimal(24, 6)
+  unit             String              @default("currency")
+  sourceType       FinancialSourceType
+  sourceIdentifier String
+  sourceMetadata   Json?
+  versionContext   String              @default("UNVERSIONED")
+  dimensionKey     String
+  grainKey         String
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  organization     Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  account          Account             @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  fiscalPeriod     FiscalPeriod        @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+  currency         Currency            @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  legalEntity      LegalEntity?        @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  businessUnit     BusinessUnit?       @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  geography        Geography?          @relation(fields: [geographyId], references: [id], onDelete: Restrict)
+  product          Product?            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  customer         Customer?           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  costCenter       CostCenter?         @relation(fields: [costCenterId], references: [id], onDelete: Restrict)
+  lineage          LineageReference[]
+
+  @@unique([organizationId, grainKey])
+  @@index([organizationId, fiscalPeriodId, scenario, accountId])
+  @@index([organizationId, geographyId, productId])
+}
+
+model LineageReference {
+  id               String              @id @default(uuid()) @db.Uuid
+  financialFactId  String              @db.Uuid
+  sourceType       FinancialSourceType
+  sourceIdentifier String
+  sourceLocation   Json
+  transformation   Json?
+  capturedAt       DateTime            @default(now())
+  fact             FinancialFact       @relation(fields: [financialFactId], references: [id], onDelete: Cascade)
+
+  @@index([financialFactId])
+}
+
+model MetricDefinition {
+  id             String                 @id @default(uuid()) @db.Uuid
+  organizationId String                 @db.Uuid
+  code           String
+  name           String
+  description    String
+  unit           MetricUnit
+  active         Boolean                @default(true)
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  calculation    CalculationDefinition?
+  dependencies   MetricDependency[]     @relation("MetricDependsOn")
+  dependents     MetricDependency[]     @relation("MetricDependencyTarget")
+  values         MetricValue[]
+
+  @@unique([organizationId, code])
+}
+
+model CalculationDefinition {
+  id                 String           @id @default(uuid()) @db.Uuid
+  metricDefinitionId String           @unique @db.Uuid
+  expression         String
+  version            Int              @default(1)
+  metric             MetricDefinition @relation(fields: [metricDefinitionId], references: [id], onDelete: Cascade)
+}
+
+model MetricDependency {
+  id                 String           @id @default(uuid()) @db.Uuid
+  metricDefinitionId String           @db.Uuid
+  dependsOnMetricId  String           @db.Uuid
+  metric             MetricDefinition @relation("MetricDependsOn", fields: [metricDefinitionId], references: [id], onDelete: Cascade)
+  dependsOn          MetricDefinition @relation("MetricDependencyTarget", fields: [dependsOnMetricId], references: [id], onDelete: Restrict)
+
+  @@unique([metricDefinitionId, dependsOnMetricId])
+}
+
+model MetricValue {
+  id                 String            @id @default(uuid()) @db.Uuid
+  organizationId     String            @db.Uuid
+  metricDefinitionId String            @db.Uuid
+  fiscalPeriodId     String            @db.Uuid
+  scenario           FinancialScenario
+  currencyCode       String?           @db.Char(3)
+  value              Decimal           @db.Decimal(28, 10)
+  contextKey         String
+  provenance         Json
+  calculatedAt       DateTime          @default(now())
+  organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  metric             MetricDefinition  @relation(fields: [metricDefinitionId], references: [id], onDelete: Restrict)
+  fiscalPeriod       FiscalPeriod      @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, metricDefinitionId, fiscalPeriodId, scenario, contextKey])
+  @@index([organizationId, fiscalPeriodId, scenario])
+}
+
+model Plan {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @db.Uuid
+  code           String
+  name           String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  versions       PlanVersion[]
+
+  @@unique([organizationId, code])
+}
+
+model PlanVersion {
+  id             String            @id @default(uuid()) @db.Uuid
+  planId         String            @db.Uuid
+  version        Int
+  status         PlanVersionStatus @default(DRAFT)
+  correctionOfId String?           @db.Uuid
+  reason         String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  plan           Plan              @relation(fields: [planId], references: [id], onDelete: Restrict)
+  correctionOf   PlanVersion?      @relation("PlanCorrections", fields: [correctionOfId], references: [id], onDelete: Restrict)
+  corrections    PlanVersion[]     @relation("PlanCorrections")
+
+  @@unique([planId, version])
+}
+
+model Forecast {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @db.Uuid
+  code           String
+  name           String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  versions       ForecastVersion[]
+
+  @@unique([organizationId, code])
+}
+
+model ForecastVersion {
+  id             String                @id @default(uuid()) @db.Uuid
+  forecastId     String                @db.Uuid
+  version        Int
+  status         ForecastVersionStatus @default(DRAFT)
+  correctionOfId String?               @db.Uuid
+  reason         String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  forecast       Forecast              @relation(fields: [forecastId], references: [id], onDelete: Restrict)
+  correctionOf   ForecastVersion?      @relation("ForecastCorrections", fields: [correctionOfId], references: [id], onDelete: Restrict)
+  corrections    ForecastVersion[]     @relation("ForecastCorrections")
+
+  @@unique([forecastId, version])
 }
 
 model OrganizationMembership {
@@ -53,15 +453,15 @@ model OrganizationMembership {
 }
 
 model Session {
-  id           String   @id @default(uuid()) @db.Uuid
-  tokenHash    String   @unique
-  userId       String   @db.Uuid
-  membershipId String   @db.Uuid
+  id           String                 @id @default(uuid()) @db.Uuid
+  tokenHash    String                 @unique
+  userId       String                 @db.Uuid
+  membershipId String                 @db.Uuid
   expiresAt    DateTime
-  lastSeenAt   DateTime @default(now())
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastSeenAt   DateTime               @default(now())
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   membership   OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
+  createdAt    DateTime               @default(now())
 
   @@index([userId, expiresAt])
 }
