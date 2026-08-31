@@ -49,3 +49,25 @@ Add rows as capabilities are implemented. Do not batch-populate this table from 
 This file is checked, not just written. Before marking any capability COMPLETE in `docs/IMPLEMENTATION-STATUS.md` or a delivery report (CLAUDE.md §7), confirm its row here is fully populated and every referenced path/route/test actually exists in the repository at the stated location. A row that references a test file that doesn't exist is worse than no row at all — it actively misleads the next session.
 
 When a schema, route, or test file is renamed, update the corresponding row in the same commit. Stale traceability rows are a form of technical debt and should be tracked in `docs/KNOWN-GAPS.md` if they can't be fixed immediately.
+
+## 5. Phase 0 Target Traceability
+
+This target matrix prevents orphaned requirements before executable paths exist. It does not claim implementation.
+
+| Requirement | Phase | Domain object(s) | Implementation target | Test target | Status |
+|---|---:|---|---|---|---|
+| Login, tenant and permission enforcement | 1 | User, Organization, Membership, Role, Permission | `src/auth`, `src/permissions`, tenant repositories | login/RBAC/tenant E2E | SPECIFIED |
+| Append-only audit | 1 | AuditEvent | `src/audit`, database trigger/policy | audit immutability integration | SPECIFIED |
+| Canonical financial truth and metrics | 2 | FinancialFact, MetricDefinition, MetricValue | domain calculation engine/repositories | $87M financial fixture | SPECIFIED |
+| Lineage and version immutability | 2 | LineageReference, PlanVersion, ForecastVersion | application policies/database constraints | lineage and mutation-denial tests | SPECIFIED |
+| Excel profiling and mapping | 3 | WorkbookProfile, MappingVersion, MappingDecision | spreadsheet adapter and review UI | wide/long/unmapped/drift E2E | SPECIFIED |
+| Canonical import | 3 | ImportBatch, ImportError, FinancialFact | validated import service | fixture fact/lineage integration | SPECIFIED |
+| Reconciliation and data quality | 4 | ReconciliationRun, DataQualityIssue | deterministic controls and stewardship UI | discrepancy-to-$0 E2E | SPECIFIED |
+| Certification | 4 | Certification, CertificationDecision | human approval service | blocking issue denial | SPECIFIED |
+| Planning and deterministic forecast | 5 | Plan, Forecast, DriverDefinition, Assumption | shared calculation graph/workspaces | driver/workflow E2E | SPECIFIED |
+| Command Center and variance | 6 | VarianceAnalysis, VarianceDriver, Exception | variance engine and investigation UI | -$7M child-sum/source drill | SPECIFIED |
+| Scenario and human decision | 7 | Scenario, Recommendation, Decision | scenario service and Decision Hub | +$4.7M/human authority | SPECIFIED |
+| Action, outcome and reforecast | 8 | Action, Outcome, Realization | closed-loop application service | $4.1M/87.2%/new version | SPECIFIED |
+| Copilot and governed agents | 9 | AgentRun, AgentEvidence, AgentRecommendation | authorized deterministic tool adapter | grounding/approval/prohibited action | SPECIFIED |
+| Reporting and Excel round trip | 10 | ReportDraft, ExportBatch, ChangeReview | reporting/export/re-import adapters | publish and new-version E2E | SPECIFIED |
+| Production certification | 10 | DeploymentEvidence | CI/CD, observability and runbooks | security/performance/full E2E | SPECIFIED |

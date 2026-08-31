@@ -156,4 +156,4 @@ Planora/
 
 ## Current implementation status
 
-See `docs/IMPLEMENTATION-STATUS.md` for the live COMPLETE/PARTIAL/BLOCKED breakdown per capability, and `docs/TRACEABILITY-MATRIX.md` for the pain-point-to-evidence chain behind each entry. As of this document's writing, implementation has not yet begun — Iteration 0 (repository audit) is the next step per `CLAUDE.md` §3.
+See `docs/IMPLEMENTATION-STATUS.md` for the live phase breakdown and `docs/TRACEABILITY-MATRIX.md` for the pain-point-to-evidence chain. Phase 0 is certified as an architecture baseline; Phase 1 runtime implementation is in progress.

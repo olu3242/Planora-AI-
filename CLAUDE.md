@@ -24,7 +24,7 @@ Planora must be able to continuously answer:
 
 Governance surrounds the lifecycle. AI accelerates the lifecycle. Humans remain accountable for material financial decisions. Excel remains interoperable with the lifecycle rather than being displaced by it.
 
-See `docs/PLANORA-PRD.md` for full product scope, `docs/CANONICAL-FINANCIAL-MODEL.md` for the data model, `docs/EXCEL-INTEROPERABILITY.md` for the Excel adapter architecture, `docs/E2E-ACCEPTANCE.md` for the acceptance test, and `docs/TRACEABILITY-MATRIX.md` for pain-point-to-evidence traceability. These five documents are load-bearing — do not implement a capability that isn't traceable to at least one of them.
+See `PRD.md` for full product scope, `docs/CANONICAL-FINANCIAL-MODEL.md` for the data model, `docs/EXCEL-INTEROPERABILITY.md` for the Excel adapter architecture, `docs/E2E-ACCEPTANCE.md` for the acceptance test, and `docs/TRACEABILITY-MATRIX.md` for pain-point-to-evidence traceability. These five documents are load-bearing — do not implement a capability that isn't traceable to at least one of them.
 
 ---
 
@@ -48,7 +48,7 @@ See `docs/PLANORA-PRD.md` for full product scope, `docs/CANONICAL-FINANCIAL-MODE
 2. Produce `docs/CURRENT-STATE-AUDIT.md` — what actually exists, evidenced by file paths and code, not assumption.
 3. Produce `docs/GAP-MATRIX.md` — classify every Planora capability as COMPLETE / PARTIAL / MISSING / BLOCKED against what was found in step 2.
 4. Produce or update `docs/TARGET-ARCHITECTURE.md` and `docs/DOMAIN-MODEL.md`.
-5. Produce `docs/IMPLEMENTATION-PLAN.md` with vertical-slice iterations (see suggested sequencing in `docs/PLANORA-PRD.md`).
+5. Produce `docs/IMPLEMENTATION-PLAN.md` with vertical-slice iterations (see suggested sequencing in `PRD.md`).
 6. Select the highest-leverage first vertical slice. The recommended first proof chain is: **Excel → Mapping → Validation → Reconciliation → Canonical Financial Model → Command Center → Variance → Scenario → Decision → Action → Outcome.**
 7. Implement in vertical slices, not horizontal scaffolding. A slice is not done until it satisfies §6.
 8. Do not unnecessarily rewrite stable existing functionality discovered in step 1.
@@ -143,7 +143,7 @@ Do not merge or promote to production without explicit authorization from the us
 
 Maintain these files as living documents, updated as implementation progresses — not written once and abandoned:
 
-`README.md`, `docs/PLANORA-PRD.md`, `docs/PAIN-POINT-MATRIX.md`, `docs/CURRENT-STATE-AUDIT.md`, `docs/GAP-MATRIX.md`, `docs/TARGET-ARCHITECTURE.md`, `docs/E2E-WORKFLOW.md`, `docs/DOMAIN-MODEL.md`, `docs/CANONICAL-FINANCIAL-MODEL.md`, `docs/EXCEL-INTEROPERABILITY.md`, `docs/EXCEL-MAPPING-SPEC.md`, `docs/DATA-GOVERNANCE.md`, `docs/SECURITY-RBAC.md`, `docs/AI-AGENT-ARCHITECTURE.md`, `docs/DECISION-INTELLIGENCE.md`, `docs/IMPLEMENTATION-PLAN.md`, `docs/TEST-STRATEGY.md`, `docs/E2E-ACCEPTANCE.md`, `docs/DEPLOYMENT.md`, `docs/OPERATIONS.md`, `docs/KNOWN-GAPS.md`, `docs/DECISIONS.md`, `docs/CHANGELOG.md`, `docs/IMPLEMENTATION-STATUS.md`, `docs/TRACEABILITY-MATRIX.md`, `AGENTS.md`, `PRD.md`, `BRD.md`.
+`README.md`, `docs/PAIN-POINT-MATRIX.md`, `docs/CURRENT-STATE-AUDIT.md`, `docs/GAP-MATRIX.md`, `docs/TARGET-ARCHITECTURE.md`, `docs/E2E-WORKFLOW.md`, `docs/DOMAIN-MODEL.md`, `docs/CANONICAL-FINANCIAL-MODEL.md`, `docs/EXCEL-INTEROPERABILITY.md`, `docs/EXCEL-MAPPING-SPEC.md`, `docs/DATA-GOVERNANCE.md`, `docs/SECURITY-RBAC.md`, `docs/AI-AGENT-ARCHITECTURE.md`, `docs/DECISION-INTELLIGENCE.md`, `docs/IMPLEMENTATION-PLAN.md`, `docs/TEST-STRATEGY.md`, `docs/E2E-ACCEPTANCE.md`, `docs/DEPLOYMENT.md`, `docs/OPERATIONS.md`, `docs/KNOWN-GAPS.md`, `docs/DECISIONS.md`, `docs/CHANGELOG.md`, `docs/IMPLEMENTATION-STATUS.md`, `docs/TRACEABILITY-MATRIX.md`, `AGENTS.md`, `PRD.md`, `BRD.md`.
 
 If a required doc doesn't exist yet, create it before or during the iteration that first needs it — don't backfill documentation after the fact from memory.
 
