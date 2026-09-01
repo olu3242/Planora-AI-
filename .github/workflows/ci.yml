@@ -1,0 +1,35 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: planora
+          POSTGRES_USER: planora
+          POSTGRES_PASSWORD: planora_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U planora" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://planora:planora_ci@127.0.0.1:5432/planora?schema=public
+      APP_ENV: test
+      APP_URL: http://127.0.0.1:3000
+      SESSION_COOKIE_NAME: planora_session
+      SESSION_TTL_HOURS: 12
+      AGENTIC_OS_ENABLED: "true"
+      AGENT_EXECUTION_ENABLED: "true"
+      AI_COMMENTARY_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm audit --audit-level=moderate
+      - run: npx playwright install --with-deps chromium
+      - run: npm run certify

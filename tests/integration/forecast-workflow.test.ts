@@ -1,0 +1,56 @@
+import { afterAll, describe, expect, it } from "vitest";
+import { readFile } from "node:fs/promises";
+import { PrismaClient } from "@prisma/client";
+import { addForecastComment, transitionForecast, updateForecastLine } from "@/application/forecast/forecast-service";
+import { ingestWorkbook, validateAndImportWorkbook } from "@/application/excel/workbook-service";
+import { getTenantForecastVersion } from "@/repositories/forecast-repository";
+import { forecastCycleMetrics } from "@/application/forecast/value-metrics";
+import { reconcileForecastVersion } from "@/application/forecast/reconciliation-service";
+
+const prisma = new PrismaClient();
+afterAll(() => prisma.$disconnect());
+
+describe("governed forecast workflow", () => {
+  it("enforces revision, separated approval, audit, tenant scope, and locked immutability", async () => {
+    const organization = await prisma.organization.findUniqueOrThrow({ where: { code: "NORTHSTAR" } });
+    const otherOrganization = await prisma.organization.findUniqueOrThrow({ where: { code: "HORIZON" } });
+    const analyst = await prisma.user.findUniqueOrThrow({ where: { email: "analyst@planora.local" } });
+    const director = await prisma.user.findUniqueOrThrow({ where: { email: "director@planora.local" } });
+    const cfo = await prisma.user.findUniqueOrThrow({ where: { email: "cfo@planora.local" } });
+    const csv = (await readFile("tests/fixtures/FY26_Forecast.csv", "utf8")).replace("Shared Programs", "Operating Expense");
+    const workbook = await ingestWorkbook(new File([csv], "FY26_Workflow.csv", { type: "text/csv" }), { organizationId: organization.id, actorId: analyst.id, correlationId: "workflow-upload" });
+    await validateAndImportWorkbook({ organizationId: organization.id, actorId: analyst.id, correlationId: "workflow-import", workbookId: workbook.id });
+    const version = await prisma.forecastVersion.findFirstOrThrow({ where: { forecast: { organizationId: organization.id, code: "FY26-MVP" } }, include: { lines: true } }); const line = version.lines[0];
+    const analystContext = { organizationId: organization.id, actorId: analyst.id, role: "ANALYST" as const, correlationId: "workflow-analyst" };
+    const directorContext = { organizationId: organization.id, actorId: director.id, role: "FPA_DIRECTOR" as const, correlationId: "workflow-director" };
+    const cfoContext = { organizationId: organization.id, actorId: cfo.id, role: "CFO" as const, correlationId: "workflow-cfo" };
+    await updateForecastLine({ ...analystContext, versionId: version.id, lineId: line.id, currentForecast: "71000000", reason: "Updated sales outlook" });
+    await addForecastComment({ ...analystContext, versionId: version.id, body: "Industrial demand supports the revised sales outlook." });
+    const foreignAccount = await prisma.account.findFirstOrThrow({ where: { organizationId: otherOrganization.id } }); const foreignCostCenter = await prisma.costCenter.findFirstOrThrow({ where: { organizationId: otherOrganization.id } }); const foreignPeriod = await prisma.fiscalPeriod.findFirstOrThrow({ where: { year: { calendar: { organizationId: otherOrganization.id } } } });
+    const foreignForecast = await prisma.forecast.upsert({ where: { organizationId_code: { organizationId: otherOrganization.id, code: "SECURITY-CHECK" } }, update: {}, create: { organizationId: otherOrganization.id, code: "SECURITY-CHECK", name: "Security check" } }); const foreignVersion = await prisma.forecastVersion.upsert({ where: { forecastId_version: { forecastId: foreignForecast.id, version: 1 } }, update: {}, create: { forecastId: foreignForecast.id, version: 1 } }); const foreignLine = await prisma.forecastLine.upsert({ where: { forecastVersionId_accountId_costCenterId_fiscalPeriodId: { forecastVersionId: foreignVersion.id, accountId: foreignAccount.id, costCenterId: foreignCostCenter.id, fiscalPeriodId: foreignPeriod.id } }, update: {}, create: { forecastVersionId: foreignVersion.id, accountId: foreignAccount.id, costCenterId: foreignCostCenter.id, fiscalPeriodId: foreignPeriod.id, actualAmount: "0", priorForecast: "0", currentForecast: "0" } });
+    await expect(addForecastComment({ ...analystContext, versionId: version.id, lineId: foreignLine.id, body: "Manipulated cross-tenant line" })).rejects.toMatchObject({ code: "RESOURCE_NOT_FOUND", status: 404 });
+    await transitionForecast({ ...analystContext, versionId: version.id, action: "submit", reason: "Ready for director review" });
+    await expect(transitionForecast({ ...analystContext, versionId: version.id, action: "approve", reason: "Self approval attempt" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await transitionForecast({ ...directorContext, versionId: version.id, action: "review", reason: "Review started" });
+    await transitionForecast({ ...directorContext, versionId: version.id, action: "revise", reason: "Update the revenue assumption" });
+    await expect(transitionForecast({ ...directorContext, versionId: version.id, action: "approve", reason: "Invalid state approval" })).rejects.toMatchObject({ code: "CONFLICT" });
+    await updateForecastLine({ ...analystContext, versionId: version.id, lineId: line.id, currentForecast: "70500000", reason: "Revision response" });
+    await transitionForecast({ ...analystContext, versionId: version.id, action: "submit", reason: "Revision completed" });
+    await transitionForecast({ ...directorContext, versionId: version.id, action: "review", reason: "Revision reviewed" });
+    await transitionForecast({ ...directorContext, versionId: version.id, action: "approve", reason: "Forecast approved" });
+    await expect(transitionForecast({ ...directorContext, versionId: version.id, action: "lock", reason: "Director lock attempt" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(prisma.forecastLine.update({ where: { id: line.id }, data: { currentForecast: "1" } })).rejects.toThrow(/immutable/i);
+    await transitionForecast({ ...cfoContext, versionId: version.id, action: "lock", reason: "Final CFO lock" });
+    await expect(updateForecastLine({ ...analystContext, versionId: version.id, lineId: line.id, currentForecast: "1", reason: "Unauthorized locked edit" })).rejects.toMatchObject({ code: "VERSION_LOCKED" });
+    await expect(getTenantForecastVersion(otherOrganization.id, version.id)).rejects.toMatchObject({ code: "RESOURCE_NOT_FOUND", status: 404 });
+    const final = await getTenantForecastVersion(organization.id, version.id); expect(final.status).toBe("LOCKED"); expect(final.comments[0]).toMatchObject({ authorId: analyst.id });
+    const reconciliation = await reconcileForecastVersion(organization.id, version.id); expect(reconciliation).toMatchObject({ acceptedSourceTotal: "213000000", persistedImportTotal: "213000000", workspaceTotal: "213500000", approvedForecastTotal: "213500000", importReconciled: true, status: "LOCKED" });
+    const actions = await prisma.auditEvent.findMany({ where: { organizationId: organization.id, entityType: "ForecastVersion", entityId: version.id }, select: { action: true, actorId: true, previousState: true, newState: true, metadata: true, occurredAt: true } });
+    expect(actions.map((event) => event.action)).toEqual(expect.arrayContaining(["FORECAST.SUBMIT", "FORECAST.REVIEW", "FORECAST.REVISE", "FORECAST.APPROVE", "FORECAST.LOCK"]));
+    expect(actions.every((event) => event.previousState && event.newState)).toBe(true);
+    expect(actions.every((event) => event.actorId && event.occurredAt && (event.metadata as { reason?: string } | null)?.reason)).toBe(true);
+    const metrics = await forecastCycleMetrics(organization.id, version.id); expect(metrics).toMatchObject({ revisionCount: 1 }); expect(metrics.eventCount).toBeGreaterThanOrEqual(8); expect(metrics.cycleDurationMs).not.toBeNull();
+    const batch = await prisma.importBatch.findFirstOrThrow({ where: { workbookId: workbook.id } });
+    await prisma.financialFact.deleteMany({ where: { organizationId: organization.id, versionContext: batch.id } });
+  });
+});

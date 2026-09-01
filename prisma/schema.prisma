@@ -1,0 +1,957 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleCode {
+  CFO
+  FPA_DIRECTOR
+  ANALYST
+  PLATFORM_ADMIN
+}
+
+enum AccountType {
+  REVENUE
+  COGS
+  OPERATING_EXPENSE
+  OTHER_INCOME
+  OTHER_EXPENSE
+  ASSET
+  LIABILITY
+  EQUITY
+  STATISTICAL
+}
+
+enum NormalBalance {
+  DEBIT
+  CREDIT
+}
+
+enum FinancialScenario {
+  ACTUAL
+  BUDGET
+  FORECAST
+  PLAN
+  TARGET
+  PRIOR_YEAR
+  SCENARIO
+}
+
+enum FinancialSourceType {
+  SEED
+  MANUAL_TEST_FIXTURE
+  EXCEL_WORKBOOK
+  SYSTEM_CALCULATION
+}
+
+enum MetricUnit {
+  CURRENCY
+  PERCENT
+  NUMBER
+}
+
+enum PlanVersionStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  CHANGES_REQUESTED
+  RESUBMITTED
+  APPROVED
+  LOCKED
+}
+
+enum ForecastVersionStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  REVISION_REQUIRED
+  APPROVED
+  LOCKED
+  PUBLISHED
+  SUPERSEDED
+}
+
+enum ValidationSeverity {
+  ERROR
+  WARNING
+  INFO
+}
+
+enum WorkbookStatus {
+  UPLOADED
+  PROFILED
+  MAPPING_REVIEW
+  VALIDATED
+  IMPORTED
+  FAILED
+}
+
+enum WorkbookShape {
+  WIDE
+  LONG
+  UNKNOWN
+}
+
+enum MappingVersionStatus {
+  DRAFT
+  REVIEW_REQUIRED
+  APPROVED
+  RETIRED
+}
+
+enum MappingKind {
+  COLUMN
+  MEMBER
+}
+
+enum MappingSuggestionStatus {
+  SUGGESTED
+  REVIEW_REQUIRED
+  APPROVED
+  REJECTED
+  OVERRIDDEN
+}
+
+enum ImportBatchStatus {
+  VALIDATING
+  VALIDATION_FAILED
+  IMPORTED
+  FAILED
+}
+
+enum AgentAuthorityClass {
+  A0_OBSERVE
+  A1_RECOMMEND
+  A2_ASSIST
+  A3_EXECUTE
+  A4_GOVERNED
+  A5_RESERVED
+}
+
+enum AgentKillSwitch {
+  ENABLED
+  READ_ONLY
+  DISABLED
+}
+
+enum AgentRunStatus {
+  RUNNING
+  SUCCEEDED
+  NO_RECOMMENDATION
+  INSUFFICIENT_DATA
+  AUTHORIZATION_UNDETERMINED
+  ERROR
+}
+
+enum AgentRecommendationStatus {
+  PENDING
+  ACCEPTED
+  EDITED
+  REJECTED
+}
+
+enum AgentFeedbackDecision {
+  ACCEPTED
+  EDITED
+  REJECTED
+}
+
+enum RuntimeExecutionStatus {
+  PENDING
+  RUNNING
+  RETRY_PENDING
+  SUCCEEDED
+  FAILED
+  RECOVERED
+}
+
+enum RuntimeErrorCategory {
+  TRANSIENT
+  VALIDATION
+  AUTHORIZATION
+  DATA_INTEGRITY
+  DEPENDENCY
+  LOGIC
+  UNKNOWN
+}
+
+model User {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  email                   String                   @unique
+  name                    String
+  passwordHash            String
+  active                  Boolean                  @default(true)
+  memberships             OrganizationMembership[]
+  sessions                Session[]
+  auditEvents             AuditEvent[]             @relation("AuditActor")
+  mappingDecisions        MappingDecision[]
+  importBatches           ImportBatch[]
+  forecastComments        ForecastComment[]
+  agentRuns               AgentRun[]
+  recommendations         AgentRecommendation[]    @relation("RecommendationActor")
+  recommendationDecisions AgentRecommendation[]    @relation("RecommendationDecisionMaker")
+  agentFeedback           AgentFeedback[]
+  runtimeExecutions       RuntimeExecution[]
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+}
+
+model Organization {
+  id                   String                   @id @default(uuid()) @db.Uuid
+  code                 String                   @unique
+  name                 String
+  active               Boolean                  @default(true)
+  pilot                Boolean                  @default(false)
+  memberships          OrganizationMembership[]
+  auditEvents          AuditEvent[]
+  legalEntities        LegalEntity[]
+  businessUnits        BusinessUnit[]
+  geographies          Geography[]
+  products             Product[]
+  customers            Customer[]
+  costCenters          CostCenter[]
+  accounts             Account[]
+  fiscalCalendars      FiscalCalendar[]
+  financialFacts       FinancialFact[]
+  metricDefinitions    MetricDefinition[]
+  metricValues         MetricValue[]
+  plans                Plan[]
+  forecasts            Forecast[]
+  excelWorkbooks       ExcelWorkbook[]
+  mappingTemplates     MappingTemplate[]
+  importBatches        ImportBatch[]
+  agentRuns            AgentRun[]
+  agentRecommendations AgentRecommendation[]
+  agentFeedback        AgentFeedback[]
+  runtimeExecutions    RuntimeExecution[]
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+}
+
+model ExcelWorkbook {
+  id                String           @id @default(uuid()) @db.Uuid
+  organizationId    String           @db.Uuid
+  originalFileName  String
+  sanitizedFileName String
+  mimeType          String
+  byteSize          Int
+  sha256            String
+  content           Bytes
+  status            WorkbookStatus   @default(UPLOADED)
+  uploadedAt        DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  organization      Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  profile           WorkbookProfile?
+  mappingVersions   MappingVersion[]
+  importBatches     ImportBatch[]
+
+  @@unique([organizationId, sha256])
+  @@index([organizationId, uploadedAt])
+}
+
+model WorkbookProfile {
+  id               String        @id @default(uuid()) @db.Uuid
+  workbookId       String        @unique @db.Uuid
+  fingerprint      String
+  primaryShape     WorkbookShape
+  sheetCount       Int
+  formulaCount     Int
+  hiddenSheetCount Int
+  mergedCellCount  Int
+  profile          Json
+  profiledAt       DateTime      @default(now())
+  workbook         ExcelWorkbook @relation(fields: [workbookId], references: [id], onDelete: Cascade)
+
+  @@index([fingerprint])
+}
+
+model MappingTemplate {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @db.Uuid
+  name           String
+  fingerprint    String
+  active         Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  versions       MappingVersion[]
+
+  @@unique([organizationId, fingerprint])
+}
+
+model MappingVersion {
+  id                String               @id @default(uuid()) @db.Uuid
+  templateId        String               @db.Uuid
+  workbookId        String?              @db.Uuid
+  version           Int
+  status            MappingVersionStatus @default(DRAFT)
+  schemaFingerprint String
+  createdAt         DateTime             @default(now())
+  approvedAt        DateTime?
+  template          MappingTemplate      @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  workbook          ExcelWorkbook?       @relation(fields: [workbookId], references: [id], onDelete: Restrict)
+  rules             MappingRule[]
+  suggestions       MappingSuggestion[]
+  importBatches     ImportBatch[]
+
+  @@unique([templateId, version])
+  @@index([workbookId])
+}
+
+model MappingRule {
+  id               String         @id @default(uuid()) @db.Uuid
+  mappingVersionId String         @db.Uuid
+  kind             MappingKind
+  sourceField      String
+  targetConcept    String
+  targetMemberId   String?
+  confidence       Decimal        @db.Decimal(5, 4)
+  reason           String
+  mappingVersion   MappingVersion @relation(fields: [mappingVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([mappingVersionId, kind, sourceField, targetConcept])
+}
+
+model MappingSuggestion {
+  id                String                  @id @default(uuid()) @db.Uuid
+  mappingVersionId  String                  @db.Uuid
+  kind              MappingKind
+  sourceValue       String
+  targetConcept     String
+  suggestedTargetId String?
+  confidence        Decimal                 @db.Decimal(5, 4)
+  reason            String
+  status            MappingSuggestionStatus
+  createdAt         DateTime                @default(now())
+  mappingVersion    MappingVersion          @relation(fields: [mappingVersionId], references: [id], onDelete: Cascade)
+  decision          MappingDecision?
+
+  @@unique([mappingVersionId, kind, sourceValue, targetConcept])
+}
+
+model MappingDecision {
+  id               String                  @id @default(uuid()) @db.Uuid
+  suggestionId     String                  @unique @db.Uuid
+  decidedById      String                  @db.Uuid
+  decision         MappingSuggestionStatus
+  selectedTargetId String
+  reason           String
+  decidedAt        DateTime                @default(now())
+  suggestion       MappingSuggestion       @relation(fields: [suggestionId], references: [id], onDelete: Restrict)
+  decidedBy        User                    @relation(fields: [decidedById], references: [id], onDelete: Restrict)
+}
+
+model ImportBatch {
+  id               String            @id @default(uuid()) @db.Uuid
+  organizationId   String            @db.Uuid
+  workbookId       String            @db.Uuid
+  mappingVersionId String            @db.Uuid
+  importedById     String            @db.Uuid
+  status           ImportBatchStatus @default(VALIDATING)
+  rowCount         Int               @default(0)
+  rejectedRowCount Int               @default(0)
+  sourceTotals     Json?
+  resultMetrics    Json?
+  startedAt        DateTime          @default(now())
+  completedAt      DateTime?
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  workbook         ExcelWorkbook     @relation(fields: [workbookId], references: [id], onDelete: Restrict)
+  mappingVersion   MappingVersion    @relation(fields: [mappingVersionId], references: [id], onDelete: Restrict)
+  importedBy       User              @relation(fields: [importedById], references: [id], onDelete: Restrict)
+  errors           ImportError[]
+
+  @@unique([workbookId, mappingVersionId])
+  @@index([organizationId, startedAt])
+}
+
+model ImportError {
+  id                 String             @id @default(uuid()) @db.Uuid
+  importBatchId      String             @db.Uuid
+  rowNumber          Int?
+  code               String
+  field              String?
+  sourceValue        String?
+  message            String
+  blocking           Boolean            @default(true)
+  severity           ValidationSeverity @default(ERROR)
+  resolutionGuidance String?
+  resolvedAt         DateTime?
+  evidence           Json?
+  batch              ImportBatch        @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+
+  @@index([importBatchId, blocking])
+}
+
+model LegalEntity {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         LegalEntity?    @relation("LegalEntityHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       LegalEntity[]   @relation("LegalEntityHierarchy")
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, parentId])
+}
+
+model BusinessUnit {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         BusinessUnit?   @relation("BusinessUnitHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       BusinessUnit[]  @relation("BusinessUnitHierarchy")
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, parentId])
+}
+
+model Geography {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         Geography?      @relation("GeographyHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       Geography[]     @relation("GeographyHierarchy")
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, parentId])
+}
+
+model Product {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         Product?        @relation("ProductHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       Product[]       @relation("ProductHierarchy")
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, parentId])
+}
+
+model Customer {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  facts          FinancialFact[]
+
+  @@unique([organizationId, code])
+}
+
+model CostCenter {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         CostCenter?     @relation("CostCenterHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       CostCenter[]    @relation("CostCenterHierarchy")
+  facts          FinancialFact[]
+  forecastLines  ForecastLine[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, parentId])
+}
+
+model Account {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  code           String
+  name           String
+  type           AccountType
+  normalBalance  NormalBalance
+  parentId       String?         @db.Uuid
+  active         Boolean         @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         Account?        @relation("AccountHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       Account[]       @relation("AccountHierarchy")
+  facts          FinancialFact[]
+  forecastLines  ForecastLine[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, type])
+}
+
+model Currency {
+  code       String          @id @db.Char(3)
+  name       String
+  minorUnits Int
+  facts      FinancialFact[]
+}
+
+model FiscalCalendar {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  code           String
+  name           String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  years          FiscalYear[]
+
+  @@unique([organizationId, code])
+}
+
+model FiscalYear {
+  id               String         @id @default(uuid()) @db.Uuid
+  fiscalCalendarId String         @db.Uuid
+  code             String
+  name             String
+  startDate        DateTime       @db.Date
+  endDate          DateTime       @db.Date
+  calendar         FiscalCalendar @relation(fields: [fiscalCalendarId], references: [id], onDelete: Restrict)
+  periods          FiscalPeriod[]
+
+  @@unique([fiscalCalendarId, code])
+}
+
+model FiscalPeriod {
+  id            String          @id @default(uuid()) @db.Uuid
+  fiscalYearId  String          @db.Uuid
+  code          String
+  name          String
+  ordinal       Int
+  startDate     DateTime        @db.Date
+  endDate       DateTime        @db.Date
+  year          FiscalYear      @relation(fields: [fiscalYearId], references: [id], onDelete: Restrict)
+  facts         FinancialFact[]
+  metricValues  MetricValue[]
+  forecastLines ForecastLine[]
+
+  @@unique([fiscalYearId, code])
+  @@unique([fiscalYearId, ordinal])
+}
+
+model FinancialFact {
+  id               String              @id @default(uuid()) @db.Uuid
+  organizationId   String              @db.Uuid
+  accountId        String              @db.Uuid
+  fiscalPeriodId   String              @db.Uuid
+  legalEntityId    String?             @db.Uuid
+  businessUnitId   String?             @db.Uuid
+  geographyId      String?             @db.Uuid
+  productId        String?             @db.Uuid
+  customerId       String?             @db.Uuid
+  costCenterId     String?             @db.Uuid
+  scenario         FinancialScenario
+  currencyCode     String              @db.Char(3)
+  amount           Decimal             @db.Decimal(24, 6)
+  unit             String              @default("currency")
+  sourceType       FinancialSourceType
+  sourceIdentifier String
+  sourceMetadata   Json?
+  versionContext   String              @default("UNVERSIONED")
+  dimensionKey     String
+  grainKey         String
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  organization     Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  account          Account             @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  fiscalPeriod     FiscalPeriod        @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+  currency         Currency            @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  legalEntity      LegalEntity?        @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  businessUnit     BusinessUnit?       @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  geography        Geography?          @relation(fields: [geographyId], references: [id], onDelete: Restrict)
+  product          Product?            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  customer         Customer?           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  costCenter       CostCenter?         @relation(fields: [costCenterId], references: [id], onDelete: Restrict)
+  lineage          LineageReference[]
+
+  @@unique([organizationId, grainKey])
+  @@index([organizationId, fiscalPeriodId, scenario, accountId])
+  @@index([organizationId, geographyId, productId])
+}
+
+model LineageReference {
+  id               String              @id @default(uuid()) @db.Uuid
+  financialFactId  String              @db.Uuid
+  sourceType       FinancialSourceType
+  sourceIdentifier String
+  sourceLocation   Json
+  transformation   Json?
+  capturedAt       DateTime            @default(now())
+  fact             FinancialFact       @relation(fields: [financialFactId], references: [id], onDelete: Cascade)
+
+  @@index([financialFactId])
+}
+
+model MetricDefinition {
+  id             String                 @id @default(uuid()) @db.Uuid
+  organizationId String                 @db.Uuid
+  code           String
+  name           String
+  description    String
+  unit           MetricUnit
+  active         Boolean                @default(true)
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  calculation    CalculationDefinition?
+  dependencies   MetricDependency[]     @relation("MetricDependsOn")
+  dependents     MetricDependency[]     @relation("MetricDependencyTarget")
+  values         MetricValue[]
+
+  @@unique([organizationId, code])
+}
+
+model CalculationDefinition {
+  id                 String           @id @default(uuid()) @db.Uuid
+  metricDefinitionId String           @unique @db.Uuid
+  expression         String
+  version            Int              @default(1)
+  metric             MetricDefinition @relation(fields: [metricDefinitionId], references: [id], onDelete: Cascade)
+}
+
+model MetricDependency {
+  id                 String           @id @default(uuid()) @db.Uuid
+  metricDefinitionId String           @db.Uuid
+  dependsOnMetricId  String           @db.Uuid
+  metric             MetricDefinition @relation("MetricDependsOn", fields: [metricDefinitionId], references: [id], onDelete: Cascade)
+  dependsOn          MetricDefinition @relation("MetricDependencyTarget", fields: [dependsOnMetricId], references: [id], onDelete: Restrict)
+
+  @@unique([metricDefinitionId, dependsOnMetricId])
+}
+
+model MetricValue {
+  id                 String            @id @default(uuid()) @db.Uuid
+  organizationId     String            @db.Uuid
+  metricDefinitionId String            @db.Uuid
+  fiscalPeriodId     String            @db.Uuid
+  scenario           FinancialScenario
+  currencyCode       String?           @db.Char(3)
+  value              Decimal           @db.Decimal(28, 10)
+  contextKey         String
+  provenance         Json
+  calculatedAt       DateTime          @default(now())
+  organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  metric             MetricDefinition  @relation(fields: [metricDefinitionId], references: [id], onDelete: Restrict)
+  fiscalPeriod       FiscalPeriod      @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, metricDefinitionId, fiscalPeriodId, scenario, contextKey])
+  @@index([organizationId, fiscalPeriodId, scenario])
+}
+
+model Plan {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @db.Uuid
+  code           String
+  name           String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  versions       PlanVersion[]
+
+  @@unique([organizationId, code])
+}
+
+model PlanVersion {
+  id             String            @id @default(uuid()) @db.Uuid
+  planId         String            @db.Uuid
+  version        Int
+  status         PlanVersionStatus @default(DRAFT)
+  correctionOfId String?           @db.Uuid
+  reason         String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  plan           Plan              @relation(fields: [planId], references: [id], onDelete: Restrict)
+  correctionOf   PlanVersion?      @relation("PlanCorrections", fields: [correctionOfId], references: [id], onDelete: Restrict)
+  corrections    PlanVersion[]     @relation("PlanCorrections")
+
+  @@unique([planId, version])
+}
+
+model Forecast {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @db.Uuid
+  code           String
+  name           String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  versions       ForecastVersion[]
+
+  @@unique([organizationId, code])
+}
+
+model ForecastVersion {
+  id                   String                @id @default(uuid()) @db.Uuid
+  forecastId           String                @db.Uuid
+  version              Int
+  status               ForecastVersionStatus @default(DRAFT)
+  correctionOfId       String?               @db.Uuid
+  reason               String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  forecast             Forecast              @relation(fields: [forecastId], references: [id], onDelete: Restrict)
+  correctionOf         ForecastVersion?      @relation("ForecastCorrections", fields: [correctionOfId], references: [id], onDelete: Restrict)
+  corrections          ForecastVersion[]     @relation("ForecastCorrections")
+  submittedAt          DateTime?
+  approvedAt           DateTime?
+  lockedAt             DateTime?
+  lines                ForecastLine[]
+  comments             ForecastComment[]
+  agentRuns            AgentRun[]
+  agentRecommendations AgentRecommendation[]
+  runtimeExecutions    RuntimeExecution[]
+
+  @@unique([forecastId, version])
+}
+
+model ForecastLine {
+  id                  String            @id @default(uuid()) @db.Uuid
+  forecastVersionId   String            @db.Uuid
+  accountId           String            @db.Uuid
+  costCenterId        String            @db.Uuid
+  fiscalPeriodId      String            @db.Uuid
+  actualAmount        Decimal           @db.Decimal(24, 6)
+  priorForecast       Decimal           @db.Decimal(24, 6)
+  currentForecast     Decimal           @db.Decimal(24, 6)
+  sourceImportBatchId String?           @db.Uuid
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  forecastVersion     ForecastVersion   @relation(fields: [forecastVersionId], references: [id], onDelete: Restrict)
+  account             Account           @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  costCenter          CostCenter        @relation(fields: [costCenterId], references: [id], onDelete: Restrict)
+  fiscalPeriod        FiscalPeriod      @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+  comments            ForecastComment[]
+
+  @@unique([forecastVersionId, accountId, costCenterId, fiscalPeriodId])
+  @@index([forecastVersionId, fiscalPeriodId])
+}
+
+model ForecastComment {
+  id                String            @id @default(uuid()) @db.Uuid
+  forecastVersionId String            @db.Uuid
+  forecastLineId    String?           @db.Uuid
+  authorId          String            @db.Uuid
+  body              String
+  context           Json
+  editedFromId      String?           @db.Uuid
+  createdAt         DateTime          @default(now())
+  forecastVersion   ForecastVersion   @relation(fields: [forecastVersionId], references: [id], onDelete: Restrict)
+  forecastLine      ForecastLine?     @relation(fields: [forecastLineId], references: [id], onDelete: Restrict)
+  author            User              @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  editedFrom        ForecastComment?  @relation("CommentEdits", fields: [editedFromId], references: [id], onDelete: Restrict)
+  edits             ForecastComment[] @relation("CommentEdits")
+
+  @@index([forecastVersionId, createdAt])
+}
+
+model OrganizationMembership {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @db.Uuid
+  organizationId String       @db.Uuid
+  role           RoleCode
+  active         Boolean      @default(true)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sessions       Session[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([userId, organizationId])
+  @@index([organizationId, role])
+}
+
+model Session {
+  id           String                 @id @default(uuid()) @db.Uuid
+  tokenHash    String                 @unique
+  userId       String                 @db.Uuid
+  membershipId String                 @db.Uuid
+  expiresAt    DateTime
+  lastSeenAt   DateTime               @default(now())
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  membership   OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  createdAt    DateTime               @default(now())
+
+  @@index([userId, expiresAt])
+}
+
+model AuditEvent {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  actorId        String?      @db.Uuid
+  action         String
+  entityType     String
+  entityId       String
+  previousState  Json?
+  newState       Json?
+  metadata       Json?
+  correlationId  String
+  occurredAt     DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor          User?        @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, occurredAt])
+  @@index([entityType, entityId])
+}
+
+model LoginThrottle {
+  key             String    @id
+  failedCount     Int       @default(0)
+  windowStartedAt DateTime  @default(now())
+  blockedUntil    DateTime?
+  updatedAt       DateTime  @updatedAt
+}
+
+model AgentDefinition {
+  id                       String                  @id @default(uuid()) @db.Uuid
+  agentId                  String                  @unique
+  displayName              String
+  version                  Int                     @default(1)
+  purpose                  String
+  persona                  String
+  tenantScope              String                  @default("AUTHENTICATED_ORGANIZATION")
+  authorityClass           AgentAuthorityClass
+  allowedTools             String[]
+  forbiddenActions         String[]
+  requiredContext          String[]
+  workflowStates           ForecastVersionStatus[]
+  humanApprovalRequired    Boolean                 @default(true)
+  financialWritePermission Boolean                 @default(false)
+  retryPolicy              Json
+  memoryPolicy             Json
+  learningPolicy           Json
+  failurePolicy            Json
+  auditPolicy              Json
+  killSwitch               AgentKillSwitch         @default(ENABLED)
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  runs                     AgentRun[]
+  runtimeExecutions        RuntimeExecution[]
+}
+
+model AgentRun {
+  id                String                @id @default(uuid()) @db.Uuid
+  agentDefinitionId String                @db.Uuid
+  organizationId    String                @db.Uuid
+  actorId           String                @db.Uuid
+  forecastVersionId String?               @db.Uuid
+  trigger           String
+  task              String
+  inputReferences   Json
+  toolTrace         Json
+  evidence          Json
+  output            Json?
+  status            AgentRunStatus        @default(RUNNING)
+  confidence        Decimal?              @db.Decimal(5, 4)
+  errorCode         String?
+  startedAt         DateTime              @default(now())
+  completedAt       DateTime?
+  agentDefinition   AgentDefinition       @relation(fields: [agentDefinitionId], references: [id], onDelete: Restrict)
+  organization      Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor             User                  @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  forecastVersion   ForecastVersion?      @relation(fields: [forecastVersionId], references: [id], onDelete: Restrict)
+  recommendations   AgentRecommendation[]
+
+  @@index([organizationId, startedAt])
+  @@index([forecastVersionId, startedAt])
+}
+
+model AgentRecommendation {
+  id                String                    @id @default(uuid()) @db.Uuid
+  runId             String                    @db.Uuid
+  organizationId    String                    @db.Uuid
+  actorId           String                    @db.Uuid
+  forecastVersionId String?                   @db.Uuid
+  type              String
+  summary           String
+  proposedContent   String?
+  observedFacts     Json
+  evidence          Json
+  unsupportedClaim  Boolean                   @default(false)
+  status            AgentRecommendationStatus @default(PENDING)
+  decidedById       String?                   @db.Uuid
+  decidedAt         DateTime?
+  decisionReason    String?
+  createdAt         DateTime                  @default(now())
+  run               AgentRun                  @relation(fields: [runId], references: [id], onDelete: Restrict)
+  organization      Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor             User                      @relation("RecommendationActor", fields: [actorId], references: [id], onDelete: Restrict)
+  decidedBy         User?                     @relation("RecommendationDecisionMaker", fields: [decidedById], references: [id], onDelete: Restrict)
+  forecastVersion   ForecastVersion?          @relation(fields: [forecastVersionId], references: [id], onDelete: Restrict)
+  feedback          AgentFeedback[]
+
+  @@index([organizationId, createdAt])
+  @@index([forecastVersionId, createdAt])
+}
+
+model AgentFeedback {
+  id                    String                @id @default(uuid()) @db.Uuid
+  recommendationId      String                @db.Uuid
+  organizationId        String                @db.Uuid
+  actorId               String                @db.Uuid
+  decision              AgentFeedbackDecision
+  originalContent       String?
+  finalContent          String?
+  candidateImprovement  Json?
+  requiresVersionChange Boolean               @default(true)
+  createdAt             DateTime              @default(now())
+  recommendation        AgentRecommendation   @relation(fields: [recommendationId], references: [id], onDelete: Restrict)
+  organization          Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor                 User                  @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, createdAt])
+}
+
+model RuntimeExecution {
+  id                String                 @id @default(uuid()) @db.Uuid
+  correlationId     String
+  idempotencyKey    String
+  agentDefinitionId String?                @db.Uuid
+  agentVersion      Int?
+  actorId           String                 @db.Uuid
+  organizationId    String                 @db.Uuid
+  forecastVersionId String?                @db.Uuid
+  command           String
+  targetId          String
+  status            RuntimeExecutionStatus @default(PENDING)
+  attempt           Int                    @default(0)
+  retrySafe         Boolean                @default(false)
+  request           Json
+  result            Json?
+  errorCategory     RuntimeErrorCategory?
+  errorCode         String?
+  startedAt         DateTime               @default(now())
+  completedAt       DateTime?
+  agentDefinition   AgentDefinition?       @relation(fields: [agentDefinitionId], references: [id], onDelete: Restrict)
+  actor             User                   @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  organization      Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  forecastVersion   ForecastVersion?       @relation(fields: [forecastVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, command, idempotencyKey])
+  @@index([organizationId, startedAt])
+  @@index([correlationId])
+}
