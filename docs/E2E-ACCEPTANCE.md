@@ -81,7 +81,7 @@ This is the specific, worked example the journey must satisfy — used for build
 | Scenario | Recalculation is dynamic (driven by the same formula graph as planning), and does not mutate the underlying approved plan/forecast |
 | Recommendation / Decision | Decision references the scenario(s) it was based on; approval is attributed to a specific authorized user |
 | Action / Outcome | Actions have an owner and due state; Outcome records both expected and realized value and computes realization rate |
-| Export | Exported Excel reconciles against Planora with $0 unexplained difference |
+| Export | Exported XLSX and CSV both reconcile against database, dashboard and workspace with $0 unexplained difference |
 | Lineage/Audit | Every stage above produces an audit record and/or lineage reference sufficient to answer "where did this come from" without guessing |
 
 ---

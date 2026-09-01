@@ -2,17 +2,16 @@
 
 ## Active gaps
 
-| ID | Description | Severity | Blocker status | Resolution |
-|---|---|---|---|---|
-| KG-005 | The freeze candidate still requires remote CI and human PR review | Medium | Does not block the certified local pilot freeze | Push the exact certified SHA; do not merge until required CI and review pass |
-| KG-006 | Vercel Preview and its isolated Neon database are configured; private object storage, malware scanning, backup/PITR evidence, monitoring, rollback rehearsal, and production remain unconfigured | High | Production gate; does not automatically block synthetic Preview pilot validation | Reassess against the pilot data classification and complete required controls under explicit authorization before production |
-| KG-009 | No real FP&A baseline, observed session, feedback, reuse intent or commercial signal exists | High | Blocks `MVP_VALIDATED` and beta decisions | Run the validation kit and record evidence without inventing values |
-| KG-010 | Hosted runtime/agent telemetry and operational alerting are not configured | Medium | Does not block isolated local user validation | Configure only with an explicitly authorized pilot environment |
+| ID | Gap | Severity | Effect | Required closure |
+| --- | --- | --- | --- | --- |
+| KG-005 | Human PR review/merge decision is still outstanding | Medium | PR can be review-ready but cannot be merged autonomously | Human review; merge only with explicit authorization |
+| KG-007 | Private object storage and malware scanning are not certified | High | Blocks real customer financial workbooks and Production readiness | Implement/certify before any real-data pilot |
+| KG-008 | Neon retention/PITR entitlement and a database restore rehearsal are not evidenced; exact RPO/RTO are `INSUFFICIENT_DATA` | High | Blocks real financial data and Production readiness | Obtain provider evidence and perform synthetic restore rehearsal |
+| KG-009 | No real FP&A outcome evidence exists | High | Blocks `MVP_VALIDATED` and beta decisions | Run the controlled validation plan and record real evidence |
+| KG-010 | Vercel logs/health exist, but alert delivery and measured SLOs are not configured | Medium | Acceptable only for facilitated synthetic validation with manual monitoring | Assign owner/check cadence; configure alerts before unattended/real-data use |
 
 ## Deferred by design
 
-ERP/CRM integrations, Power BI, workforce/headcount, capex, treasury/cash, consolidation/intercompany, full budgeting, planning cubes, predictive forecasting, autonomous finance agents, external-LLM dependency, generic workflow builders, advanced scenario engines, board-book automation, native mobile, complex SSO and marketplaces remain outside the Forecast MVP.
+ERP/CRM integrations, Power BI, full budgeting, workforce/headcount, capex, treasury/cash, consolidation/intercompany, planning cubes, predictive forecasting, autonomous finance agents, generic workflow builders, advanced scenarios, board-book automation, billing, marketplace, mobile, complex SSO, and new personas are out of scope.
 
-## Current boundary
-
-The local Phase 20 workflow is `READY_FOR_USER_VALIDATION`. Phase 30 remains `MVP_PARTIALLY_VALIDATED` until real participants demonstrate usability, meaningful effort reduction, repeat intent and adoption/commercial evidence.
+Product status remains `MVP_PARTIALLY_VALIDATED`. Report `INSUFFICIENT_DATA` instead of extrapolating missing pilot evidence.

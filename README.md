@@ -160,4 +160,4 @@ Planora/
 
 ## Current implementation status
 
-See `docs/MVP-CERTIFICATION.md` for the evidence-backed Forecast MVP matrix and `docs/USER-VALIDATION-KIT.md` for the external FP&A test. The complete canonical forecast cycle is implemented locally. Preview infrastructure is configured for synthetic hosted certification; pilot readiness requires an exact committed SHA, and production promotion remains unauthorized.
+See `docs/FINAL-MVP-CERTIFICATION.md` for the exact-SHA engineering record and `docs/PILOT-VALIDATION-PLAN.md` for the controlled FP&A test. The frozen forecast cycle is locally, in CI, and on its exact isolated Git Preview certified at `fdb419ee28fba0025a4f081b295e011393cc920f`. Engineering status is `READY_FOR_CONTROLLED_USER_VALIDATION`. Product status remains `MVP_PARTIALLY_VALIDATED`, real financial workbooks are prohibited, and Production promotion is unauthorized.

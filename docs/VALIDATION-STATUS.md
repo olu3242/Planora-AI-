@@ -2,9 +2,9 @@
 
 ## Phase 20 gate
 
-`READY_FOR_USER_VALIDATION`
+`READY_FOR_CONTROLLED_USER_VALIDATION`
 
-The canonical forecast workflow and invalid-source path pass from a clean migrated/seeded database. Financial, security, audit, export, accessibility, responsive, performance and production-build gates are documented in `MVP-CERTIFICATION.md`.
+The canonical workflow and invalid-source path pass locally, in CI, and on the exact isolated Git Preview from the authorized deterministic synthetic baseline. The hosted suite passed 35/35 with zero retries. See `FINAL-MVP-CERTIFICATION.md`.
 
 ## Phases 21-30
 
@@ -16,8 +16,8 @@ The canonical forecast workflow and invalid-source path pass from a clean migrat
 | 24 Before/after analysis | PARTIAL | Formulas and system-derived cycle metrics exist; baseline and participant data are `INSUFFICIENT_DATA`. |
 | 25 Evidence-based UX iteration | NOT_STARTED | No repeated pilot feedback exists. Starting UI changes would violate the evidence gate. |
 | 26 Exception/recovery | PASS | Invalid source, partial mapping, duplicate upload, header drift, invalid transition, unauthorized export/direct ID, revision, and locked mutation paths are tested. |
-| 27 Pilot tenant readiness | PARTIAL | Local demo provisioning/reset is deterministic. Hosted environment, storage, malware scan, backup and cleanup execution remain unconfigured. |
-| 28 Observability/support | PASS | Correlation IDs, sanitized unhandled-error logs, audit events, health endpoint, and `PILOT-SUPPORT-RUNBOOK.md`. Hosted monitoring is unconfigured. |
+| 27 Pilot tenant readiness | PASS_SYNTHETIC | Exact Preview, isolated Neon resource, and hosted certification pass. Real-data storage, malware scan and recovery evidence remain absent, so real data remains prohibited. |
+| 28 Observability/support | PARTIAL | Correlation IDs, safe logs, audit, health, Vercel log query and support runbook exist; alert delivery and measured SLO evidence do not. |
 | 29 Product decision gate | PASS | Current decision: `CONTINUE_MVP_PILOT`; technical evidence is positive and user/commercial evidence is insufficient. |
 | 30 Validation certification | PARTIAL | Technical hypothesis is certified; usability, effort reduction, reuse intent and commercial signal require real FP&A participants. |
 

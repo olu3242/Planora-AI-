@@ -25,9 +25,11 @@ Production requires automated database backups, tested restore, object versionin
 
 Health/readiness endpoints, alert routing, support ownership, backup restore evidence, migration recovery, rate/resource controls, security review, dependency audit, browser compatibility and large-workbook tests must pass before production authorization is requested.
 
-## Phase 2 local runbook evidence
+## Current pilot evidence
 
-The financial-core migration and idempotent fixture seed were exercised from empty PostgreSQL. Operational verification includes exact metric reproduction, database duplicate-grain rejection, protected-version mutation rejection, tenant isolation, health checks, production build, and browser tests. Hosted backup, alerting, and recovery gates remain `HOSTED_BLOCKED` until infrastructure is selected.
+The exact candidate passed empty-database migrations, idempotent synthetic seed, exact metric/export reproduction, duplicate-grain and protected-version rejection, tenant isolation, health, build, CI, and 35 browser tests locally and on the isolated Preview. Hosted migrations are current, database immutability triggers were verified enabled before the run, and the post-run error-level deployment log query returned no entries. Alert delivery is not configured. Neon retention/PITR entitlement, restore evidence, and exact RPO/RTO are `INSUFFICIENT_DATA`; real financial data is prohibited.
+
+For facilitated synthetic validation, check deployment state, `/api/health`, error logs, failed imports, failed workflow/runtime records, and unresolved validation issues before and after each session. Stop and escalate any 5xx, database failure, cross-tenant anomaly, reconciliation difference, or protected-state mutation.
 
 ## Canonical local certification
 

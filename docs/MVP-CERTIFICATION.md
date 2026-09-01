@@ -18,13 +18,13 @@ Scope: the canonical forecast cycle only. Status is based on executable reposito
 | CFO view | PASS | Revenue, Operating Expense, EBITDA, favorable/unfavorable variance, movement, outstanding action and state. |
 | Locking | PASS | CFO-only transition plus database triggers protecting locked version and financial lines. |
 | Audit/lineage | PASS | source file/sheet/row/mapping/batch lineage plus actor, organization, before/after, reason and version audit history. |
-| Export | PASS | Director/CFO-only XLSX/CSV; approved/locked states; explicit export audit; E2E reads XLSX and reconciles totals. |
+| Export | PASS | Director/CFO-only XLSX/CSV; approved/locked states; explicit export audit; E2E reads both and reconciles database/dashboard/workspace/XLSX/CSV exactly. |
 | Tenant isolation | PASS | repositories scope opaque IDs by session organization; cross-tenant workbook/forecast/comment tests return 404. |
 | Performance | PASS | 10,000-row parse/profile/map and 1,000-row full import; bulk facts/lineage, chunked line upserts, paged UI. |
 | Agentic OS | PASS | Four deterministic A1/A2 assistants; persisted runs/evidence/recommendations; Accept/Edit/Reject; prompt-injection, role and tenant denials. |
 | Execution runtime | PASS | Correlated execution records, stable UI idempotency keys, duplicate prevention, bounded safe retry/recovery and fail-closed error classes. |
 | Governed learning | PASS | Tenant-scoped feedback stores original/final output and requires an approved future version; live definitions are not silently mutated. |
-| Deployment | BLOCKED | No preview/production target or credentials. Production promotion was not authorized and is not required for local user validation. |
+| Deployment | PASS_PREVIEW | Exact Git Preview `dpl_GukiqTLY4S1RFuzgRUu82U9wrc3B` is `READY`; authorized synthetic hosted suite passed 35/35 with zero retries. Production is unchanged and unauthorized. |
 
 ## Six-layer convergence
 
@@ -73,6 +73,8 @@ For the Phase 20 browser fixture:
 - Persisted import: `$213,500,000.00`
 - Final workspace/approved forecast: `$213,750,000.00`
 - XLSX export: `$213,750,000.00`
+- CSV export: `$213,750,000.00`
+- Executive dashboard/workspace: `$213,750,000.00`
 
 The `$250,000.00` change is the audited Analyst revision, not an import discrepancy.
 
@@ -89,4 +91,4 @@ The cycle is reconstructable from `WORKBOOK.PROFILED`, `MAPPING.ACCOUNT_OVERRIDD
 
 ## Pilot boundary
 
-Local controlled-pilot readiness is covered by deterministic seed identities, valid/invalid fixtures, clean migrations, health check, production build, session controls, tenant isolation, RBAC and rollback policy. Hosted malware scanning, private object storage, backups, monitoring, preview deployment and production deployment remain infrastructure gates; no production system was changed.
+Local, CI, and hosted Preview readiness is covered by deterministic seed identities, valid/invalid fixtures, clean migrations, health, build, session controls, tenant isolation, RBAC, exact multi-format reconciliation, and Preview-only alias recovery. The authorized synthetic hosted run passed 35/35 with zero retries. Real-data storage/malware scanning, alerting, verified recovery, and Production remain gates; no Production system was changed.
