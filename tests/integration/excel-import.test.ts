@@ -46,4 +46,15 @@ describe("Excel canonical import", () => {
     const reused = await getTenantWorkbook(org.id, revised.id); expect(reused.mappingVersions[0].suggestions.find((suggestion) => suggestion.sourceValue === "Shared Programs")).toMatchObject({ status: "APPROVED", reason: "Reused approved template mapping" });
     const changedHeaders = "GL_ACCT,COST_CENTER,MONTH,ACTUAL,CHANGED_FCST\nRevenue,NA-IND,P01,1,2"; await expect(ingestWorkbook(new File([changedHeaders], "Changed_Headers.csv", { type: "text/csv" }), { organizationId: org.id, actorId: actor.id, correlationId: "phase26-header-drift" })).rejects.toThrow(/required columns are missing/i);
   });
+
+  it("imports the profiled data sheet when a cover sheet appears first", async () => {
+    const org = await prisma.organization.findUniqueOrThrow({ where: { code: "HORIZON" } }); const actor = await prisma.user.findUniqueOrThrow({ where: { email: "cfo@horizon.local" } });
+    const account = await prisma.account.findFirstOrThrow({ where: { organizationId: org.id, type: "REVENUE" } }); const costCenter = await prisma.costCenter.findFirstOrThrow({ where: { organizationId: org.id } }); const period = await prisma.fiscalPeriod.findFirstOrThrow({ where: { year: { calendar: { organizationId: org.id } } } });
+    const source = new ExcelJS.Workbook(); source.addWorksheet("Cover").addRow(["FY26 Forecast Workbook"]); const data = source.addWorksheet("Data"); data.addRow(["GL_ACCT", "COST_CENTER", "MONTH", "ACTUAL", "FCST"]); data.addRow([account.code, costCenter.code, period.code, 100, 110]);
+    const bytes = await source.xlsx.writeBuffer(); const workbook = await ingestWorkbook(new File([bytes as ArrayBuffer], "Cover_First.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), { organizationId: org.id, actorId: actor.id, correlationId: "review-cover-upload" });
+    await validateAndImportWorkbook({ organizationId: org.id, actorId: actor.id, correlationId: "review-cover-import", workbookId: workbook.id });
+    const workspace = await getTenantWorkbook(org.id, workbook.id); const batch = workspace.importBatches[0];
+    expect(batch).toMatchObject({ status: "IMPORTED", rowCount: 1, rejectedRowCount: 0 });
+    expect(await prisma.financialFact.count({ where: { organizationId: org.id, versionContext: batch.id } })).toBe(2);
+  });
 });

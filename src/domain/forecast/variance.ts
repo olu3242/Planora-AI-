@@ -9,3 +9,10 @@ export function calculateMovement(current: DecimalInput, prior: DecimalInput) {
   const currentValue = money(current); const priorValue = money(prior); const amount = currentValue.minus(priorValue);
   return { amount, percentage: priorValue.isZero() ? money(0) : amount.div(priorValue.abs()).mul(100) };
 }
+
+const expenseTypes = new Set(["COGS", "OPERATING_EXPENSE", "OTHER_EXPENSE"]);
+
+export function calculateFavorability(variance: DecimalInput, accountType: string) {
+  const amount = money(variance);
+  return expenseTypes.has(accountType) ? amount.negated() : amount;
+}

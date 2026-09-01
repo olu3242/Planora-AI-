@@ -21,6 +21,18 @@ describe("financial core persistence", () => {
     expect(lineage.facts).toHaveLength(12);
     expect(lineage.facts.every((fact) => fact.source[0]?.identifier === "PHASE2-FIXTURE")).toBe(true);
   });
+  it("preserves selected statement filters in EBITDA lineage", async () => {
+    const org = await prisma.organization.findUniqueOrThrow({ where: { code: "NORTHSTAR" } });
+    const geography = await prisma.geography.findFirstOrThrow({ where: { organizationId: org.id } });
+    const statement = await getActualStatement(org.id, { geographyId: geography.id });
+    expect(statement.state).toBe("ready");
+    if (statement.state !== "ready") return;
+    const ebitda = statement.lines.find((line) => line.code === "EBITDA")!;
+    const lineage = await explainMetricValue(org.id, ebitda.metricValueId!, { geographyId: geography.id });
+    expect(lineage.value).toBe(ebitda.value);
+    expect(lineage.facts.length).toBeGreaterThan(0);
+    expect(lineage.facts.every((fact) => fact.geography === geography.name)).toBe(true);
+  });
   it("rejects a duplicate semantic fact grain", async () => {
     const fact = await prisma.financialFact.findFirstOrThrow({ where: { organization: { code: "NORTHSTAR" } } });
     await expect(prisma.financialFact.create({ data: {

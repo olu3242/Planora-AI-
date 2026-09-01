@@ -1,7 +1,7 @@
 import "server-only";
 import type { ForecastVersionStatus, Prisma, RoleCode } from "@prisma/client";
 import { writeAudit } from "@/audit/audit";
-import { calculateMovement, calculateVariance } from "@/domain/forecast/variance";
+import { calculateFavorability, calculateMovement, calculateVariance } from "@/domain/forecast/variance";
 import { AppError } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import { getTenantForecastVersion } from "@/repositories/forecast-repository";
@@ -16,7 +16,7 @@ export async function forecastWorkspace(organizationId: string, id: string, filt
     return { ...line, actual: line.actualAmount.toFixed(), prior: line.priorForecast.toFixed(), current: line.currentForecast.toFixed(), variance: variance.amount.toFixed(), variancePct: variance.percentage.toFixed(), movement: movement.amount.toFixed(), movementPct: movement.percentage.toFixed() };
   });
   const pageSize = 100; const pageCount = Math.max(1, Math.ceil(matchedLines.length / pageSize)); const page = Math.min(pageCount, Math.max(1, Number.parseInt(filters.page ?? "1", 10) || 1)); const lines = filters.all ? matchedLines : matchedLines.slice((page - 1) * pageSize, page * pageSize);
-  const rank = (line: typeof matchedLines[number]) => Number(line.variance); const movementRank = (line: typeof matchedLines[number]) => Math.abs(Number(line.movement));
+  const rank = (line: typeof matchedLines[number]) => calculateFavorability(line.variance, line.account.type).toNumber(); const movementRank = (line: typeof matchedLines[number]) => Math.abs(Number(line.movement));
   return { version, lines, topFavorable: [...matchedLines].sort((a, b) => rank(b) - rank(a)).slice(0, 3), topUnfavorable: [...matchedLines].sort((a, b) => rank(a) - rank(b)).slice(0, 3), largestMovements: [...matchedLines].sort((a, b) => movementRank(b) - movementRank(a)).slice(0, 3), editable: editable.has(version.status), page, pageCount, totalLines: matchedLines.length };
 }
 

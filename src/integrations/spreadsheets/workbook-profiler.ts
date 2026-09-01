@@ -25,3 +25,8 @@ export function profileWorkbook(workbook: ParsedWorkbook): WorkbookProfileResult
   const shapes = sheets.map((sheet) => sheet.shape).filter((shape) => shape !== "UNKNOWN");
   return { fingerprint: createHash("sha256").update(JSON.stringify(fingerprintSource)).digest("hex"), primaryShape: shapes[0] ?? "UNKNOWN", sheets, formulaCount: sheets.reduce((sum, sheet) => sum + sheet.formulaCount, 0), hiddenSheetCount: sheets.filter((sheet) => sheet.state !== "visible").length, mergedCellCount: sheets.reduce((sum, sheet) => sum + sheet.mergedCellCount, 0) };
 }
+
+export function selectPrimarySheet(workbook: ParsedWorkbook, profile: WorkbookProfileResult) {
+  return workbook.sheets.find((sheet) => ["p&l", "forecast"].includes(sheet.name.trim().toLowerCase()))
+    ?? workbook.sheets.find((sheet) => profile.sheets.find((candidate) => candidate.name === sheet.name)?.shape !== "UNKNOWN");
+}

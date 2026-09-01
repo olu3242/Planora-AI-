@@ -9,6 +9,7 @@ import { PrismaClient } from "@prisma/client";
 import { getTenantRecommendation, respondToRecommendation, runAgent } from "@/agents/agent-service";
 import { getTenantExecution } from "@/runtime/execution-runtime";
 import { decideAccountMapping, decideColumnMapping, validateAndImportWorkbook } from "@/application/excel/workbook-service";
+import { requiredMappingPermission } from "@/application/excel/mapping-authorization";
 
 const prisma = new PrismaClient();
 afterAll(() => prisma.$disconnect());
@@ -20,6 +21,12 @@ describe("authorization boundaries", () => {
     expect(hasPermission("ANALYST", "forecast.publish")).toBe(false);
     expect(hasPermission("ANALYST", "forecast.export")).toBe(false);
     expect(hasPermission("ANALYST", "admin.manage")).toBe(false);
+  });
+
+  it("routes account mapping overrides through mapping approval authority", () => {
+    expect(requiredMappingPermission({ suggestionId: "suggestion" })).toBe("mapping.approve");
+    expect(hasPermission("ANALYST", requiredMappingPermission({ suggestionId: "suggestion" }))).toBe(false);
+    expect(hasPermission("FPA_DIRECTOR", requiredMappingPermission({ suggestionId: "suggestion" }))).toBe(true);
   });
 
   it("keeps platform operations separate from financial authority", () => {
