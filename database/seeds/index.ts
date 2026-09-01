@@ -88,9 +88,15 @@ async function main() {
   const northstar = await seedOrganization("NORTHSTAR", "Northstar Manufacturing");
   const horizon = await seedOrganization("HORIZON", "Horizon Services");
   const demo = await seedOrganization("PLANORA-DEMO", "Planora Demo Company");
+  const platform = await prisma.organization.upsert({
+    where: { code: "PLANORA-PLATFORM" },
+    update: { name: "Planora Platform Operations", active: true, pilot: false },
+    create: { code: "PLANORA-PLATFORM", name: "Planora Platform Operations", active: true, pilot: false },
+  });
   await seedUser("cfo@planora.local", "Morgan Lee", RoleCode.CFO, northstar.id);
   await seedUser("director@planora.local", "Jordan Patel", RoleCode.FPA_DIRECTOR, northstar.id);
   await seedUser("analyst@planora.local", "Casey Rivera", RoleCode.ANALYST, northstar.id);
+  await seedUser("platform-admin@planora.local", "Sam Osei", RoleCode.PLATFORM_ADMIN, platform.id);
   await seedUser("cfo@horizon.local", "Avery Chen", RoleCode.CFO, horizon.id);
   await seedUser("analyst@demo.planora.local", "Demo Analyst", RoleCode.ANALYST, demo.id);
   await seedUser("director@demo.planora.local", "Demo FP&A Director", RoleCode.FPA_DIRECTOR, demo.id);

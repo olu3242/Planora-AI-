@@ -28,3 +28,9 @@ Health/readiness endpoints, alert routing, support ownership, backup restore evi
 ## Phase 2 local runbook evidence
 
 The financial-core migration and idempotent fixture seed were exercised from empty PostgreSQL. Operational verification includes exact metric reproduction, database duplicate-grain rejection, protected-version mutation rejection, tenant isolation, health checks, production build, and browser tests. Hosted backup, alerting, and recovery gates remain `HOSTED_BLOCKED` until infrastructure is selected.
+
+## Canonical local certification
+
+Run `npm run certify` against the repository's loopback PostgreSQL service. This is the single developer/CI gate and includes fresh migrations, deterministic seed, migration status, static checks, all Vitest layers, zero-retry Playwright E2E, reconciliation, and production build. The reset guard rejects Preview, Production, and non-loopback database targets.
+
+For a non-destructive hosted pilot setup, run `npm run db:migrate` and `npm run db:seed`; verify `npm run db:status` before deployment. Do not use the local reset command against hosted data.

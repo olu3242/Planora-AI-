@@ -11,6 +11,7 @@ enum RoleCode {
   CFO
   FPA_DIRECTOR
   ANALYST
+  PLATFORM_ADMIN
 }
 
 enum AccountType {
@@ -203,6 +204,8 @@ model Organization {
   id                   String                   @id @default(uuid()) @db.Uuid
   code                 String                   @unique
   name                 String
+  active               Boolean                  @default(true)
+  pilot                Boolean                  @default(false)
   memberships          OrganizationMembership[]
   auditEvents          AuditEvent[]
   legalEntities        LegalEntity[]

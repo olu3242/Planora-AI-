@@ -22,24 +22,14 @@ jobs:
       APP_URL: http://127.0.0.1:3000
       SESSION_COOKIE_NAME: planora_session
       SESSION_TTL_HOURS: 12
+      AGENTIC_OS_ENABLED: "true"
+      AGENT_EXECUTION_ENABLED: "true"
+      AI_COMMENTARY_ENABLED: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: npm }
       - run: npm ci
       - run: npm audit --audit-level=moderate
-      - run: npx prisma generate
-      - run: npm run db:migrate
-      - run: npm run db:seed
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run test:financial
-      - run: npm run test:excel
-      - run: npm run test:security
-      - run: npm run test:performance
-      - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm run db:reset:test
-      - run: npm run db:seed
-      - run: npm run test:e2e
+      - run: npm run certify

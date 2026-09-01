@@ -4,6 +4,7 @@ import { writeAudit } from "@/audit/audit";
 import { forecastWorkspace } from "@/application/forecast/forecast-service";
 import { AppError } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
+import { env } from "@/validation/env";
 import { nextBestActions } from "./next-best-action";
 import type { AgentCapability } from "./definitions";
 
@@ -24,6 +25,7 @@ function promptGuardrail(prompt = "") {
 }
 
 export async function runAgent(input: RunInput) {
+  const config = env();
   const definition = await prisma.agentDefinition.findUnique({ where: { agentId: input.agentId } });
   if (!definition) throw new AppError("RESOURCE_NOT_FOUND", "Agent capability was not found.", 404);
   const run = await prisma.agentRun.create({ data: { agentDefinitionId: definition.id, organizationId: input.organizationId, actorId: input.actorId, trigger: "USER_REQUEST", task: input.task, inputReferences: { forecastVersion: "authorization_pending" }, toolTrace: [], evidence: {} } });
@@ -31,6 +33,8 @@ export async function runAgent(input: RunInput) {
     await prisma.agentRun.update({ where: { id: run.id }, data: { status, errorCode, completedAt: new Date(), output: { message: error.message } } });
     throw error;
   };
+  if (!config.AGENTIC_OS_ENABLED) return fail("ERROR", "AGENTIC_OS_DISABLED", new AppError("CONFLICT", "Planora assistants are disabled. The deterministic forecast workflow remains available.", 409));
+  if (!config.AI_COMMENTARY_ENABLED && input.agentId === "PLANORA.FORECAST.ANALYST.COMMENTARY.v1") return fail("ERROR", "AI_COMMENTARY_DISABLED", new AppError("CONFLICT", "Assistant commentary is disabled. Manual commentary remains available.", 409));
   if (definition.killSwitch === "DISABLED") return fail("ERROR", "AGENT_DISABLED", new AppError("CONFLICT", `${definition.displayName} is disabled. The deterministic forecast workflow remains available.`, 409));
   if (!definition.persona.split("|").includes(input.role)) return fail("AUTHORIZATION_UNDETERMINED", "ROLE_NOT_ALLOWED", new AppError("FORBIDDEN", "This assistant is not available for the current role.", 403));
 
@@ -111,6 +115,7 @@ export async function runAgent(input: RunInput) {
 }
 
 export async function respondToRecommendation(input: AgentContext & { recommendationId: string; decision: AgentFeedbackDecision; finalContent?: string; reason: string }) {
+  const config = env();
   return prisma.$transaction(async (tx) => {
     const recommendation = await tx.agentRecommendation.findFirst({ where: { id: input.recommendationId, organizationId: input.organizationId }, include: { run: { include: { agentDefinition: true } }, forecastVersion: true } });
     if (!recommendation) throw new AppError("RESOURCE_NOT_FOUND", "Agent recommendation was not found.", 404);
@@ -118,6 +123,7 @@ export async function respondToRecommendation(input: AgentContext & { recommenda
     const content = input.finalContent?.trim() || recommendation.proposedContent;
     if (input.decision === "EDITED" && (!content || content === recommendation.proposedContent)) throw new AppError("VALIDATION_ERROR", "Edited commentary must differ from the suggestion.", 400);
     if (["ACCEPTED", "EDITED"].includes(input.decision) && recommendation.type === "COMMENTARY_DRAFT") {
+      if (!config.AGENT_EXECUTION_ENABLED) throw new AppError("CONFLICT", "Agent-assisted application is disabled. Manual commentary remains available.", 409);
       if (recommendation.run.agentDefinition.killSwitch !== "ENABLED") throw new AppError("CONFLICT", "Commentary application is read-only or disabled. The suggestion remains available for review.", 409);
       if (!content || !recommendation.forecastVersion || !["DRAFT", "REVISION_REQUIRED", "IN_REVIEW"].includes(recommendation.forecastVersion.status)) throw new AppError("VERSION_LOCKED", "Commentary cannot be applied in the current workflow state.", 409);
       const comment = await tx.forecastComment.create({ data: { forecastVersionId: recommendation.forecastVersion.id, authorId: input.actorId, body: content, context: { source: "agent_recommendation", recommendationId: recommendation.id, decision: input.decision, agentId: recommendation.run.agentDefinition.agentId, agentVersion: recommendation.run.agentDefinition.version } } });

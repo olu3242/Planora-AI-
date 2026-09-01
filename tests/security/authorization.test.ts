@@ -8,6 +8,7 @@ import { addForecastComment } from "@/application/forecast/forecast-service";
 import { PrismaClient } from "@prisma/client";
 import { getTenantRecommendation, respondToRecommendation, runAgent } from "@/agents/agent-service";
 import { getTenantExecution } from "@/runtime/execution-runtime";
+import { decideAccountMapping, decideColumnMapping, validateAndImportWorkbook } from "@/application/excel/workbook-service";
 
 const prisma = new PrismaClient();
 afterAll(() => prisma.$disconnect());
@@ -19,6 +20,13 @@ describe("authorization boundaries", () => {
     expect(hasPermission("ANALYST", "forecast.publish")).toBe(false);
     expect(hasPermission("ANALYST", "forecast.export")).toBe(false);
     expect(hasPermission("ANALYST", "admin.manage")).toBe(false);
+  });
+
+  it("keeps platform operations separate from financial authority", () => {
+    expect(hasPermission("PLATFORM_ADMIN", "admin.manage")).toBe(true);
+    expect(hasPermission("PLATFORM_ADMIN", "financial.read")).toBe(false);
+    expect(hasPermission("PLATFORM_ADMIN", "forecast.approve")).toBe(false);
+    expect(hasPermission("CFO", "admin.manage")).toBe(false);
   });
 
   it("fails a direct cross-tenant organization ID as not found", async () => {
@@ -45,6 +53,19 @@ describe("authorization boundaries", () => {
     const tenantB = await prisma.organization.findUniqueOrThrow({ where: { code: "HORIZON" } });
     const workbook = await prisma.excelWorkbook.upsert({ where: { organizationId_sha256: { organizationId: tenantB.id, sha256: "security-workbook-fixture" } }, update: {}, create: { organizationId: tenantB.id, originalFileName: "security.xlsx", sanitizedFileName: "security.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", byteSize: 4, sha256: "security-workbook-fixture", content: Buffer.from("PK00") } });
     await expect(getTenantWorkbook(tenantA.id, workbook.id)).rejects.toMatchObject({ status: 404, code: "RESOURCE_NOT_FOUND" });
+  });
+
+  it("denies manipulated cross-tenant import and mapping IDs", async () => {
+    const tenantA = await prisma.organization.findUniqueOrThrow({ where: { code: "NORTHSTAR" } }); const tenantB = await prisma.organization.findUniqueOrThrow({ where: { code: "HORIZON" } }); const analyst = await prisma.user.findUniqueOrThrow({ where: { email: "analyst@planora.local" } });
+    const workbook = await prisma.excelWorkbook.upsert({ where: { organizationId_sha256: { organizationId: tenantB.id, sha256: "security-mapping-fixture" } }, update: {}, create: { organizationId: tenantB.id, originalFileName: "foreign.csv", sanitizedFileName: "foreign.csv", mimeType: "text/csv", byteSize: 1, sha256: "security-mapping-fixture", content: Buffer.from("x") } });
+    const template = await prisma.mappingTemplate.upsert({ where: { organizationId_fingerprint: { organizationId: tenantB.id, fingerprint: "security-mapping-fingerprint" } }, update: {}, create: { organizationId: tenantB.id, name: "Foreign security mapping", fingerprint: "security-mapping-fingerprint" } });
+    const mapping = await prisma.mappingVersion.upsert({ where: { templateId_version: { templateId: template.id, version: 1 } }, update: {}, create: { templateId: template.id, workbookId: workbook.id, version: 1, schemaFingerprint: template.fingerprint } });
+    const rule = await prisma.mappingRule.upsert({ where: { mappingVersionId_kind_sourceField_targetConcept: { mappingVersionId: mapping.id, kind: "COLUMN", sourceField: "GL_ACCT", targetConcept: "UNMAPPED" } }, update: {}, create: { mappingVersionId: mapping.id, kind: "COLUMN", sourceField: "GL_ACCT", targetConcept: "UNMAPPED", confidence: "0", reason: "Security fixture" } });
+    const suggestion = await prisma.mappingSuggestion.upsert({ where: { mappingVersionId_kind_sourceValue_targetConcept: { mappingVersionId: mapping.id, kind: "MEMBER", sourceValue: "Foreign Revenue", targetConcept: "ACCOUNT" } }, update: {}, create: { mappingVersionId: mapping.id, kind: "MEMBER", sourceValue: "Foreign Revenue", targetConcept: "ACCOUNT", confidence: "0", reason: "Security fixture", status: "REVIEW_REQUIRED" } });
+    const context = { organizationId: tenantA.id, actorId: analyst.id, correlationId: "security-mapping-id" };
+    await expect(decideColumnMapping({ ...context, workbookId: workbook.id, ruleId: rule.id, targetConcept: "ACCOUNT", reason: "Manipulated foreign rule" })).rejects.toMatchObject({ status: 404, code: "RESOURCE_NOT_FOUND" });
+    await expect(decideAccountMapping({ ...context, workbookId: workbook.id, suggestionId: suggestion.id, accountId: (await prisma.account.findFirstOrThrow({ where: { organizationId: tenantA.id } })).id, reason: "Manipulated foreign suggestion" })).rejects.toMatchObject({ status: 404, code: "RESOURCE_NOT_FOUND" });
+    await expect(validateAndImportWorkbook({ ...context, workbookId: workbook.id })).rejects.toMatchObject({ status: 404, code: "RESOURCE_NOT_FOUND" });
   });
 
   it("denies cross-tenant forecast and commentary IDs without disclosure", async () => {

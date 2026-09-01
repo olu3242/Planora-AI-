@@ -8,9 +8,10 @@ export const permissions = [
 export type Permission = (typeof permissions)[number];
 
 const grants: Record<RoleCode, ReadonlySet<Permission>> = {
-  CFO: new Set(permissions),
+  CFO: new Set(permissions.filter((p) => p !== "admin.manage")),
   FPA_DIRECTOR: new Set(permissions.filter((p) => p !== "admin.manage")),
   ANALYST: new Set(["financial.read", "financial.write", "financial.import", "mapping.review", "reconciliation.run", "forecast.create", "forecast.submit"]),
+  PLATFORM_ADMIN: new Set(["audit.read", "admin.manage"]),
 };
 
 export function hasPermission(role: RoleCode, permission: Permission) {

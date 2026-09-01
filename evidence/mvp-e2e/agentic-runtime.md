@@ -14,7 +14,9 @@
 `npx vitest run tests/integration/agentic-runtime.test.ts --reporter=verbose`
 
 - 1 test file passed
-- 10 tests passed
+- 11 tests passed
 - 0 failed
 
 The tests prove human-to-agent-to-recommendation-to-feedback-to-runtime-to-domain-to-audit correlation using the same organization, actor, and correlation ID.
+
+They also prove that environment-level Agentic OS, execution, and commentary switches fail closed while deterministic forecast actions and manual commentary remain available. Transient read-only work recovers within bounds; authorization, validation, data-integrity, and unknown failures do not retry; duplicate keys produce one logical domain effect.

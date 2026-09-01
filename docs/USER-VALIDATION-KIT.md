@@ -2,6 +2,12 @@
 
 Use one finance user, the Planora demo dataset, and a timer. Do not coach the participant beyond the task statements. Record blockers verbatim.
 
+## Pilot assets
+
+- `tests/fixtures/Planora_Pilot_Monthly_Forecast.xlsx` is the participant-facing synthetic workbook. Its Forecast sheet contains period, GL account, cost center, actual, prior forecast, and current forecast fields; supporting expense detail covers payroll/people expense, software/services, travel, and facilities without adding workforce planning.
+- `FY26_Forecast.xlsx`, `FY26_Forecast_Revision.xlsx`, and `FY26_Forecast_Invalid.csv` remain the automated mapping-reuse and invalid-path fixtures.
+- All values and organization labels are synthetic.
+
 ## Current state interview
 
 1. How long does the monthly forecast take from source collection to approval?

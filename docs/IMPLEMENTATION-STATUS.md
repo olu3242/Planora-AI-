@@ -15,7 +15,7 @@ Updated: 2026-08-31
 | 8 | Review/revision/approval | PASS | Server state matrix, separated approval, revision/resubmission E2E |
 | 9 | CFO, audit and lock | PASS | Management totals/rankings, reconstructable audit, CFO lock and database triggers |
 | 10 | Export/E2E | PASS | Authorized XLSX/CSV, audited export, exact `$213,750,000` browser reconciliation |
-| 11-20 | Certification and hardening | PASS | `MVP-CERTIFICATION.md`; 22 browser tests and all quality gates |
+| 11-20 | Certification and hardening | PASS | `MVP-CERTIFICATION.md`; 28 zero-retry browser tests and all quality gates |
 | 21-24 | Pilot evidence preparation | PARTIAL | Repeatable baseline/session/feedback records exist; real participant data is insufficient |
 | 25 | Evidence-based UX iteration | NOT_STARTED | Correctly gated on repeated pilot evidence |
 | 26 | Exception/recovery | PASS | Invalid, duplicate, drift, authorization, transition and lock paths tested |
@@ -24,11 +24,12 @@ Updated: 2026-08-31
 | 29 | Product decision | PASS | `CONTINUE_MVP_PILOT` |
 | 30 | Validation certification | PARTIAL | `MVP_PARTIALLY_VALIDATED`; external usability/value/adoption evidence required |
 | 31 | Bounded Agentic OS and execution runtime | PASS | Four governed assistants, feedback/version controls, idempotency/recovery, tenant/RBAC/prompt-injection tests and canonical browser regression |
+| 32 | Management dashboard and bounded Platform Admin | PASS | Domain-owned aggregation, DB/dashboard/export reconciliation, isolated admin role, pilot operations, agent controls, audit and financial-authority denial E2E |
 
 ## Current decision
 
-Phase 20: `READY_FOR_USER_VALIDATION`.
+Local freeze: `FEATURE_FREEZE_FOR_PILOT`.
 
 Phase 30: `MVP_PARTIALLY_VALIDATED` because no real FP&A pilot results exist. Continue the controlled MVP pilot; do not expand the product or claim beta readiness.
 
-No PR, merge, preview deployment, production deployment, or production data change was performed.
+PR #2 exists for the certification branch. Mandatory local freeze gates pass; remote CI/PR status must be tied to the exact freeze SHA. No merge, preview deployment, production deployment, or production data change was performed.

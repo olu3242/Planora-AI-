@@ -29,3 +29,11 @@ The Forecast MVP implements four deterministic, provider-independent assistants:
 `AgentDefinition`, `AgentRun`, `AgentRecommendation`, and `AgentFeedback` persist version, authenticated actor/organization, workflow context, evidence, output, and human decision. Feedback is evaluation data only. It carries `requiresVersionChange = true` and cannot silently mutate prompts, accounting logic, permissions, workflow rules, or the running definition.
 
 Human workflow transitions use `PLANORA.RUNTIME.COMMAND.EXECUTOR` through `RuntimeExecution`. The runtime supplies idempotency, bounded safe retries, failure classification, correlation, and append-only audit events. It cannot elevate identity, alter governance, or heal financial data. The deterministic workflow remains available when assistants are read-only or disabled.
+
+## Operational controls
+
+- `AGENTIC_OS_ENABLED=false` rejects new assistant runs while the deterministic import, forecast, commentary, review, approval, lock, and export workflow remains available.
+- `AI_COMMENTARY_ENABLED=false` disables assistant-authored commentary drafts; human commentary remains available.
+- `AGENT_EXECUTION_ENABLED=false` keeps safe recommendations and Reject feedback available but prevents accepted/edited commentary from being applied to the forecast.
+- Per-definition `ENABLED`, `READ_ONLY`, and `DISABLED` database kill switches remain the narrower control. Environment flags cannot grant authority or bypass a definition restriction.
+- No external model credential is required for the bounded MVP assistants.

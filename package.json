@@ -21,10 +21,12 @@
     "test:e2e:responsive": "playwright test --grep @responsive",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
+    "db:validate": "prisma validate",
+    "db:status": "prisma migrate status",
     "db:reset:test": "tsx database/reset-test.ts",
     "db:seed": "tsx database/seeds/index.ts",
     "db:generate": "prisma generate",
-    "certify": "npm run lint && npm run typecheck && npm run build && npm run test && npm run test:financial && npm run test:excel && npm run test:security && npm run test:performance && npm run db:reset:test && npm run db:seed && npm run test:e2e"
+    "certify": "npm run db:generate && npm run db:validate && npm run db:reset:test && npm run db:seed && npm run db:status && npm run lint && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:financial && npm run test:excel && npm run test:security && npm run test:performance && npm run test:e2e && npm run build"
   },
   "dependencies": {
     "@prisma/client": "6.19.1",

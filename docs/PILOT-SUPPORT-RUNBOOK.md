@@ -2,7 +2,7 @@
 
 ## Provision and reset
 
-Use the isolated `PLANORA-DEMO` organization and its Analyst, FP&A Director, and CFO seed accounts with non-sensitive fixtures only. Apply migrations and seed from a clean pilot database. For a repeatable local reset, run `npm run db:reset:test` followed by `npm run db:seed`. This is destructive and must never target a database containing retained pilot data.
+Use the isolated `PLANORA-DEMO` organization and its Analyst, FP&A Director, and CFO seed accounts with non-sensitive fixtures only. Apply migrations and seed from a clean pilot database. For a repeatable local reset, run `npm run db:reset:test` followed by `npm run db:seed`. The reset fails closed unless `APP_ENV` is `development`/`test` and the database host is loopback. Hosted pilot preparation uses `npm run db:migrate` followed by `npm run db:seed`; never use the destructive reset against Preview or Production.
 
 For removal, delete the isolated pilot environment/database according to the hosting retention policy. Do not manually delete tenant rows from a shared production database. Hosted provisioning/removal requires an approved environment target and backup/retention plan.
 

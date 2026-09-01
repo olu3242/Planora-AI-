@@ -48,7 +48,7 @@ export async function getSession() {
     where: { id: session.membershipId },
     include: { organization: true },
   });
-  if (!membership || !membership.active || membership.userId !== session.userId) return null;
+  if (!membership || !membership.active || !membership.organization.active || membership.userId !== session.userId) return null;
   return { sessionId: session.id, user: session.user, membership, organization: membership.organization };
 }
 

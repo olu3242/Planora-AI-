@@ -1,7 +1,7 @@
 import type { ParsedSheet } from "./types";
 
 export const requiredConcepts = ["ACCOUNT", "PERIOD", "COST_CENTER", "ACTUAL_AMOUNT", "FORECAST_AMOUNT"] as const;
-const aliases: Record<string, string> = { account: "ACCOUNT", "gl account": "ACCOUNT", gl: "ACCOUNT", acct: "ACCOUNT", "gl acct": "ACCOUNT", period: "PERIOD", month: "PERIOD", dept: "COST_CENTER", department: "COST_CENTER", "cost center": "COST_CENTER", actual: "ACTUAL_AMOUNT", "actual amount": "ACTUAL_AMOUNT", forecast: "FORECAST_AMOUNT", fcst: "FORECAST_AMOUNT", "forecast amount": "FORECAST_AMOUNT" };
+const aliases: Record<string, string> = { account: "ACCOUNT", "gl account": "ACCOUNT", gl: "ACCOUNT", acct: "ACCOUNT", "gl acct": "ACCOUNT", period: "PERIOD", month: "PERIOD", dept: "COST_CENTER", department: "COST_CENTER", "cost center": "COST_CENTER", actual: "ACTUAL_AMOUNT", "actual amount": "ACTUAL_AMOUNT", forecast: "FORECAST_AMOUNT", fcst: "FORECAST_AMOUNT", "forecast amount": "FORECAST_AMOUNT", "current forecast": "FORECAST_AMOUNT" };
 
 export function normalizeLabel(value: string) { return value.trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " "); }
 

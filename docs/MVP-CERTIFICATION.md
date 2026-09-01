@@ -26,6 +26,30 @@ Scope: the canonical forecast cycle only. Status is based on executable reposito
 | Governed learning | PASS | Tenant-scoped feedback stores original/final output and requires an approved future version; live definitions are not silently mutated. |
 | Deployment | BLOCKED | No preview/production target or credentials. Production promotion was not authorized and is not required for local user validation. |
 
+## Six-layer convergence
+
+Every scoped capability below has a real UI, server boundary, domain/application path, persisted model, server authorization, and automated browser coverage. A check means the referenced layer is exercised by the canonical zero-retry workflow, not inferred from file existence.
+
+| Capability | UI | API / server action | Domain | Persistence | Authorization | E2E |
+|---|---|---|---|---|---|---|
+| Forecast Cycle | `/forecasts` | tenant RSC query | forecast service/repository | `Forecast`, `ForecastVersion` | session organization | PASS |
+| Import | `/excel` | workbook routes | workbook service | workbook/profile/batch/facts | Analyst + tenant | PASS |
+| Mapping | workbook review | mapping routes | mapping decisions/reuse | template/version/rule/decision | role + tenant | PASS |
+| Validation | workbook review | import route | deterministic validation | `ImportError`, batch status | tenant + blocking gate | PASS |
+| Forecast Update | forecast workspace | line route | `updateForecastLine` | `ForecastLine`, audit | Analyst + editable state | PASS |
+| Variance | management workspace | tenant RSC query | decimal variance engine | canonical line amounts | tenant session | PASS |
+| Commentary | forecast workspace | comment route | `addForecastComment` | comment + audit | role/state/tenant | PASS |
+| Submission | workflow panel | transition route | transition matrix | version + audit + execution | Analyst/state | PASS |
+| Review | Director workflow | transition route | transition matrix | version + audit + execution | Director/state | PASS |
+| Revision | Director/Analyst workflow | transition/line routes | transition matrix | version/line/audit | separated roles/state | PASS |
+| Approval | Director workflow | transition route | self-approval/state guards | version + audit + execution | Director, not submitter | PASS |
+| CFO View | forecast workspace | tenant RSC query | management calculations | canonical forecast lines | CFO membership | PASS |
+| Lock | CFO workflow | transition route | finalization guard | locked version + DB triggers | CFO only | PASS |
+| Audit | audit history | tenant RSC query | append-only `writeAudit` | `AuditEvent` + DB trigger | tenant scope | PASS |
+| Export | workspace export | export route | authorized export builder | locked lines + export audit | Director/CFO + state | PASS |
+| Agent Recommendation | assistant panel | agent/feedback routes | grounded recommendation service | definition/run/recommendation/feedback | session role + tenant + flags | PASS |
+| Runtime Execution | workflow actions | transition route | bounded runtime executor | execution/idempotency/audit | inherited human authority | PASS |
+
 ## Canonical paths
 
 | Path | UI | HTTP boundary | Application | Repository/database |

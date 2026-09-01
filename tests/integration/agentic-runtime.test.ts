@@ -1,7 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { getTenantRecommendation, runAgent, respondToRecommendation } from "@/agents/agent-service";
-import { transitionForecast } from "@/application/forecast/forecast-service";
+import { addForecastComment, transitionForecast } from "@/application/forecast/forecast-service";
 import { AppError } from "@/lib/errors";
 import { executeRuntimeCommand, getTenantExecution } from "@/runtime/execution-runtime";
 
@@ -103,6 +103,29 @@ describe("governed Agentic OS", () => {
     await transitionForecast({ organizationId, actorId, role: "ANALYST", correlationId: "kill-core", versionId: coreVersion.id, action: "submit", reason: "Core workflow remains available" });
     expect((await prisma.forecastVersion.findUniqueOrThrow({ where: { id: coreVersion.id } })).status).toBe("SUBMITTED");
     await prisma.agentDefinition.update({ where: { id: definition.id }, data: { killSwitch: "ENABLED" } });
+  });
+
+  it("honors environment kill switches while preserving the deterministic and manual workflow", async () => {
+    try {
+      vi.stubEnv("AGENTIC_OS_ENABLED", "false");
+      await expect(runAgent({ ...context(), agentId: "PLANORA.WORKFLOW.ASSISTANT.NEXT_ACTION.v1", task: "Disabled operating state" })).rejects.toMatchObject({ code: "CONFLICT" });
+      const disabledRun = await prisma.agentRun.findFirstOrThrow({ where: { organizationId, actorId, errorCode: "AGENTIC_OS_DISABLED" }, orderBy: { startedAt: "desc" } }); runIds.push(disabledRun.id);
+
+      vi.stubEnv("AGENTIC_OS_ENABLED", "true"); vi.stubEnv("AI_COMMENTARY_ENABLED", "false");
+      await expect(runAgent({ ...context(), agentId: "PLANORA.FORECAST.ANALYST.COMMENTARY.v1", task: "Disabled commentary" })).rejects.toMatchObject({ code: "CONFLICT" });
+      const commentaryDisabledRun = await prisma.agentRun.findFirstOrThrow({ where: { organizationId, actorId, errorCode: "AI_COMMENTARY_DISABLED" }, orderBy: { startedAt: "desc" } }); runIds.push(commentaryDisabledRun.id);
+      const manualBody = `Manual commentary remains available ${crypto.randomUUID()}`;
+      await addForecastComment({ organizationId, actorId, role: "ANALYST", correlationId: "manual-commentary-fallback", versionId, body: manualBody });
+      expect(await prisma.forecastComment.findFirst({ where: { forecastVersionId: versionId, body: manualBody } })).not.toBeNull();
+
+      vi.stubEnv("AI_COMMENTARY_ENABLED", "true"); vi.stubEnv("AGENT_EXECUTION_ENABLED", "false");
+      const recommendation = await runAgent({ ...context(), agentId: "PLANORA.FORECAST.ANALYST.COMMENTARY.v1", task: "Read-only recommendation" }); runIds.push(recommendation.runId);
+      await expect(respondToRecommendation({ organizationId, actorId, role: "ANALYST", correlationId: "execution-disabled", recommendationId: recommendation.recommendation.id, decision: "ACCEPTED", reason: "Application should remain disabled" })).rejects.toMatchObject({ code: "CONFLICT" });
+      await respondToRecommendation({ organizationId, actorId, role: "ANALYST", correlationId: "execution-disabled", recommendationId: recommendation.recommendation.id, decision: "REJECTED", reason: "Human feedback remains available" });
+      expect(await prisma.agentRecommendation.findUniqueOrThrow({ where: { id: recommendation.recommendation.id } })).toMatchObject({ status: "REJECTED" });
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });
 
