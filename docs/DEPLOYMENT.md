@@ -34,12 +34,22 @@ Schema changes are backward compatible across a rolling deploy where possible. D
 
 ## Current state
 
-Preview: not configured.
-Production: not configured.
+Preview: configured for the linked Vercel project `eduradiusllc/planora-pilot` with an isolated Neon PostgreSQL database. The pre-convergence CLI deployment `dpl_AbAmBHF7WNXrrZpHV1L1snaJqD7M` is `READY`, but it was built from an uncommitted working tree and is not a certification candidate.
+Production: no successful deployment is configured. A prior Production-target build failed; no promotion occurred.
 Promotion: not authorized.
-Hosted certification: `HOSTED_BLOCKED` pending infrastructure and credentials; local work can continue.
+Hosted certification: `PARTIAL`. The landing page, login route, database-backed health endpoint, and unauthenticated application redirect passed hosted smoke checks. Full authenticated hosted workflow certification, object storage, malware scanning, backup/PITR evidence, monitoring, and rollback rehearsal remain outstanding.
 Local: PostgreSQL 18 via `compose.yaml`; Next.js standalone build PASS; health route `/api/health` PASS during browser tests.
 
-MVP certification: all eight migrations through `20260831184500_fix_agentic_tenant_guard` are verified from an empty local database. The deterministic seed includes isolated organizations and Analyst, FP&A Director, and CFO identities. Valid XLSX/CSV, compatible-revision, invalid CSV, and a synthetic monthly pilot fixture cover the controlled pilot workflow. The standalone production build and `/api/health` pass locally. See `MVP-CERTIFICATION.md` and `USER-VALIDATION-KIT.md`.
+MVP certification: all nine migrations through `20260831203000_dashboard_admin_closure` are verified from an empty local database. The deterministic seed includes isolated organizations and Analyst, FP&A Director, CFO, and Platform Admin identities. Valid XLSX/CSV, compatible-revision, invalid CSV, and a synthetic monthly pilot fixture cover the controlled pilot workflow. The standalone production build and `/api/health` pass locally. See `MVP-CERTIFICATION.md` and `USER-VALIDATION-KIT.md`.
 
-No preview deployment or production promotion was attempted. Hosted object storage, malware scanning, backups, monitoring, and rollback rehearsal must be configured for a hosted pilot; they do not block local real-user validation with non-sensitive demo data.
+The Preview database has all nine migrations applied and the repeatable synthetic seed. Hosted object storage, malware scanning, backup/PITR evidence, monitoring, and rollback rehearsal remain production gates unless the pilot risk assessment identifies a concrete blocker. No production promotion is authorized.
+
+### 2026-09-01 Preview evidence
+
+- Local `npm run certify`: PASS, including 34 zero-retry Playwright tests and the production build.
+- Vercel deployment status: `READY`, target `preview`.
+- `/`: HTTP 200 and contains the Planora landing hero plus `/login` entry points.
+- `/login`: HTTP 200.
+- `/api/health`: HTTP 200 with `{"status":"healthy"}`.
+- `/command-center` without a session: HTTP 307 to the authentication boundary.
+- Preview runtime error scan immediately after smoke checks: no error logs found.

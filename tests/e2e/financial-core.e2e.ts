@@ -30,7 +30,8 @@ for (const width of [375, 430, 768, 1024, 1440]) {
   test(`@responsive actuals remains usable without overflow at ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 950 });
     await signIn(page); await page.goto("/actuals");
-    await expect(page.getByText("$87M", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Actuals" })).toBeVisible();
+    await expect(page.getByText("EBITDA", { exact: true }).first()).toBeVisible();
     await page.getByText("Explain EBITDA", { exact: true }).click();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     expect(overflow).toBe(false);

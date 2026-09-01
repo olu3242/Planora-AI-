@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  output: process.env.VERCEL ? undefined : "standalone",
   poweredByHeader: false,
   allowedDevOrigins: ["127.0.0.1"],
   experimental: { serverActions: { bodySizeLimit: "12mb" } },

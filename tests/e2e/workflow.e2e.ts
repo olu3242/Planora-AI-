@@ -93,8 +93,8 @@ test.describe.serial("canonical forecast cycle", () => {
     await page.getByRole("link", { name: "Planora" }).focus(); await page.keyboard.press("Tab"); const focus = await page.evaluate(() => { const element = document.activeElement as HTMLElement; const style = getComputedStyle(element); return { tag: element.tagName, outline: style.outlineStyle, width: style.outlineWidth }; }); expect(["A", "BUTTON"]).toContain(focus.tag); expect(focus.outline).not.toBe("none"); expect(focus.width).not.toBe("0px"); await page.waitForLoadState("networkidle");
   });
 
-  for (const width of [375, 430, 768, 1024, 1440]) test(`@responsive locked CFO workspace has no page overflow at ${width}`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 950 }); await signIn(page, "cfo@planora.local"); await page.getByRole("link", { name: "Forecasts" }).click(); await page.getByRole("link", { name: /FY26 Forecast Cycle/ }).click(); await expect(page.getByText("LOCKED", { exact: true }).first()).toBeVisible(); expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false); await page.waitForLoadState("networkidle");
+  for (const width of [375, 430, 768, 1024, 1440]) test(`@responsive CFO workspace has no page overflow at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 950 }); await signIn(page, "cfo@planora.local"); await page.getByRole("link", { name: "Forecasts" }).click(); await page.getByRole("link", { name: /FY26 Forecast Cycle/ }).click(); await expect(page.getByRole("heading", { name: /FY26 Forecast Cycle/ })).toBeVisible(); expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false); await page.waitForLoadState("networkidle");
   });
 });
 

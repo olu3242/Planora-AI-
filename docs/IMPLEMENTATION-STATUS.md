@@ -1,6 +1,6 @@
 # Planora Implementation Status
 
-Updated: 2026-08-31
+Updated: 2026-09-01
 
 | Phase | Scope | State | Evidence |
 |---:|---|---|---|
@@ -19,7 +19,7 @@ Updated: 2026-08-31
 | 21-24 | Pilot evidence preparation | PARTIAL | Repeatable baseline/session/feedback records exist; real participant data is insufficient |
 | 25 | Evidence-based UX iteration | NOT_STARTED | Correctly gated on repeated pilot evidence |
 | 26 | Exception/recovery | PASS | Invalid, duplicate, drift, authorization, transition and lock paths tested |
-| 27 | Controlled pilot tenant | PARTIAL | Local `PLANORA-DEMO` ready; hosted environment unconfigured |
+| 27 | Controlled pilot tenant | PARTIAL | Local `PLANORA-DEMO` ready; Vercel Preview and isolated Neon database are live with synthetic seed, while hosted storage/monitoring/backup controls and full hosted certification remain incomplete |
 | 28 | Pilot support | PASS | Correlation IDs, safe logs, health check and support runbook |
 | 29 | Product decision | PASS | `CONTINUE_MVP_PILOT` |
 | 30 | Validation certification | PARTIAL | `MVP_PARTIALLY_VALIDATED`; external usability/value/adoption evidence required |
@@ -32,4 +32,4 @@ Local freeze: `FEATURE_FREEZE_FOR_PILOT`.
 
 Phase 30: `MVP_PARTIALLY_VALIDATED` because no real FP&A pilot results exist. Continue the controlled MVP pilot; do not expand the product or claim beta readiness.
 
-PR #2 exists for the certification branch. Mandatory local freeze gates pass; remote CI/PR status must be tied to the exact freeze SHA. No merge, preview deployment, production deployment, or production data change was performed.
+PR #2 exists for the certification branch. Mandatory local freeze gates pass; remote CI/PR status must be tied to the exact freeze SHA. Preview deployment `dpl_AbAmBHF7WNXrrZpHV1L1snaJqD7M` is READY with synthetic data. No merge, production deployment, production promotion, or production data change was performed.

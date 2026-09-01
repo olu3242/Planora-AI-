@@ -160,4 +160,4 @@ Planora/
 
 ## Current implementation status
 
-See `docs/MVP-CERTIFICATION.md` for the evidence-backed Forecast MVP matrix and `docs/USER-VALIDATION-KIT.md` for the external FP&A test. The complete canonical forecast cycle is implemented locally; hosted deployment remains unconfigured and production promotion is not authorized.
+See `docs/MVP-CERTIFICATION.md` for the evidence-backed Forecast MVP matrix and `docs/USER-VALIDATION-KIT.md` for the external FP&A test. The complete canonical forecast cycle is implemented locally. Preview infrastructure is configured for synthetic hosted certification; pilot readiness requires an exact committed SHA, and production promotion remains unauthorized.

@@ -5,7 +5,7 @@
 | ID | Description | Severity | Blocker status | Resolution |
 |---|---|---|---|---|
 | KG-005 | The freeze candidate still requires remote CI and human PR review | Medium | Does not block the certified local pilot freeze | Push the exact certified SHA; do not merge until required CI and review pass |
-| KG-006 | Preview/production infrastructure, private object storage, malware scanning, backups and monitoring are unconfigured | High | Blocks hosted external pilot, not local demo-data validation | Provision an isolated pilot environment under explicit authorization |
+| KG-006 | Vercel Preview and its isolated Neon database are configured; private object storage, malware scanning, backup/PITR evidence, monitoring, rollback rehearsal, and production remain unconfigured | High | Production gate; does not automatically block synthetic Preview pilot validation | Reassess against the pilot data classification and complete required controls under explicit authorization before production |
 | KG-009 | No real FP&A baseline, observed session, feedback, reuse intent or commercial signal exists | High | Blocks `MVP_VALIDATED` and beta decisions | Run the validation kit and record evidence without inventing values |
 | KG-010 | Hosted runtime/agent telemetry and operational alerting are not configured | Medium | Does not block isolated local user validation | Configure only with an explicitly authorized pilot environment |
 

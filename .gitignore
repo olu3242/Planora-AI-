@@ -39,3 +39,5 @@ workspace.code-workspace
 # generated delivery archives
 planora-e2e.zip
 planora-docs.zip
+
+.vercel
