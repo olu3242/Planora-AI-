@@ -63,8 +63,7 @@ export function createPrismaJournalPostingRepository(
             line.creditMinor !== input.lines[i].creditMinor)) throw new Error("IDEMPOTENCY_CONFLICT");
           return { journalId: existing.id, created: false };
         }
-        const postingDate = period.endDate;
-        if (accounts.some((account) => account.effectiveFrom > postingDate || (account.effectiveTo && account.effectiveTo < period.startDate))) throw new Error("ACCOUNT_NOT_EFFECTIVE");
+        if (accounts.some((account) => account.effectiveFrom > period.startDate || (account.effectiveTo && account.effectiveTo < period.endDate))) throw new Error("ACCOUNT_NOT_EFFECTIVE");
         const journal = await tx.accountingJournal.create({
           data: {
             organizationId: trustedOrganizationId, legalEntityId: input.legalEntityId,
