@@ -14,6 +14,7 @@ export function createPrismaJournalPostingRepository(
 ): JournalPostingRepository {
   return {
     async postAtomically(input) {
+      if (!trustedActorId.trim() || !trustedOrganizationId.trim()) throw new Error("TRUSTED_CONTEXT_REQUIRED");
       if (input.actorId !== trustedActorId || input.organizationId !== trustedOrganizationId) {
         throw new Error("UNTRUSTED_POSTING_CONTEXT");
       }
