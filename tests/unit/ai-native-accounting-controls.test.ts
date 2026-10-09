@@ -6,7 +6,7 @@ const validGate: PostingGate = {
   periodOpen: true, accountsActive: true, sourceEvidencePresent: true,
   idempotencyKeyPresent: true, policyEffective: true,
   requiresHumanApproval: true, humanApproved: true,
-  agentKillSwitchEnabled: true, isAgentInitiated: true,
+  agentKillSwitchEnabled: true, isAgentInitiated: false,
 };
 
 describe("AI-native accounting deterministic safeguards", () => {
@@ -37,9 +37,12 @@ describe("AI-native accounting deterministic safeguards", () => {
   it("fails closed for each posting control", () => {
     assertPostingGate(validGate);
     for (const key of Object.keys(validGate) as (keyof PostingGate)[]) {
-      if (key === "requiresHumanApproval" || key === "isAgentInitiated") continue;
+      if (key === "requiresHumanApproval" || key === "isAgentInitiated" || key === "agentKillSwitchEnabled") continue;
       expect(() => assertPostingGate({ ...validGate, [key]: false })).toThrow();
     }
+  });
+  it("rejects agent-initiated postings even when the kill switch is enabled", () => {
+    expect(() => assertPostingGate({ ...validGate, isAgentInitiated: true })).toThrow("AGENT_POSTING_NOT_SUPPORTED");
   });
   it("permits a non-agent workflow without an agent kill switch", () => {
     expect(() => assertPostingGate({ ...validGate, isAgentInitiated: false, agentKillSwitchEnabled: false })).not.toThrow();
