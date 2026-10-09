@@ -5,6 +5,7 @@ import { hasPermission } from "@/permissions/permissions";
 import { getLedgerWorkspace } from "@/application/accounting/ledger-workspace";
 import { validateApCloseReadiness, validateArCloseReadiness, validateBankCloseReadiness } from "@/application/accounting/close-readiness";
 import { getTrialBalance } from "@/application/accounting/trial-balance-service";
+import { StartCloseWorkflow } from "@/components/accounting-workflow-actions";
 
 type Search=Promise<{entity?:string;period?:string}>;
 export default async function CloseCenter({searchParams}:{searchParams:Search}){
@@ -24,7 +25,7 @@ export default async function CloseCenter({searchParams}:{searchParams:Search}){
   <div className="page-title-row"><div><h1 className="page-heading">Close Center</h1><p className="subtle">Pre-close controls before the governed close-to-forecast workflow.</p></div><span className={ready?"status good":"status"}>{ready?"READY FOR WORKFLOW":"REVIEW REQUIRED"}</span></div>
   <form className="filter-bar" method="get"><label className="compact-field">Entity<select name="entity" defaultValue={q.entity??""}><option value="">Select entity</option>{meta.entities.map(e=><option key={e.id} value={e.id}>{e.code} · {e.name}</option>)}</select></label><label className="compact-field">Period<select name="period" defaultValue={q.period??""}><option value="">Select period</option>{meta.periods.map(p=><option key={p.id} value={p.id}>{p.year.code} · {p.name} · {p.accountingCloseState}</option>)}</select></label><button className="button button-secondary">Run readiness</button></form>
   <section className="panel"><div className="section-heading"><div><h2>Close readiness</h2><p>All four controls must pass. Starting the workflow does not itself close the period.</p></div><LockKeyhole size={20}/></div><div className="fact-list">{checks.map(c=><div className="fact-row" key={c.name}><div>{c.ok?<CheckCircle2 size={18}/>:<TriangleAlert size={18}/>} <strong>{c.name}</strong></div><div><strong>{c.ok?"PASS":"BLOCKED"}</strong><span>{c.detail}</span></div></div>)}{!checks.length&&<div className="empty-state"><h2>Select an entity and period</h2></div>}</div></section>
-  {ready&&<form action="/api/orchestration/start" method="post"><input type="hidden" name="legalEntityId" value={q.entity}/><input type="hidden" name="fiscalPeriodId" value={q.period}/><p className="subtle">Workflow start requires the authenticated API boundary and controller approval before period close.</p></form>}
+  {ready&&q.entity&&q.period&&<section className="panel"><h2>Governed close workflow</h2><p className="subtle">Start the durable workflow. It must reach a separate controller approval before the period-close step can execute.</p><StartCloseWorkflow legalEntityId={q.entity} fiscalPeriodId={q.period}/></section>}
   <Link className="button button-secondary" href="/accounting/control-center">Open Control Center</Link>
  </>;
 }
