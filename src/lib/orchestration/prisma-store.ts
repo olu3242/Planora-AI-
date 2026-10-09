@@ -15,6 +15,7 @@ export class PrismaWorkflowRunStore implements WorkflowRunStore {
       create: {
         id: run.id,
         organizationId: run.context.organizationId,
+        actorId: run.context.actorId,
         definitionId: run.definitionId,
         definitionVersion: run.definitionVersion,
         status: run.status,
