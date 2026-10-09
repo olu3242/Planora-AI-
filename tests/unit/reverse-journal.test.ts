@@ -9,7 +9,7 @@ function fixture(options: { closed?: boolean; reversed?: boolean; role?: string 
         where.reversalOfId
           ? Promise.resolve(options.reversed ? { id: "existing" } : null)
           : Promise.resolve({
-              id: "original", organizationId: "org", legalEntityId: "entity",
+              id: "original", postedById: "actor", reversalOfId: null, organizationId: "org", legalEntityId: "entity",
               fiscalPeriodId: "period", currencyCode: "USD",
               lines: [
                 { ordinal: 0, accountId: "cash", debitMinor: 100n, creditMinor: 0n },
