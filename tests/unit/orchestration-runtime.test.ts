@@ -65,3 +65,45 @@ describe("governed orchestration runtime", () => {
     expect(failed.steps.write.status).toBe("PENDING");
   });
 });
+
+
+describe("bounded retry policy", () => {
+  it("retries transient failures only up to maxAttempts", async () => {
+    const retryDefinition: WorkflowDefinition = {
+      id: "retry-test", version: 1,
+      steps: [{ id: "transient", kind: "INTEGRATION", maxAttempts: 3 }],
+    };
+    const runStore = new MemoryWorkflowRunStore();
+    const executionStore = new MemoryRuntimeExecutionStore();
+    const registry = new RuntimeRegistry();
+    let attempts = 0;
+    registry.register("transient", async () => {
+      attempts += 1;
+      if (attempts < 3) throw new Error("NETWORK_TIMEOUT");
+      return { evidenceId: "ev-recovered" };
+    });
+    await runStore.save(createWorkflowRun("run-retry", retryDefinition, context));
+    const run = await executeReadySteps(retryDefinition, "run-retry", runStore, executionStore, registry);
+    expect(attempts).toBe(3);
+    expect(run.steps.transient.status).toBe("SUCCEEDED");
+  });
+
+  it("does not retry pending or financial validation failures", async () => {
+    const terminalDefinition: WorkflowDefinition = {
+      id: "terminal-test", version: 1,
+      steps: [{ id: "pending-capability", kind: "DATABASE", maxAttempts: 5 }],
+    };
+    const runStore = new MemoryWorkflowRunStore();
+    const executionStore = new MemoryRuntimeExecutionStore();
+    const registry = new RuntimeRegistry();
+    let attempts = 0;
+    registry.register("pending-capability", async () => {
+      attempts += 1;
+      throw new Error("RUNTIME_CAPABILITY_PENDING:period-close-transaction");
+    });
+    await runStore.save(createWorkflowRun("run-terminal", terminalDefinition, context));
+    const run = await executeReadySteps(terminalDefinition, "run-terminal", runStore, executionStore, registry);
+    expect(attempts).toBe(1);
+    expect(run.status).toBe("FAILED");
+  });
+});
