@@ -58,6 +58,35 @@ describe("Prisma posting adapter (mock transaction boundary)", () => {
     await expect(createPrismaJournalPostingRepository(db as never, "actor", "org").postAtomically(input)).rejects.toThrow("PERIOD_NOT_OPEN");
     expect(tx.accountingJournal.create).not.toHaveBeenCalled();
   });
+  it("rejects an account outside the fiscal period", async () => {
+    const { db, tx } = fakeDb({
+      account: { findMany: vi.fn().mockResolvedValue([
+        { id: "cash", effectiveFrom: new Date("2026-02-01"), effectiveTo: null },
+        { id: "sales", effectiveFrom: new Date("2020-01-01"), effectiveTo: null },
+      ]) },
+    });
+    await expect(createPrismaJournalPostingRepository(db as never, "actor", "org").postAtomically(input))
+      .rejects.toThrow("ACCOUNT_NOT_EFFECTIVE");
+    expect(tx.accountingJournal.create).not.toHaveBeenCalled();
+  });
+  it("replays an identical journal without a second posting", async () => {
+    const { db, tx } = fakeDb({
+      accountingJournal: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "existing", status: "POSTED", postedById: "actor",
+          legalEntityId: "entity", fiscalPeriodId: "period", currencyCode: "USD",
+        }),
+        create: vi.fn(), update: vi.fn(),
+      },
+      accountingJournalLine: { findMany: vi.fn().mockResolvedValue(
+        lines.map((line, ordinal) => ({ ...line, ordinal })),
+      ) },
+    });
+    await expect(createPrismaJournalPostingRepository(db as never, "actor", "org").postAtomically(input))
+      .resolves.toEqual({ journalId: "existing", created: false });
+    expect(tx.accountingJournal.create).not.toHaveBeenCalled();
+    expect(tx.auditEvent.create).not.toHaveBeenCalled();
+  });
   it("rejects replay with different amounts", async () => {
     const { tx, db } = fakeDb({
       accountingJournal: {
