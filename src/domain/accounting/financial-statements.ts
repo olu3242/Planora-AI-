@@ -1,10 +1,43 @@
-export type StatementAccount = Readonly<{accountId:string;code:string;name:string;type:string;normalBalance:"DEBIT"|"CREDIT";debitMinor:bigint;creditMinor:bigint}>;
+export type StatementAccount = Readonly<{
+ accountId:string;code:string;name:string;type:string;normalBalance:"DEBIT"|"CREDIT";debitMinor:bigint;creditMinor:bigint;
+ statementClass?:string|null;statementSection?:string|null;reportingCode?:string|null;cashFlowClass?:string|null;systemPurpose?:string|null;
+}>;
 export type FinancialStatementSet = Readonly<{
  profitAndLoss: readonly StatementAccount[];
  balanceSheet: readonly StatementAccount[];
  cashFlow: Readonly<{operatingMinor:bigint;investingMinor:bigint;financingMinor:bigint;netChangeMinor:bigint;unclassifiedMinor:bigint}>;
  controls: Readonly<{trialBalanceBalanced:boolean;balanceSheetBalanced:boolean;cashFlowClassified:boolean}>;
 }>;
+
+export function serializeFinancialStatementEvidence(input:{
+ profitAndLoss:FinancialStatementSet["profitAndLoss"];
+ balanceSheet:FinancialStatementSet["balanceSheet"];
+ cashFlow:FinancialStatementSet["cashFlow"];
+ controls:FinancialStatementSet["controls"];
+ currencyCode:string|null;
+ coaControl:{mapped:boolean;unmappedAccounts:readonly {accountId:string;code:string;name:string}[]};
+}){
+ const serializeAccount=(account:StatementAccount)=>({
+  accountId:account.accountId,code:account.code,name:account.name,type:account.type,normalBalance:account.normalBalance,
+  debitMinor:account.debitMinor.toString(),creditMinor:account.creditMinor.toString(),
+  statementClass:account.statementClass??null,statementSection:account.statementSection??null,
+  reportingCode:account.reportingCode??null,cashFlowClass:account.cashFlowClass??null,systemPurpose:account.systemPurpose??null,
+ });
+ return {
+  currencyCode:input.currencyCode,
+    profitAndLoss:input.profitAndLoss.map(serializeAccount),
+    balanceSheet:input.balanceSheet.map(serializeAccount),
+  cashFlow:{
+     operatingMinor:input.cashFlow.operatingMinor.toString(),
+     investingMinor:input.cashFlow.investingMinor.toString(),
+     financingMinor:input.cashFlow.financingMinor.toString(),
+     netChangeMinor:input.cashFlow.netChangeMinor.toString(),
+     unclassifiedMinor:input.cashFlow.unclassifiedMinor.toString(),
+  },
+    controls:input.controls,
+  coaControl:{mapped:input.coaControl.mapped,unmappedAccounts:input.coaControl.unmappedAccounts.map(account=>({...account}))},
+ };
+}
 
 const net=(a:StatementAccount)=>a.normalBalance==="DEBIT"?a.debitMinor-a.creditMinor:a.creditMinor-a.debitMinor;
 const pnlTypes=new Set(["REVENUE","COGS","OPERATING_EXPENSE","OTHER_INCOME","OTHER_EXPENSE"]);
