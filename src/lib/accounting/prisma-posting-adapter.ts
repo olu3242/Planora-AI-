@@ -1,6 +1,7 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import type { JournalPostingRepository } from "./governed-posting";
 import { validateJournalLines } from "./ai-native-controls";
+import { verifyPersistedAccountingApproval } from "./persisted-approval";
 
 /**
  * Persistence adapter for approved human-initiated postings only.
