@@ -23,6 +23,16 @@ export async function syncLedgerActuals(input:Readonly<{
   // Check the original debit/credit amounts (not normal-balance signed values).
   const journalTotals=new Map<string,{debits:bigint;credits:bigint}>();
   for(const journal of journals){
+   if(journal.lines.length<2) throw new Error("INVALID_POSTED_JOURNAL");
+   let journalDebits=0n;
+   let journalCredits=0n;
+   for(const line of journal.lines){
+    if(line.debitMinor<0n || line.creditMinor<0n || (line.debitMinor>0n)===(line.creditMinor>0n))
+     throw new Error("INVALID_POSTED_JOURNAL_LINE");
+    journalDebits+=line.debitMinor;
+    journalCredits+=line.creditMinor;
+   }
+   if(journalDebits!==journalCredits) throw new Error("UNBALANCED_POSTED_JOURNAL");
    const totals=journalTotals.get(journal.currencyCode)??{debits:0n,credits:0n};
    for(const line of journal.lines){
     totals.debits+=line.debitMinor;
