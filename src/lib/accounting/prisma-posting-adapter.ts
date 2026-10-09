@@ -66,6 +66,10 @@ export function createPrismaJournalPostingRepository(
             line.creditMinor !== input.lines[i].creditMinor)) throw new Error("IDEMPOTENCY_CONFLICT");
           return { journalId: existing.id, created: false };
         }
+        const approval = await verifyPersistedAccountingApproval(tx, {
+          organizationId: trustedOrganizationId, legalEntityId: input.legalEntityId,
+          fiscalPeriodId: input.fiscalPeriodId, sourceKey: input.sourceKey, actorId: trustedActorId,
+        });
         const journal = await tx.accountingJournal.create({
           data: {
             organizationId: trustedOrganizationId, legalEntityId: input.legalEntityId,
