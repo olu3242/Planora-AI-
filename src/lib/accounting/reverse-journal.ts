@@ -6,7 +6,7 @@ export async function reverseJournal(
   actor: { userId: string; organizationId: string },
   request: { originalId: string; sourceKey: string; reason: string },
 ) {
-  if (!request.sourceKey.trim() || !request.reason.trim()) throw new Error("REVERSAL_REASON_REQUIRED");
+  if (!actor.userId || !actor.organizationId || !request.originalId || !request.sourceKey.trim() || !request.reason.trim()) throw new Error("REVERSAL_REASON_REQUIRED");
   return db.$transaction(async (tx) => {
     const member = await tx.organizationMembership.findFirst({
       where: { userId: actor.userId, organizationId: actor.organizationId, active: true },
