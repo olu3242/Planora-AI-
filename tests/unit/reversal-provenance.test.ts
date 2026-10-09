@@ -15,7 +15,8 @@ describe("reversal provenance", () => {
       },
       fiscalPeriod: { findFirst: vi.fn().mockResolvedValue({ accountingCloseState: "OPEN" }) },
     };
-    const db = { $transaction: vi.fn(async (fn: (tx: typeof tx) => unknown) => fn(tx)) };
+    type MockTransaction = typeof tx;
+    const db = { $transaction: vi.fn(async (fn: (value: MockTransaction) => unknown) => fn(tx)) };
     await expect(reverseJournal(db as never, { userId: "actor", organizationId: "org" }, {
       originalId: "journal", sourceKey: "reverse-key", reason: "Correction",
     })).rejects.toThrow("ORIGINAL_POSTING_PROVENANCE_REQUIRED");
