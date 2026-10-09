@@ -14,3 +14,8 @@ export async function acceptedDecisionMemory(organizationId:string,types:string[
  for(const row of scoped){const e=row.evidence as Record<string,unknown>;const key=[row.type,e.legalEntityId??"",e.fiscalPeriodId??"",e.accountId??""].join(":");if(!latest.has(key))latest.set(key,row);}
  return [...latest.values()];
 }
+
+
+export async function pendingRecommendationInbox(organizationId:string,excludeActorId?:string){
+ return prisma.agentRecommendation.findMany({where:{organizationId,status:"PENDING",...(excludeActorId?{NOT:{actorId:excludeActorId}}:{})},orderBy:{createdAt:"asc"},take:50,select:{id:true,type:true,summary:true,observedFacts:true,evidence:true,createdAt:true,actorId:true,run:{select:{agentDefinition:{select:{agentId:true,displayName:true}}}}}});
+}
