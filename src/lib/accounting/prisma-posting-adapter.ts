@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
 import type { JournalPostingRepository } from "./governed-posting";
 
 /**
@@ -69,8 +69,30 @@ export function createPrismaJournalPostingRepository(
             })) },
           },
         });
+        await tx.auditEvent.create({
+          data: {
+            organizationId: trustedOrganizationId,
+            actorId: trustedActorId,
+            action: "ACCOUNTING_JOURNAL_POSTED",
+            entityType: "AccountingJournal",
+            entityId: journal.id,
+            correlationId: input.sourceKey,
+            newState: {
+              journalId: journal.id,
+              legalEntityId: input.legalEntityId,
+              fiscalPeriodId: input.fiscalPeriodId,
+              currencyCode: input.currencyCode,
+              sourceKey: input.sourceKey,
+              lines: input.lines.map((line, ordinal) => ({
+                ordinal, accountId: line.accountId,
+                debitMinor: line.debitMinor.toString(),
+                creditMinor: line.creditMinor.toString(),
+              })),
+            },
+          },
+        });
         return { journalId: journal.id, created: true };
-      }, { isolationLevel: "Serializable" });
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     },
   };
 }
