@@ -203,6 +203,20 @@ enum RuntimeErrorCategory {
   UNKNOWN
 }
 
+enum ReportingRunStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  REJECTED
+}
+
+enum ReportingApprovalDecision {
+  REVIEWED
+  APPROVED
+  REJECTED
+}
+
 model User {
   id                      String                   @id @default(uuid()) @db.Uuid
   email                   String                   @unique
@@ -222,6 +236,8 @@ model User {
   runtimeExecutions       RuntimeExecution[]
   postedAccountingJournals AccountingJournal[]
   workflowRuns            WorkflowRunRecord[] @relation("WorkflowRunActor")
+  preparedReportingRuns   ReportingRun[] @relation("ReportingRunPreparer")
+  reportingApprovals      ReportingApproval[] @relation("ReportingApprovalActor")
 
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
@@ -263,6 +279,8 @@ model Organization {
   apPayments           ApPayment[]
   arInvoices           ArInvoice[]
   arReceipts           ArReceipt[]
+  reportingFrameworks  ReportingFrameworkVersion[]
+  reportingRuns        ReportingRun[]
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
 }
@@ -441,6 +459,7 @@ model LegalEntity {
   apPayments         ApPayment[]
   arInvoices         ArInvoice[]
   arReceipts         ArReceipt[]
+  reportingRuns      ReportingRun[]
 
   @@unique([organizationId, code])
   @@index([organizationId, parentId])
@@ -609,6 +628,7 @@ model FiscalPeriod {
 
   accountingJournals AccountingJournal[]
   accountingCloseState AccountingPeriodState @default(OPEN)
+  reportingRuns ReportingRun[]
 
   @@unique([fiscalYearId, code])
   @@unique([fiscalYearId, ordinal])
@@ -1237,4 +1257,78 @@ model ArReceiptAllocation {
   invoice     ArInvoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
   @@unique([receiptId, invoiceId])
   @@index([invoiceId])
+}
+
+
+model ReportingFrameworkVersion {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  frameworkCode  String
+  version        String
+  effectiveFrom  DateTime     @db.Date
+  effectiveTo    DateTime?    @db.Date
+  ruleManifest   Json
+  disclosureManifest Json
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  runs           ReportingRun[]
+
+  @@unique([organizationId, frameworkCode, version])
+  @@index([organizationId, frameworkCode, effectiveFrom])
+}
+
+model ReportingRun {
+  id                 String             @id @default(uuid()) @db.Uuid
+  organizationId     String             @db.Uuid
+  legalEntityId      String             @db.Uuid
+  fiscalPeriodId     String             @db.Uuid
+  frameworkVersionId String             @db.Uuid
+  preparedById       String             @db.Uuid
+  status             ReportingRunStatus @default(DRAFT)
+  statementEvidence  Json
+  controlEvidence    Json
+  lockedAt           DateTime?
+  publishedAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity        LegalEntity        @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  fiscalPeriod       FiscalPeriod       @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+  frameworkVersion   ReportingFrameworkVersion @relation(fields: [frameworkVersionId], references: [id], onDelete: Restrict)
+  preparedBy         User               @relation("ReportingRunPreparer", fields: [preparedById], references: [id], onDelete: Restrict)
+  disclosures        ReportingDisclosureEvidence[]
+  approvals          ReportingApproval[]
+
+  @@unique([organizationId, legalEntityId, fiscalPeriodId, frameworkVersionId])
+  @@index([organizationId, status, updatedAt])
+}
+
+model ReportingDisclosureEvidence {
+  id          String       @id @default(uuid()) @db.Uuid
+  runId       String       @db.Uuid
+  requirementCode String
+  required    Boolean      @default(true)
+  satisfied   Boolean      @default(false)
+  evidence    Json
+  createdAt   DateTime     @default(now())
+  run         ReportingRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@unique([runId, requirementCode])
+  @@index([runId, required, satisfied])
+}
+
+model ReportingApproval {
+  id          String                    @id @default(uuid()) @db.Uuid
+  runId       String                    @db.Uuid
+  actorId     String                    @db.Uuid
+  decision    ReportingApprovalDecision
+  reason      String
+  evidence    Json
+  createdAt   DateTime                  @default(now())
+  run         ReportingRun              @relation(fields: [runId], references: [id], onDelete: Restrict)
+  actor       User                      @relation("ReportingApprovalActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([runId, createdAt])
+  @@index([actorId, createdAt])
 }
