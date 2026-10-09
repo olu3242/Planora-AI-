@@ -9,6 +9,7 @@ import { runCloseAgent } from "@/application/agents/close-agent";
 import { runForecastAgent } from "@/application/agents/forecast-agent";
 import { runInsightAgent } from "@/application/agents/insight-agent";
 import { runStatementAgent } from "@/application/agents/statement-agent";
+import { runPlanoraReportAgent } from "@/application/agents/report-agent";
 
 function evidence(stepId:string,runId:string){return `workflow:${runId}:${stepId}`;}
 const unavailable=(capability:string):StepHandler=>async()=>{throw new Error(`RUNTIME_CAPABILITY_PENDING:${capability}`);};
@@ -45,6 +46,13 @@ export function accountingRuntimeRegistry():RuntimeRegistry{
  registry.register("statement-review",async(run)=>{
   const s=scope(run); const result=await runStatementAgent({...s,actorId:run.context.actorId,correlationId:run.context.correlationId});
   if(!result.controls.trialBalanceBalanced||!result.controls.balanceSheetBalanced||!result.controls.cashFlowClassified||!result.controls.coaMapped) throw new Error("FINANCIAL_STATEMENT_CONTROL_BLOCKED");
+  return {evidenceId:`agent-recommendation:${result.recommendationId}`};
+ });
+ registry.register("planora-report-review",async(run)=>{
+  const reportingRunId=typeof run.context.metadata?.reportingRunId==="string"?run.context.metadata.reportingRunId:null;
+  if(!reportingRunId) throw new Error("REPORTING_RUN_CONTEXT_REQUIRED");
+  const result=await runPlanoraReportAgent({organizationId:run.context.organizationId,reportingRunId,actorId:run.context.actorId,correlationId:run.context.correlationId});
+  if(!result.readyForHumanApproval) throw new Error("PLANORA_REPORT_REMEDIATION_REQUIRED");
   return {evidenceId:`agent-recommendation:${result.recommendationId}`};
  });
  registry.register("close-analysis",async(run)=>{
