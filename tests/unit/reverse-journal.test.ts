@@ -50,6 +50,13 @@ describe("journal reversal transaction", () => {
     await expect(reverseJournal(db as never, actor, request)).rejects.toThrow("ALREADY_REVERSED");
     expect(tx.accountingJournal.create).not.toHaveBeenCalled();
   });
+  it("rejects a reused reversal source key", async () => {
+    const { db, tx } = fixture();
+    tx.accountingJournal.findUnique.mockResolvedValue({ id: "different-journal" });
+    await expect(reverseJournal(db as never, actor, request))
+      .rejects.toThrow("REVERSAL_SOURCE_KEY_CONFLICT");
+    expect(tx.accountingJournal.create).not.toHaveBeenCalled();
+  });
   it("rejects unauthorized role", async () => {
     const { db, tx } = fixture({ role: "ANALYST" });
     await expect(reverseJournal(db as never, actor, request)).rejects.toThrow("REVERSAL_DENIED");
