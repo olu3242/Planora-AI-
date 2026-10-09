@@ -27,7 +27,7 @@ export async function verifyPersistedAccountingApproval(
     sourceKey: record.sourceKey,
     preparedById: record.preparedById,
     approvedById: record.decidedById,
-    decision: record.decision,
+    decision: record.decision === "PENDING" ? "REJECTED" : record.decision,
     expiresAt: record.expiresAt,
     consumedAt: record.consumedAt,
   } : null, scope);
