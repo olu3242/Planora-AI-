@@ -44,7 +44,7 @@ export function accountingRuntimeRegistry():RuntimeRegistry{
  });
  registry.register("statement-review",async(run)=>{
   const s=scope(run); const result=await runStatementAgent({...s,actorId:run.context.actorId,correlationId:run.context.correlationId});
-  if(!result.controls.trialBalanceBalanced||!result.controls.balanceSheetBalanced||!result.controls.cashFlowClassified) throw new Error("FINANCIAL_STATEMENT_CONTROL_BLOCKED");
+  if(!result.controls.trialBalanceBalanced||!result.controls.balanceSheetBalanced||!result.controls.cashFlowClassified||!result.controls.coaMapped) throw new Error("FINANCIAL_STATEMENT_CONTROL_BLOCKED");
   return {evidenceId:`agent-recommendation:${result.recommendationId}`};
  });
  registry.register("close-analysis",async(run)=>{
