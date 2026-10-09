@@ -22,6 +22,7 @@ export async function reverseJournal(
     });
     if (!period || period.accountingCloseState !== "OPEN") throw new Error("PERIOD_LOCKED");
     if (original.reversalOfId) throw new Error("REVERSAL_OF_REVERSAL_DENIED");
+    if (original.postedById === null) throw new Error("ORIGINAL_POSTING_PROVENANCE_REQUIRED");
     const prior = await tx.accountingJournal.findFirst({
       where: { organizationId: actor.organizationId, reversalOfId: original.id },
     });
