@@ -1,0 +1,13 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {PeriodLedger} from "./period-ledger.mjs";
+const config={entityId:"e1",sector:"private",jurisdiction:"US",framework:"US_GAAP",standardVersion:"2026",effectiveDate:"2026-01-01",currency:"USD"};
+const chart={Cash:{type:"asset",active:true},Revenue:{type:"revenue",active:true}};
+const journal={id:"j1",entityId:"e1",date:"2026-10-08",lines:[{account:"Cash",debitMinor:100,creditMinor:0},{account:"Revenue",debitMinor:0,creditMinor:100}]};
+const ledger=()=>new PeriodLedger({config,chart});
+test("posts balanced journal and records event",()=>{const l=ledger();assert.equal(l.post(journal,"controller").status,"POSTED");assert.equal(l.getEvents().length,1)});
+test("rejects duplicate journal",()=>{const l=ledger();l.post(journal,"controller");assert.throws(()=>l.post(journal,"controller"),/Duplicate/)});
+test("closed period rejects posting",()=>{const l=ledger();l.setPeriod("2026-10","CLOSED","controller");assert.throws(()=>l.post(journal,"controller"),/Closed/)});
+test("closed period cannot reopen without approval",()=>{const l=ledger();l.setPeriod("2026-10","CLOSED","controller");assert.throws(()=>l.setPeriod("2026-10","OPEN","controller"),/approval/)});
+test("reversal preserves original journal",()=>{const l=ledger();l.post(journal,"controller");const r=l.reverse("j1",{id:"j2",date:"2026-10-09",actor:"controller"});assert.equal(r.lines[0].creditMinor,100);assert.equal(l.getJournals().length,2)});
+test("external mutation does not alter stored journal",()=>{const l=ledger();l.post(journal,"controller");const copy=l.getJournals();copy[0].lines[0].debitMinor=9;assert.equal(l.getJournals()[0].lines[0].debitMinor,100)});
