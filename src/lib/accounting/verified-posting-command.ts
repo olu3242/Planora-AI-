@@ -1,7 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { resolveAccountingPrincipal } from "./verified-session";
-import { createPrismaJournalPostingRepository } from "./prisma-posting-adapter";
-import { postGovernedJournal, type AuthorizedPosting } from "./governed-posting";
+import type { AuthorizedPosting } from "./governed-posting";
 
 /**
  * Fail-closed command boundary. The caller supplies a server-received session token;
@@ -20,7 +19,5 @@ export async function postAccountingFromSession(
   // No persisted approval decision is currently bound to accounting journals.
   // Deny rather than fabricate a humanApproved=true gate.
   void command;
-  void createPrismaJournalPostingRepository;
-  void postGovernedJournal;
   throw new Error("PERSISTED_ACCOUNTING_APPROVAL_NOT_IMPLEMENTED");
 }
