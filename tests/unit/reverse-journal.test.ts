@@ -23,7 +23,7 @@ function fixture(options: { closed?: boolean; reversed?: boolean; role?: string 
     fiscalPeriod: { findFirst: vi.fn().mockResolvedValue({ accountingCloseState: options.closed ? "HARD_CLOSED" : "OPEN" }) },
     auditEvent: { create: vi.fn().mockResolvedValue({ id: "audit" }) },
   };
-  const db = { $transaction: vi.fn(async (fn: (tx: typeof tx) => unknown) => fn(tx)) };
+  const db = { $transaction: vi.fn(async (fn: (transaction: typeof tx) => unknown) => fn(tx)) };
   return { db, tx };
 }
 const actor = { userId: "actor", organizationId: "org" };
