@@ -22,6 +22,7 @@ try {
   if (-not (Get-Command node -ErrorAction SilentlyContinue)) { throw "Node.js not installed" }
   if (-not (Get-Command npm -ErrorAction SilentlyContinue)) { throw "npm not installed" }
   Run-Gate "git-status" "git status --short"
+  Run-Gate "git-branch" "git branch --show-current"
   Run-Gate "npm-ci" "npm ci"
   Run-Gate "prisma-generate" "npx prisma generate"
   Run-Gate "prisma-validate" "npx prisma validate"
