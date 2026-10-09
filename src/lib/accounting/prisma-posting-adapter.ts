@@ -100,6 +100,8 @@ export function createPrismaJournalPostingRepository(
             correlationId: input.sourceKey,
             newState: {
               journalId: journal.id,
+              approvalId: approval.id,
+              approvedById: approval.decidedById,
               legalEntityId: input.legalEntityId,
               fiscalPeriodId: input.fiscalPeriodId,
               currencyCode: input.currencyCode,
