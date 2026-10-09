@@ -20,7 +20,7 @@ export function createPrismaJournalPostingRepository(
         const membership = await tx.organizationMembership.findFirst({
           where: { organizationId: trustedOrganizationId, userId: trustedActorId, active: true },
         });
-        if (!membership || !["CFO", "FPA_DIRECTOR"].includes(membership.roleCode)) {
+        if (!membership || !["CFO", "FPA_DIRECTOR"].includes(membership.role)) {
           throw new Error("POSTING_ROLE_DENIED");
         }
         const entity = await tx.legalEntity.findFirst({
