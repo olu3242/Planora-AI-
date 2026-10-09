@@ -16,6 +16,7 @@ function fixture(options: { closed?: boolean; reversed?: boolean; role?: string 
                 { ordinal: 1, accountId: "revenue", debitMinor: 0n, creditMinor: 100n },
               ],
             })),
+      findUnique: vi.fn().mockResolvedValue(null),
       create: vi.fn().mockResolvedValue({ id: "reversal" }),
       update: vi.fn().mockResolvedValue({ id: "reversal", status: "POSTED" }),
     },
