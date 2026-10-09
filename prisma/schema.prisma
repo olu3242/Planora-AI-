@@ -197,7 +197,7 @@ model User {
   agentFeedback           AgentFeedback[]
   runtimeExecutions       RuntimeExecution[]
   postedAccountingJournals AccountingJournal[]
-  workflowRuns            WorkflowRunRecord[]
+  workflowRuns            WorkflowRunRecord[] @relation("WorkflowRunActor")
 
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
@@ -236,7 +236,9 @@ model Organization {
   vendors              Vendor[]
   bankAccounts         BankAccount[]
   apBills              ApBill[]
+  apPayments           ApPayment[]
   arInvoices           ArInvoice[]
+  arReceipts           ArReceipt[]
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
 }
@@ -412,7 +414,9 @@ model LegalEntity {
   accountingJournals AccountingJournal[]
   bankAccounts       BankAccount[]
   apBills            ApBill[]
+  apPayments         ApPayment[]
   arInvoices         ArInvoice[]
+  arReceipts         ArReceipt[]
 
   @@unique([organizationId, code])
   @@index([organizationId, parentId])
@@ -431,6 +435,7 @@ model BusinessUnit {
   parent         BusinessUnit?   @relation("BusinessUnitHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children       BusinessUnit[]  @relation("BusinessUnitHierarchy")
   facts          FinancialFact[]
+  arInvoices     ArInvoice[]
 
   @@unique([organizationId, code])
   @@index([organizationId, parentId])
@@ -1006,6 +1011,7 @@ model AccountingJournal {
   reversalOf      AccountingJournal? @relation("JournalReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
   reversedBy      AccountingJournal? @relation("JournalReversal")
   lines           AccountingJournalLine[]
+  matchedBankTransactions BankTransaction[]
 
   @@unique([organizationId, sourceKey])
   @@index([organizationId, legalEntityId, fiscalPeriodId, status])
@@ -1029,6 +1035,7 @@ model AccountingJournalLine {
 model WorkflowRunRecord {
   id                String                    @id
   organizationId    String                    @db.Uuid
+  actorId           String                    @db.Uuid
   definitionId      String
   definitionVersion Int
   status            String
@@ -1036,6 +1043,7 @@ model WorkflowRunRecord {
   createdAt         DateTime                  @default(now())
   updatedAt         DateTime                  @updatedAt
   organization      Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor             User                      @relation("WorkflowRunActor", fields: [actorId], references: [id], onDelete: Restrict)
   executions        WorkflowExecutionRecord[]
 
   @@index([organizationId, status, updatedAt])
@@ -1138,6 +1146,8 @@ model ApPayment {
   paidDate       DateTime              @db.Date
   amountMinor    BigInt
   reference      String
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity    LegalEntity           @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
   allocations    ApPaymentAllocation[]
   @@unique([organizationId, reference])
   @@index([organizationId, legalEntityId, paidDate])
@@ -1181,6 +1191,8 @@ model ArReceipt {
   receivedDate   DateTime              @db.Date
   amountMinor    BigInt
   reference      String
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity    LegalEntity           @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
   allocations    ArReceiptAllocation[]
   @@unique([organizationId, reference])
   @@index([organizationId, legalEntityId, receivedDate])
