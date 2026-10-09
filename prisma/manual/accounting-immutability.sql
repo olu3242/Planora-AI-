@@ -9,6 +9,23 @@ BEGIN
   IF TG_OP = 'UPDATE' AND OLD.status = 'POSTED' THEN
     RAISE EXCEPTION 'POSTED_JOURNAL_IMMUTABLE' USING ERRCODE = '23514';
   END IF;
+  IF TG_OP = 'UPDATE' AND OLD.status = 'DRAFT' AND NEW.status = 'POSTED' THEN
+    IF NEW."postedAt" IS NULL OR NEW."postedById" IS NULL THEN
+      RAISE EXCEPTION 'POSTING_PROVENANCE_REQUIRED' USING ERRCODE = '23514';
+    END IF;
+    IF (SELECT COUNT(*) FROM "AccountingJournalLine" WHERE "journalId" = NEW.id) < 2 THEN
+      RAISE EXCEPTION 'JOURNAL_REQUIRES_TWO_LINES' USING ERRCODE = '23514';
+    END IF;
+    IF EXISTS (SELECT 1 FROM "AccountingJournalLine" WHERE "journalId" = NEW.id
+      AND ("debitMinor" < 0 OR "creditMinor" < 0 OR
+        (("debitMinor" > 0) = ("creditMinor" > 0)))) THEN
+      RAISE EXCEPTION 'INVALID_JOURNAL_LINE' USING ERRCODE = '23514';
+    END IF;
+    IF (SELECT COALESCE(SUM("debitMinor"), 0) FROM "AccountingJournalLine" WHERE "journalId" = NEW.id)
+      <> (SELECT COALESCE(SUM("creditMinor"), 0) FROM "AccountingJournalLine" WHERE "journalId" = NEW.id) THEN
+      RAISE EXCEPTION 'UNBALANCED_JOURNAL' USING ERRCODE = '23514';
+    END IF;
+  END IF;
   RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
 END;
 $$;
