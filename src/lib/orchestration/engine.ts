@@ -74,6 +74,7 @@ function dependenciesSucceeded(step: WorkflowStepDefinition, run: WorkflowRun): 
 }
 
 export function readySteps(definition: WorkflowDefinition, run: WorkflowRun): WorkflowStepDefinition[] {
+  if (run.status === "WAITING_APPROVAL" || run.status === "FAILED" || run.status === "CANCELLED" || run.status === "SUCCEEDED") return [];
   return definition.steps.filter(
     (step) => run.steps[step.id]?.status === "PENDING" && dependenciesSucceeded(step, run),
   );
