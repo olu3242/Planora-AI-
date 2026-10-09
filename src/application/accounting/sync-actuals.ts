@@ -19,6 +19,20 @@ export async function syncLedgerActuals(input:Readonly<{
    const ownedAccounts=await tx.account.count({where:{id:{in:accountIds},organizationId:input.organizationId}});
    if(ownedAccounts!==accountIds.length) throw new Error("LEDGER_ACCOUNT_NOT_IN_TENANT");
   }
+  // Ledger postings must balance by currency before they become FP&A actuals.
+  // Check the original debit/credit amounts (not normal-balance signed values).
+  const journalTotals=new Map<string,{debits:bigint;credits:bigint}>();
+  for(const journal of journals){
+   const totals=journalTotals.get(journal.currencyCode)??{debits:0n,credits:0n};
+   for(const line of journal.lines){
+    totals.debits+=line.debitMinor;
+    totals.credits+=line.creditMinor;
+   }
+   journalTotals.set(journal.currencyCode,totals);
+  }
+  for(const totals of journalTotals.values()){
+   if(totals.debits!==totals.credits) throw new Error("LEDGER_ACTUALS_UNBALANCED");
+  }
   const currencies=[...new Set(journals.map(j=>j.currencyCode))];
   let count=0;
   for(const currency of currencies){
