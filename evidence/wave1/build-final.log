@@ -1,0 +1,72 @@
+Isolated Wave 1 identity verified: {
+  database: 'planora_wave1_test',
+  role: 'planora_wave1_test',
+  port: 55440,
+  superuser: false,
+  bypass: false
+}
+▲ Next.js 16.4.0 (Turbopack)
+- Environments: .env.local, .env
+✓ Running next.config.ts took 58ms
+- Experiments (use with caution):
+  · serverActions
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 6.3s
+  Running TypeScript ...
+  Finished TypeScript in 6.6s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/13) ...
+  Generating static pages using 11 workers (3/13)
+  Generating static pages using 11 workers (6/13)
+  Generating static pages using 11 workers (9/13)
+✓ Generating static pages using 11 workers (13/13) in 767ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /accounting
+├ ƒ /accounting/chart-of-accounts
+├ ƒ /accounting/close
+├ ƒ /accounting/control-center
+├ ƒ /accounting/statements
+├ ƒ /accounting/statements/drilldown
+├ ƒ /accounting/trial-balance
+├ ƒ /actuals
+├ ƒ /api/accounting/chart-of-accounts/mapping
+├ ƒ /api/accounts/[id]
+├ ƒ /api/agent-recommendations/[id]/feedback
+├ ƒ /api/agents/recommendations/[recommendationId]/decision
+├ ƒ /api/agents/run
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/excel/workbooks
+├ ƒ /api/excel/workbooks/[id]/import
+├ ƒ /api/excel/workbooks/[id]/mappings
+├ ƒ /api/financial-facts/[id]
+├ ƒ /api/financial/statement
+├ ƒ /api/forecasts/[id]/comments
+├ ƒ /api/forecasts/[id]/export
+├ ƒ /api/forecasts/[id]/lines/[lineId]
+├ ƒ /api/forecasts/[id]/transition
+├ ƒ /api/health
+├ ƒ /api/metrics/[id]/lineage
+├ ƒ /api/orchestration/[runId]
+├ ƒ /api/orchestration/[runId]/approve
+├ ƒ /api/orchestration/[runId]/resume
+├ ƒ /api/orchestration/start
+├ ƒ /api/organizations/[id]
+├ ƒ /api/platform-admin
+├ ƒ /command-center
+├ ƒ /dashboard
+├ ƒ /excel
+├ ƒ /excel/[id]
+├ ƒ /forecasts
+├ ƒ /forecasts/[id]
+├ ƒ /login
+└ ƒ /platform-admin
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

@@ -179,6 +179,12 @@ Do not generate `planora-e2e.zip` until lint, typecheck, build, tests, and E2E c
 
 ## 11. When Uncertain
 
+### PostgreSQL certification preflight
+
+Before reporting a database blocker, read `.env.local` securely and classify its connection variables by environment. Never print credentials or complete URLs. Credentials alone are not proof of connectivity or test isolation. Never use a development or hosted database for destructive tests, migrations, or fixture mutations.
+
+Wave 1 uses the separately provisioned, ignored `.env.wave1.local`, validated by `scripts/wave1-command.ts`. `.env.convergence.local` is not assumed to be a test configuration. Verify actual database identity, least-privilege role, schema/migration alignment, and all seven database-dependent scenarios in `tests/security/authorization.test.ts` before claiming PostgreSQL certification. Record failures; continue only dependency-ready work. Environment files must never be committed.
+
 If a repository convention conflicts with a rule in this file, prefer the repository convention for style/tooling but never for the non-negotiables in §2. If the correct behavior for an ambiguous case isn't covered here or in the linked docs, stop and ask rather than guessing — record the question and the eventual answer in `docs/DECISIONS.md`.
 
 Do not claim E2E completion without executable evidence. If the acceptance chain in `docs/E2E-ACCEPTANCE.md` breaks somewhere, say exactly where it breaks and continue implementation from that point — do not round up to "done."

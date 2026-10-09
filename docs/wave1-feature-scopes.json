@@ -1,0 +1,17 @@
+[
+  {"name":"General Ledger and Chart of Accounts","patterns":["src/domain/accounting/(trial-balance|journal-validation|posting-policy)","src/application/accounting/(chart-of-accounts|update-coa|trial-balance|ledger-workspace)","src/app/.*accounting/(chart-of-accounts|trial-balance)","src/components/coa-mapping"]},
+  {"name":"Journal Entries and Bookkeeping","patterns":["src/lib/accounting/","src/domain/accounting/(journal|posting|reversal)","src/application/accounting/(post-journal|reverse-journal|close-period)"]},
+  {"name":"Accounts Payable","patterns":["src/domain/accounting/aging","src/application/accounting/(ap-ar-workspace|close-readiness)"]},
+  {"name":"Accounts Receivable","patterns":["src/domain/accounting/aging","src/application/accounting/(ap-ar-workspace|close-readiness)"]},
+  {"name":"Banking and Reconciliation","patterns":["src/domain/accounting/reconciliation","src/application/accounting/(bank-workspace|reconciliation-service|close-readiness)"]},
+  {"name":"Budgeting and Forecasting","patterns":["src/domain/forecast/","src/application/forecast/","src/repositories/forecast","src/app/.*forecasts/"]},
+  {"name":"FP&A and Variance Analysis","patterns":["src/domain/financial/","src/domain/forecast/variance","src/domain/accounting/(variance|fpa-bridge|actuals-reconciliation)","src/application/financial/","src/application/accounting/sync-actuals","src/repositories/financial","src/app/.*actuals/"]},
+  {"name":"Financial Statements and Reporting","patterns":["src/domain/accounting/(financial-statements|reporting-foundation|certification-gates)","src/application/accounting/(financial-statements|reporting-governance|statement-drilldown)","src/app/.*accounting/statements/"]},
+  {"name":"IFRS, US GAAP, and Sector Configuration","patterns":["src/lib/accounting/ai-native-controls","src/domain/accounting/reporting-foundation","src/application/accounting/reporting-governance"]},
+  {"name":"Treasury and Cash Management","patterns":["src/domain/treasury/","src/application/treasury/","src/app/.*treasury/"]},
+  {"name":"AI Accounting and Financial Agents","patterns":["src/agents/","src/application/agents/","src/domain/accounting/agent-proposal","src/app/api/agents/","src/app/api/agent-recommendations/"]},
+  {"name":"Workflow Orchestration","patterns":["src/lib/orchestration/","src/runtime/","src/app/api/orchestration/","src/components/accounting-workflow-actions"]},
+  {"name":"Integration and Data Import","patterns":["src/integrations/","src/application/excel/","src/repositories/excel","src/app/.*excel/"]},
+  {"name":"Persona Dashboards","patterns":["src/application/dashboard/","src/domain/dashboard/","src/app/.*(dashboard|command-center)/","src/components/app-shell"]},
+  {"name":"Administration and Configuration","patterns":["src/application/platform-admin/","src/app/.*platform-admin/","src/validation/","src/permissions/","src/auth/"]}
+]

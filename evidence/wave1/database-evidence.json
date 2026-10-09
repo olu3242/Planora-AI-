@@ -1,0 +1,404 @@
+{
+  "migrations": [
+    {
+      "name": "20260831000100_phase1_foundation",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20260831000200_login_throttle",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20260831110936_phase2_financial_core",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20260831113840_phase3_excel_intelligence",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20260831114612_phase3_excel_source_type",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20260831121058_forecast_mvp_workflow",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20260831183000_agentic_runtime_os",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20260831184500_fix_agentic_tenant_guard",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20260831203000_dashboard_admin_closure",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20261009011000_accounting_ledger_prerequisite",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20261009012000_workflow_orchestration",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20261009015500_bank_ap_ar_foundation",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20261009023000_coa_reporting_metadata",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20261009031500_reporting_governance",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20261009040000_accounting_posting_approvals",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20261009041000_accounting_immutability",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20261009042000_accounting_approval_scope",
+      "finished": true,
+      "checksumMatches": true
+    },
+    {
+      "name": "20261009050000_reporting_evidence_guards",
+      "finished": true,
+      "checksumMatches": true
+    }
+  ],
+  "tableCount": 61,
+  "tables": [
+    {
+      "name": "Account",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "AccountingJournal",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "AccountingJournalLine",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "AccountingPostingApproval",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "AgentDefinition",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "AgentFeedback",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "AgentRecommendation",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "AgentRun",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ApBill",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ApPayment",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ApPaymentAllocation",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ArInvoice",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ArReceipt",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ArReceiptAllocation",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "AuditEvent",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "BankAccount",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "BankTransaction",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "BusinessUnit",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "CalculationDefinition",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "CostCenter",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "Currency",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "Customer",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ExcelWorkbook",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "FinancialFact",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "FiscalCalendar",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "FiscalPeriod",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "FiscalYear",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "Forecast",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ForecastComment",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ForecastLine",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ForecastVersion",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "Geography",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ImportBatch",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ImportError",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "LegalEntity",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "LineageReference",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "LoginThrottle",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "MappingDecision",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "MappingRule",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "MappingSuggestion",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "MappingTemplate",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "MappingVersion",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "MetricDefinition",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "MetricDependency",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "MetricValue",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "Organization",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "OrganizationMembership",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "Plan",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "PlanVersion",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "Product",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ReportingApproval",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ReportingDisclosureEvidence",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ReportingFrameworkVersion",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "ReportingRun",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "RuntimeExecution",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "Session",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "User",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "Vendor",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "WorkbookProfile",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "WorkflowExecutionRecord",
+      "rls": false,
+      "forced": false
+    },
+    {
+      "name": "WorkflowRunRecord",
+      "rls": false,
+      "forced": false
+    }
+  ],
+  "policies": [],
+  "rowLevelSecurityCertified": false
+}

@@ -1,0 +1,81 @@
+Isolated Wave 1 identity verified: {
+  database: 'planora_wave1_test',
+  role: 'planora_wave1_test',
+  port: 55440,
+  superuser: false,
+  bypass: false
+}
+Migration preflight accepted isolated test database 127.0.0.1/planora_wave1_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_wave1_test", schema "public" at "127.0.0.1:55440"
+
+18 migrations found in prisma/migrations
+
+Applying migration `20260831000100_phase1_foundation`
+Applying migration `20260831000200_login_throttle`
+Applying migration `20260831110936_phase2_financial_core`
+Applying migration `20260831113840_phase3_excel_intelligence`
+Applying migration `20260831114612_phase3_excel_source_type`
+Applying migration `20260831121058_forecast_mvp_workflow`
+Applying migration `20260831183000_agentic_runtime_os`
+Applying migration `20260831184500_fix_agentic_tenant_guard`
+Applying migration `20260831203000_dashboard_admin_closure`
+Applying migration `20261009011000_accounting_ledger_prerequisite`
+Applying migration `20261009012000_workflow_orchestration`
+Applying migration `20261009015500_bank_ap_ar_foundation`
+Applying migration `20261009023000_coa_reporting_metadata`
+Applying migration `20261009031500_reporting_governance`
+Applying migration `20261009040000_accounting_posting_approvals`
+Applying migration `20261009041000_accounting_immutability`
+Applying migration `20261009042000_accounting_approval_scope`
+Applying migration `20261009050000_reporting_evidence_guards`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831000100_phase1_foundation/
+    └─ migration.sql
+  └─ 20260831000200_login_throttle/
+    └─ migration.sql
+  └─ 20260831110936_phase2_financial_core/
+    └─ migration.sql
+  └─ 20260831113840_phase3_excel_intelligence/
+    └─ migration.sql
+  └─ 20260831114612_phase3_excel_source_type/
+    └─ migration.sql
+  └─ 20260831121058_forecast_mvp_workflow/
+    └─ migration.sql
+  └─ 20260831183000_agentic_runtime_os/
+    └─ migration.sql
+  └─ 20260831184500_fix_agentic_tenant_guard/
+    └─ migration.sql
+  └─ 20260831203000_dashboard_admin_closure/
+    └─ migration.sql
+  └─ 20261009011000_accounting_ledger_prerequisite/
+    └─ migration.sql
+  └─ 20261009012000_workflow_orchestration/
+    └─ migration.sql
+  └─ 20261009015500_bank_ap_ar_foundation/
+    └─ migration.sql
+  └─ 20261009023000_coa_reporting_metadata/
+    └─ migration.sql
+  └─ 20261009031500_reporting_governance/
+    └─ migration.sql
+  └─ 20261009040000_accounting_posting_approvals/
+    └─ migration.sql
+  └─ 20261009041000_accounting_immutability/
+    └─ migration.sql
+  └─ 20261009042000_accounting_approval_scope/
+    └─ migration.sql
+  └─ 20261009050000_reporting_evidence_guards/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_wave1_test", schema "public" at "127.0.0.1:55440"
+
+18 migrations found in prisma/migrations
+
+Database schema is up to date!

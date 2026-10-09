@@ -1,0 +1,53 @@
+Isolated Wave 1 identity verified: {
+  database: 'planora_wave1_test',
+  role: 'planora_wave1_test',
+  port: 55440,
+  superuser: false,
+  bypass: false
+}
+
+Running 39 tests using 1 worker
+
+(node:26448) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [chromium] › tests\e2e\feature-cluster.e2e.ts:3:1 › supplied video plays in view and opens an accessible player (2.3s)
+  ✓   2 [chromium] › tests\e2e\feature-cluster.e2e.ts:21:1 › reduced motion prevents preview autoplay (1.2s)
+  ✓   3 [chromium] › tests\e2e\feature-cluster.e2e.ts:31:3 › feature clustering supports keyboard, disclosure and carousel (reduce) (1.5s)
+  ✓   4 [chromium] › tests\e2e\feature-cluster.e2e.ts:31:3 › feature clustering supports keyboard, disclosure and carousel (no-preference) (4.0s)
+  ✓   5 [chromium] › tests\e2e\financial-core.e2e.ts:13:1 › login to actuals exposes exact EBITDA and source evidence (2.1s)
+  ✓   6 [chromium] › tests\e2e\financial-core.e2e.ts:31:3 › @responsive actuals remains usable without overflow at 375 (1.1s)
+  ✓   7 [chromium] › tests\e2e\financial-core.e2e.ts:31:3 › @responsive actuals remains usable without overflow at 430 (1.1s)
+  ✓   8 [chromium] › tests\e2e\financial-core.e2e.ts:31:3 › @responsive actuals remains usable without overflow at 768 (1.2s)
+  ✓   9 [chromium] › tests\e2e\financial-core.e2e.ts:31:3 › @responsive actuals remains usable without overflow at 1024 (1.2s)
+  ✓  10 [chromium] › tests\e2e\financial-core.e2e.ts:31:3 › @responsive actuals remains usable without overflow at 1440 (984ms)
+  ✓  11 [chromium] › tests\e2e\foundation.e2e.ts:14:1 › unauthenticated users are redirected and can sign in (680ms)
+  ✓  12 [chromium] › tests\e2e\foundation.e2e.ts:20:1 › landing navigation, calls to action, footer links, and keyboard focus work (3.9s)
+  ✓  13 [chromium] › tests\e2e\foundation.e2e.ts:45:3 › @responsive landing has usable navigation and no overflow at 375 (765ms)
+  ✓  14 [chromium] › tests\e2e\foundation.e2e.ts:45:3 › @responsive landing has usable navigation and no overflow at 430 (735ms)
+  ✓  15 [chromium] › tests\e2e\foundation.e2e.ts:45:3 › @responsive landing has usable navigation and no overflow at 768 (657ms)
+  ✓  16 [chromium] › tests\e2e\foundation.e2e.ts:45:3 › @responsive landing has usable navigation and no overflow at 1024 (773ms)
+  ✓  17 [chromium] › tests\e2e\foundation.e2e.ts:45:3 › @responsive landing has usable navigation and no overflow at 1440 (818ms)
+  ✓  18 [chromium] › tests\e2e\foundation.e2e.ts:64:1 › authenticated Tenant A cannot access Tenant B by direct ID (741ms)
+  ✓  19 [chromium] › tests\e2e\foundation.e2e.ts:77:1 › visual certification has content, key controls, and no browser errors (774ms)
+  ✓  20 [chromium] › tests\e2e\foundation.e2e.ts:92:3 › @responsive shell has no horizontal overflow at 375 (635ms)
+  ✓  21 [chromium] › tests\e2e\foundation.e2e.ts:92:3 › @responsive shell has no horizontal overflow at 430 (629ms)
+  ✓  22 [chromium] › tests\e2e\foundation.e2e.ts:92:3 › @responsive shell has no horizontal overflow at 768 (679ms)
+  ✓  23 [chromium] › tests\e2e\foundation.e2e.ts:92:3 › @responsive shell has no horizontal overflow at 1024 (485ms)
+  ✓  24 [chromium] › tests\e2e\foundation.e2e.ts:92:3 › @responsive shell has no horizontal overflow at 1440 (506ms)
+  ✓  25 [chromium] › tests\e2e\workflow.e2e.ts:42:3 › canonical forecast cycle › analyst imports and reuses mapping, director revises and approves, CFO locks and reconciles export (16.8s)
+  ✓  26 [chromium] › tests\e2e\workflow.e2e.ts:97:3 › canonical forecast cycle › invalid import persists blocking issues and does not progress (1.2s)
+  ✓  27 [chromium] › tests\e2e\workflow.e2e.ts:102:3 › canonical forecast cycle › @accessibility canonical controls are labeled and keyboard focus is visible (1.3s)
+  ✓  28 [chromium] › tests\e2e\workflow.e2e.ts:108:52 › canonical forecast cycle › @responsive CFO workspace has no page overflow at 375 (1.3s)
+  ✓  29 [chromium] › tests\e2e\workflow.e2e.ts:108:52 › canonical forecast cycle › @responsive CFO workspace has no page overflow at 430 (1.3s)
+  ✓  30 [chromium] › tests\e2e\workflow.e2e.ts:108:52 › canonical forecast cycle › @responsive CFO workspace has no page overflow at 768 (1.2s)
+  ✓  31 [chromium] › tests\e2e\workflow.e2e.ts:108:52 › canonical forecast cycle › @responsive CFO workspace has no page overflow at 1024 (1.3s)
+  ✓  32 [chromium] › tests\e2e\workflow.e2e.ts:108:52 › canonical forecast cycle › @responsive CFO workspace has no page overflow at 1440 (1.4s)
+  ✓  33 [chromium] › tests\e2e\workflow.e2e.ts:114:3 › platform admin authority boundary › admin prepares a pilot, changes operational agent state, produces audit, and cannot exercise financial authority (3.0s)
+  ✓  34 [chromium] › tests\e2e\workflow.e2e.ts:127:52 › platform admin authority boundary › @responsive dashboard and admin avoid page overflow at 375 (1.5s)
+  ✓  35 [chromium] › tests\e2e\workflow.e2e.ts:127:52 › platform admin authority boundary › @responsive dashboard and admin avoid page overflow at 430 (1.4s)
+  ✓  36 [chromium] › tests\e2e\workflow.e2e.ts:127:52 › platform admin authority boundary › @responsive dashboard and admin avoid page overflow at 768 (1.5s)
+  ✓  37 [chromium] › tests\e2e\workflow.e2e.ts:127:52 › platform admin authority boundary › @responsive dashboard and admin avoid page overflow at 1024 (1.4s)
+  ✓  38 [chromium] › tests\e2e\workflow.e2e.ts:127:52 › platform admin authority boundary › @responsive dashboard and admin avoid page overflow at 1440 (1.7s)
+  ✓  39 [chromium] › tests\e2e\workflow.e2e.ts:131:3 › hosted-route security boundary › unauthenticated and cross-tenant direct-object attempts fail closed (1.3s)
+
+  39 passed (1.2m)
