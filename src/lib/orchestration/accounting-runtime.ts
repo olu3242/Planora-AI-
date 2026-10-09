@@ -2,6 +2,9 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { assertTrialBalance, calculateTrialBalance } from "@/domain/accounting/trial-balance";
 import { RuntimeRegistry, type StepHandler } from "./runtime";
+import { validateBankCloseReadiness, validateApCloseReadiness, validateArCloseReadiness } from "@/application/accounting/close-readiness";
+import { closeAccountingPeriod } from "@/application/accounting/close-period";
+import { syncLedgerActuals } from "@/application/accounting/sync-actuals";
 
 function evidence(stepId:string,runId:string){return `workflow:${runId}:${stepId}`;}
 const unavailable=(capability:string):StepHandler=>async()=>{throw new Error(`RUNTIME_CAPABILITY_PENDING:${capability}`);};
@@ -19,9 +22,14 @@ export function accountingRuntimeRegistry():RuntimeRegistry{
   if(period.accountingCloseState==="HARD_CLOSED") throw new Error("PERIOD_ALREADY_HARD_CLOSED");
   return {evidenceId:evidence("preflight",run.id)};
  });
- registry.register("bank-reconciliation",unavailable("bank-reconciliation-persistence"));
- registry.register("ap-validation",unavailable("ap-persistence"));
- registry.register("ar-validation",unavailable("ar-persistence"));
+ const scope=(run:Parameters<StepHandler>[0])=>{
+  const {organizationId,legalEntityId,fiscalPeriodId}=run.context;
+  if(!legalEntityId||!fiscalPeriodId) throw new Error("WORKFLOW_SCOPE_INCOMPLETE");
+  return {organizationId,legalEntityId,fiscalPeriodId};
+ };
+ registry.register("bank-reconciliation",async(run)=>{await validateBankCloseReadiness(scope(run));return {evidenceId:evidence("bank-reconciliation",run.id)};});
+ registry.register("ap-validation",async(run)=>{await validateApCloseReadiness(scope(run));return {evidenceId:evidence("ap-validation",run.id)};});
+ registry.register("ar-validation",async(run)=>{await validateArCloseReadiness(scope(run));return {evidenceId:evidence("ar-validation",run.id)};});
  registry.register("trial-balance",async(run)=>{
   const {organizationId,legalEntityId,fiscalPeriodId}=run.context;
   if(!legalEntityId||!fiscalPeriodId) throw new Error("WORKFLOW_SCOPE_INCOMPLETE");
@@ -31,8 +39,16 @@ export function accountingRuntimeRegistry():RuntimeRegistry{
   return {evidenceId:evidence("trial-balance",run.id)};
  });
  registry.register("close-analysis",unavailable("close-agent"));
- registry.register("period-close",unavailable("period-close-transaction"));
- registry.register("actuals-sync",unavailable("financial-fact-ledger-sync"));
+ registry.register("period-close",async(run)=>{
+  const s=scope(run);
+  await closeAccountingPeriod({organizationId:s.organizationId,fiscalPeriodId:s.fiscalPeriodId,actorId:run.context.actorId,correlationId:run.context.correlationId});
+  return {evidenceId:evidence("period-close",run.id)};
+ });
+ registry.register("actuals-sync",async(run)=>{
+  const s=scope(run);
+  await syncLedgerActuals({...s,actorId:run.context.actorId,correlationId:run.context.correlationId});
+  return {evidenceId:evidence("actuals-sync",run.id)};
+ });
  registry.register("forecast-refresh",unavailable("forecast-refresh-agent"));
  registry.register("insight-generation",unavailable("insight-agent"));
  return registry;
