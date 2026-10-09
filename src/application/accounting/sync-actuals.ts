@@ -3,6 +3,7 @@ import { FinancialScenario, FinancialSourceType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { projectActualCandidates } from "@/domain/accounting/fpa-bridge";
 import { validateJournal } from "@/domain/accounting/journal-validation";
+import { staleLedgerActualKeys } from "@/domain/accounting/actuals-reconciliation";
 
 export async function syncLedgerActuals(input:Readonly<{
  organizationId:string; legalEntityId:string; fiscalPeriodId:string; actorId:string; correlationId:string;
@@ -35,10 +36,6 @@ export async function syncLedgerActuals(input:Readonly<{
   for(const totals of journalTotals.values()){
    if(totals.debits!==totals.credits) throw new Error("LEDGER_ACTUALS_UNBALANCED");
   }
-  const expectedKeys = new Set(journals.flatMap(journal =>
-    journal.lines.map(line => ["ledger", input.organizationId, input.legalEntityId,
-      input.fiscalPeriodId, journal.currencyCode, line.accountId, "ACTUAL"].join(":"))
-  ));
   const existing = await tx.financialFact.findMany({
     where: {
       organizationId: input.organizationId,
@@ -51,7 +48,10 @@ export async function syncLedgerActuals(input:Readonly<{
     },
     select: { grainKey: true },
   });
-  if (existing.some(fact => !expectedKeys.has(fact.grainKey))) {
+  const stale = staleLedgerActualKeys(input,
+    journals.flatMap(journal => journal.lines.map(line => ({ currencyCode: journal.currencyCode, accountId: line.accountId }))),
+    existing.map(fact => fact.grainKey));
+  if (stale.length > 0) {
     throw new Error("STALE_LEDGER_ACTUALS_REQUIRES_RECONCILIATION");
   }
   const currencies=[...new Set(journals.map(j=>j.currencyCode))];
