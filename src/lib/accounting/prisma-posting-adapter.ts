@@ -18,6 +18,7 @@ export function createPrismaJournalPostingRepository(
         throw new Error("UNTRUSTED_POSTING_CONTEXT");
       }
       validateJournalLines(input.lines);
+      if (!input.organizationId || !input.actorId || !input.legalEntityId || !input.fiscalPeriodId) throw new Error("POSTING_CONTEXT_REQUIRED");
       if (!input.sourceKey.trim()) throw new Error("IDEMPOTENCY_KEY_REQUIRED");
       if (!/^[A-Z]{3}$/.test(input.currencyCode)) throw new Error("CURRENCY_CODE_INVALID");
       return prisma.$transaction(async (tx) => {
