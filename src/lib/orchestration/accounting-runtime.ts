@@ -7,6 +7,7 @@ import { closeAccountingPeriod } from "@/application/accounting/close-period";
 import { syncLedgerActuals } from "@/application/accounting/sync-actuals";
 import { runCloseAgent } from "@/application/agents/close-agent";
 import { runForecastAgent } from "@/application/agents/forecast-agent";
+import { runInsightAgent } from "@/application/agents/insight-agent";
 
 function evidence(stepId:string,runId:string){return `workflow:${runId}:${stepId}`;}
 const unavailable=(capability:string):StepHandler=>async()=>{throw new Error(`RUNTIME_CAPABILITY_PENDING:${capability}`);};
@@ -60,6 +61,10 @@ export function accountingRuntimeRegistry():RuntimeRegistry{
   const result=await runForecastAgent({...s,actorId:run.context.actorId,correlationId:run.context.correlationId});
   return {evidenceId:`agent-recommendation:${result.recommendationId}`};
  });
- registry.register("insight-generation",unavailable("insight-agent"));
+ registry.register("insight-generation",async(run)=>{
+  const s=scope(run);
+  const result=await runInsightAgent({...s,actorId:run.context.actorId,correlationId:run.context.correlationId});
+  return {evidenceId:`agent-recommendation:${result.recommendationId}`};
+ });
  return registry;
 }
