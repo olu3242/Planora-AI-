@@ -12,7 +12,7 @@ export async function POST(request:Request,{params}:{params:Promise<{runId:strin
  const cid=correlationId(request);
  try{
   assertSameOrigin(request);
-  const session=await requireApiSession("forecast.approve");
+  const session=await requireApiSession("accounting.close.approve");
   const input=inputSchema.safeParse(await request.json());
   if(!input.success) throw new AppError("VALIDATION_ERROR","Step and approval evidence are required.",400);
   const {runId}=await params;
