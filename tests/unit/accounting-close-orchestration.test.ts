@@ -21,8 +21,9 @@ describe("accounting close orchestration contract",()=>{
   registry.register("bank-reconciliation",async()=>{throw new Error("BANK_RECONCILIATION_INCOMPLETE:1");});
   registry.register("ap-validation",async()=>({evidenceId:"ap"})); registry.register("ar-validation",async()=>({evidenceId:"ar"}));
   registry.register("trial-balance",async()=>({evidenceId:"never"})); registry.register("close-analysis",async()=>({evidenceId:"never"}));
-  await runs.save(createWorkflowRun("blocked",definition,context));
-  const run=await executeReadySteps(definition,"blocked",runs,executions,registry);
+    await runs.save(createWorkflowRun("blocked",definition,context));
+    let run=await executeReadySteps(definition,"blocked",runs,executions,registry);
+    for(let i=0;i<6&&run.status!=="FAILED";i++) run=await executeReadySteps(definition,"blocked",runs,executions,registry);
   expect(run.status).toBe("FAILED"); expect(run.steps["trial-balance"].status).toBe("PENDING");
  });
 

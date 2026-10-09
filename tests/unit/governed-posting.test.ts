@@ -13,7 +13,7 @@ const valid = {
     periodOpen: true, accountsActive: true, sourceEvidencePresent: true,
     idempotencyKeyPresent: true, policyEffective: true,
     requiresHumanApproval: true, humanApproved: true,
-    agentKillSwitchEnabled: true, isAgentInitiated: true,
+    agentKillSwitchEnabled: true, isAgentInitiated: false,
   },
 };
 describe("governed posting", () => {

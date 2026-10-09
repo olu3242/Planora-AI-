@@ -33,16 +33,24 @@ All 13 SQL migration paths and blob SHAs match between reporting governance and 
 ## Manual scripts outside migration sequence
 - prisma/manual/accounting-immutability.sql
 - prisma/manual/accounting-posting-approvals.sql
-These are not counted among the 13 Prisma migration files. Their application state and compatibility with the canonical schema must be verified before accounting certification.
+These reference copies are not executable migration history. Their original posting-approval and immutability definitions were added to the Prisma sequence as `20261009040000_accounting_posting_approvals` and `20261009041000_accounting_immutability` on the harmonization baseline.
+
+## Wave 2A follow-up — 2026-10-09
+- The baseline contains the original 13 migrations plus the two accounting migrations above. A new forward-only, transaction-wrapped migration, `20261009042000_accounting_approval_scope`, adds approval foreign keys to legal entity and fiscal period, enforces same-organization scope, and prevents expired consumption or mutation/deletion after consumption.
+- The matching Prisma relations validate successfully on the current worktree. The SQL has not been executed against PostgreSQL, so migration-history drift and trigger behavior remain runtime-blocked.
+- `scripts/migrate-test.ts` requires `APP_ENV=test` and an explicit `TEST_DATABASE_URL` targeting loopback PostgreSQL with a database name ending `_test`; it validates the target, applies migrations, then verifies migration status. CI provisions a job-scoped `planora_test` database with test-only credentials.
+- `tests/integration/accounting-database-certification.test.ts` checks migration completion, constraints, trigger presence, tenant scope, approval expiration/consumption, balance enforcement, and journal/line/audit immutability. It requires the isolated PostgreSQL CI service and has not run locally.
+- No existing migration was rewritten. No hosted database was connected or modified.
+
+### Recovery plan
+Migrations are forward-only and no down migration is supplied. Hosted use requires explicit authorization and a verified restorable backup/PITR point. Run the test preflight and migration on a production-shaped disposable clone first. On failure, stop financial writes, preserve database and migration logs, inspect `_prisma_migrations`, and do not manually edit migration history. Use a reviewed forward repair migration, or restore the pre-migration snapshot only if no financial writes occurred after migration. Hosted recovery is not certified.
 
 ## Blockers and follow-up gates
-1. Run npm ci, npx prisma validate, npx prisma generate and npm run typecheck on the exact branch HEAD.
-2. Compare prisma migrate status and schema diff against a disposable PostgreSQL database; do not point destructive commands at hosted/production.
-3. Review whether AccountingPostingApproval is backed by a migration or only the manual approval SQL; test generated schema against actual database objects.
-4. Test SQL immutability guards against direct UPDATE/DELETE and reversal semantics.
-5. Review tenant foreign keys, journal uniqueness, source lineage, and report framework effective dating.
-6. Compare commit ancestry and unique file diffs across PR #2/#3/#4 before selecting merge target.
-7. Preserve current HOLD status until exact-SHA test and E2E evidence exists.
+1. Run `npm run db:migrate:test` and the accounting PostgreSQL integration suite using an explicitly configured isolated `_test` database.
+2. Compare `prisma migrate status` and schema drift on that disposable PostgreSQL database; never use production `.env.local` credentials.
+3. Execute direct database UPDATE/DELETE attempts against posted journals, lines, audit events, and consumed approvals.
+4. Review tenant scoping, source lineage, posting/reversal, and reporting effective-dating evidence.
+5. Preserve HOLD status until database migration, integration, and E2E evidence exists at the exact commit.
 
 ## Release decision
 NO MERGE, NO HOSTED MIGRATION, NO PRODUCTION POSTING. Static reconciliation does not equal successful Prisma validation or database certification.

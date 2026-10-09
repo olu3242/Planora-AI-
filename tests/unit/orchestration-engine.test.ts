@@ -35,7 +35,7 @@ describe("workflow orchestration", () => {
 
   it("requires explicit human approval before period close becomes eligible", () => {
     let run = createWorkflowRun("run-2", CLOSE_TO_FORECAST_WORKFLOW, context);
-    for (const id of ["preflight", "bank-reconciliation", "ap-validation", "ar-validation", "trial-balance", "close-analysis"]) {
+    for (const id of ["preflight", "bank-reconciliation", "ap-validation", "ar-validation", "trial-balance", "statement-review", "close-analysis"]) {
       const step = CLOSE_TO_FORECAST_WORKFLOW.steps.find((candidate) => candidate.id === id)!;
       run = beginStep(run, step);
       run = completeStep(run, id, `evidence-${id}`);
