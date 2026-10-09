@@ -12,7 +12,6 @@ import { runStatementAgent } from "@/application/agents/statement-agent";
 import { runPlanoraReportAgent } from "@/application/agents/report-agent";
 
 function evidence(stepId:string,runId:string){return `workflow:${runId}:${stepId}`;}
-const unavailable=(capability:string):StepHandler=>async()=>{throw new Error(`RUNTIME_CAPABILITY_PENDING:${capability}`);};
 
 export function accountingRuntimeRegistry():RuntimeRegistry{
  const registry=new RuntimeRegistry();
