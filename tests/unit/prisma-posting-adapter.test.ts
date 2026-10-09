@@ -24,6 +24,7 @@ function fakeDb(overrides: Record<string, unknown> = {}) {
     },
     accountingJournalLine: { findMany: vi.fn().mockResolvedValue([]) },
     auditEvent: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
+    accountingPostingApproval: { findUnique: vi.fn().mockResolvedValue({ id: "approval", organizationId: "org", legalEntityId: "entity", fiscalPeriodId: "period", sourceKey: "source-1", preparedById: "actor", decidedById: "reviewer", decision: "APPROVED", expiresAt: new Date("2099-01-01"), consumedAt: null }), updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
     ...overrides,
   };
   const db = { $transaction: vi.fn(async (callback: (value: typeof tx) => unknown) => callback(tx)) };
