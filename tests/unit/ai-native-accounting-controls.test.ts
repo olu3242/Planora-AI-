@@ -44,6 +44,9 @@ describe("AI-native accounting deterministic safeguards", () => {
   it("rejects agent-initiated postings even when the kill switch is enabled", () => {
     expect(() => assertPostingGate({ ...validGate, isAgentInitiated: true })).toThrow("AGENT_POSTING_NOT_SUPPORTED");
   });
+  it("requires approval for a human posting", () => {
+    expect(() => assertPostingGate({ ...validGate, humanApproved: false })).toThrow("HUMAN_APPROVAL_REQUIRED");
+  });
   it("permits a non-agent workflow without an agent kill switch", () => {
     expect(() => assertPostingGate({ ...validGate, isAgentInitiated: false, agentKillSwitchEnabled: false })).not.toThrow();
   });
