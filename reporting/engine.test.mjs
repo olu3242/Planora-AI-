@@ -1,0 +1,15 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {validateConfiguration,prepareReport,PlanoraReportAgent} from "./engine.mjs";
+const base={entityId:"entity-1",sector:"private",jurisdiction:"US",framework:"US_GAAP",standardVersion:"2026",effectiveDate:"2026-01-01",currency:"USD"};
+const entries=[{entityId:"entity-1",account:"Cash",debitMinor:10000,creditMinor:0},{entityId:"entity-1",account:"Revenue",debitMinor:0,creditMinor:10000}];
+test("valid private GAAP configuration",()=>assert.equal(validateConfiguration(base).valid,true));
+test("blocks public sector using commercial GAAP",()=>assert.equal(validateConfiguration({...base,sector:"public"}).valid,false));
+test("enforces GASB subtype",()=>assert.equal(validateConfiguration({...base,sector:"public",framework:"GASB",subtype:"federal"}).valid,false));
+test("accepts GASB state local",()=>assert.equal(validateConfiguration({...base,sector:"public",framework:"GASB",subtype:"state_local"}).valid,true));
+test("blocks cross-entity postings",()=>assert.throws(()=>prepareReport({config:base,entries:[{...entries[0],entityId:"other"}],period:"2026-10"}),/Cross-entity/));
+test("blocks unbalanced ledger",()=>assert.throws(()=>prepareReport({config:base,entries:entries.slice(0,1),period:"2026-10"}),/Unbalanced/));
+test("rejects floating point amounts",()=>assert.throws(()=>prepareReport({config:base,entries:[{...entries[0],debitMinor:1.2}],period:"2026-10"}),/Invalid monetary/));
+test("generates traceable draft trial balance",()=>{const r=prepareReport({config:base,entries,period:"2026-10"});assert.equal(r.totalDebitsMinor,10000);assert.equal(r.status,"DRAFT_REVIEW_REQUIRED")});
+test("agent blocks unauthorized publication",()=>{const a=new PlanoraReportAgent({approve:()=>false});assert.throws(()=>a.publish(a.prepare({config:base,entries,period:"2026-10"}),{reference:"X"}),/approval/)});
+test("agent accepts authorized issuance",()=>{const a=new PlanoraReportAgent({approve:(approval)=>approval.reference==="approved"});assert.equal(a.publish(a.prepare({config:base,entries,period:"2026-10"}),{reference:"approved"}).status,"APPROVED_FOR_ISSUANCE")});
