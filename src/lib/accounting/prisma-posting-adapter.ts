@@ -63,11 +63,15 @@ export function createPrismaJournalPostingRepository(
             organizationId: trustedOrganizationId, legalEntityId: input.legalEntityId,
             fiscalPeriodId: input.fiscalPeriodId, postedById: trustedActorId,
             sourceKey: input.sourceKey, currencyCode: input.currencyCode,
-            status: "POSTED", postedAt: new Date(),
+            status: "DRAFT",
             lines: { create: input.lines.map((line, ordinal) => ({
               ordinal, accountId: line.accountId, debitMinor: line.debitMinor, creditMinor: line.creditMinor,
             })) },
           },
+        });
+        await tx.accountingJournal.update({
+          where: { id: journal.id },
+          data: { status: "POSTED", postedAt: new Date() },
         });
         await tx.auditEvent.create({
           data: {
