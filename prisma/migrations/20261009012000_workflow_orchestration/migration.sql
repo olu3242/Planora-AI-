@@ -2,6 +2,7 @@
 CREATE TABLE "WorkflowRunRecord" (
   "id" TEXT NOT NULL,
   "organizationId" UUID NOT NULL,
+  "actorId" UUID NOT NULL,
   "definitionId" TEXT NOT NULL,
   "definitionVersion" INTEGER NOT NULL,
   "status" TEXT NOT NULL,
@@ -9,7 +10,8 @@ CREATE TABLE "WorkflowRunRecord" (
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "WorkflowRunRecord_pkey" PRIMARY KEY ("id"),
-  CONSTRAINT "WorkflowRunRecord_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE
+  CONSTRAINT "WorkflowRunRecord_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "WorkflowRunRecord_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 CREATE INDEX "WorkflowRunRecord_organizationId_status_updatedAt_idx" ON "WorkflowRunRecord"("organizationId","status","updatedAt");
 CREATE INDEX "WorkflowRunRecord_definitionId_definitionVersion_idx" ON "WorkflowRunRecord"("definitionId","definitionVersion");
