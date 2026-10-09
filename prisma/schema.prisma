@@ -481,7 +481,6 @@ model BusinessUnit {
   parent         BusinessUnit?   @relation("BusinessUnitHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children       BusinessUnit[]  @relation("BusinessUnitHierarchy")
   facts          FinancialFact[]
-  arInvoices     ArInvoice[]
 
   @@unique([organizationId, code])
   @@index([organizationId, parentId])
@@ -533,6 +532,7 @@ model Customer {
   effectiveTo    DateTime?
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   facts          FinancialFact[]
+  arInvoices     ArInvoice[]
 
   @@unique([organizationId, code])
 }
