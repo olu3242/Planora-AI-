@@ -39,6 +39,10 @@ describe("Prisma posting adapter (mock transaction boundary)", () => {
     expect(tx.accountingJournal.create).toHaveBeenCalledTimes(1);
     expect(tx.accountingJournal.update).toHaveBeenCalledWith({ where: { id: "posted-1" }, data: { status: "POSTED", postedAt: expect.any(Date) } });
     expect(tx.auditEvent.create).toHaveBeenCalledTimes(1);
+    expect(tx.accountingPostingApproval.updateMany).toHaveBeenCalledWith({
+      where: { id: "approval", decision: "APPROVED", consumedAt: null, journalId: null },
+      data: { consumedAt: expect.any(Date), journalId: "posted-1" },
+    });
     expect(tx.auditEvent.create.mock.calls[0][0].data.action).toBe("ACCOUNTING_JOURNAL_POSTED");
     expect(tx.accountingJournal.create.mock.calls[0][0].data.lines.create).toHaveLength(2);
   });
