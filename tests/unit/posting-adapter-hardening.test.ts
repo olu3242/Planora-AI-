@@ -10,6 +10,12 @@ const base = {
   ],
 };
 describe("adapter preflight hardening", () => {
+  it("rejects a blank trusted principal before accessing the database", async () => {
+    const db = { $transaction: vi.fn() };
+    const repo = createPrismaJournalPostingRepository(db as never, "", "org");
+    await expect(repo.postAtomically(base)).rejects.toThrow("TRUSTED_CONTEXT_REQUIRED");
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
   it("blocks unbalanced input before database transaction", async () => {
     const db = { $transaction: vi.fn() };
     const repo = createPrismaJournalPostingRepository(db as never, "actor", "org");
