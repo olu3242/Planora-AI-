@@ -31,6 +31,30 @@ enum NormalBalance {
   CREDIT
 }
 
+enum FinancialStatementClass {
+  PROFIT_AND_LOSS
+  BALANCE_SHEET
+  STATISTICAL
+}
+
+enum CashFlowClass {
+  OPERATING
+  INVESTING
+  FINANCING
+  CASH
+  NOT_APPLICABLE
+}
+
+enum SystemAccountPurpose {
+  NONE
+  CASH
+  ACCOUNTS_RECEIVABLE
+  ACCOUNTS_PAYABLE
+  RETAINED_EARNINGS
+  SUSPENSE
+}
+
+
 enum FinancialScenario {
   ACTUAL
   BUDGET
@@ -517,6 +541,12 @@ model Account {
   name           String
   type           AccountType
   normalBalance  NormalBalance
+  statementClass FinancialStatementClass?
+  statementSection String?
+  reportingCode String?
+  cashFlowClass CashFlowClass?
+  systemPurpose SystemAccountPurpose @default(NONE)
+  suspenseAllowed Boolean @default(false)
   parentId       String?         @db.Uuid
   active         Boolean         @default(true)
   effectiveFrom  DateTime
