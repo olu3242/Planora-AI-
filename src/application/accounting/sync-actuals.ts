@@ -10,6 +10,8 @@ export async function syncLedgerActuals(input:Readonly<{
   const period=await tx.fiscalPeriod.findFirst({where:{id:input.fiscalPeriodId,year:{calendar:{organizationId:input.organizationId}}},select:{id:true,accountingCloseState:true}});
   if(!period) throw new Error("PERIOD_NOT_IN_TENANT");
   if(period.accountingCloseState!=="HARD_CLOSED") throw new Error("PERIOD_NOT_HARD_CLOSED");
+  const entity=await tx.legalEntity.findFirst({where:{id:input.legalEntityId,organizationId:input.organizationId,active:true},select:{id:true}});
+  if(!entity) throw new Error("ENTITY_NOT_IN_TENANT");
   const journals=await tx.accountingJournal.findMany({where:{organizationId:input.organizationId,legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId,status:"POSTED"},select:{currencyCode:true,lines:{select:{accountId:true,debitMinor:true,creditMinor:true,account:{select:{normalBalance:true}}}}}});
   const currencies=[...new Set(journals.map(j=>j.currencyCode))];
   let count=0;
