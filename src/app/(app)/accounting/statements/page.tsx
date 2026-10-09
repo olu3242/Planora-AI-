@@ -1,3 +1,4 @@
+import { withTenantPage } from "@/lib/tenant-request";
 import Link from "next/link";
 import { requirePageSession } from "@/auth/session";
 import { hasPermission } from "@/permissions/permissions";
@@ -8,7 +9,7 @@ type Search=Promise<{entity?:string;period?:string}>;
 const exactMoney=(minor:bigint,currency:string|null)=>{const sign=minor<0n?"-":"";const a=minor<0n?-minor:minor;const whole=a/100n;const cents=(a%100n).toString().padStart(2,"0");return currency?sign+currency+" "+whole.toLocaleString()+"."+cents:sign+whole.toString()+"."+cents;};
 const net=(a:{normalBalance:"DEBIT"|"CREDIT";debitMinor:bigint;creditMinor:bigint})=>a.normalBalance==="DEBIT"?a.debitMinor-a.creditMinor:a.creditMinor-a.debitMinor;
 
-export default async function StatementsPage({searchParams}:{searchParams:Search}){
+async function StatementsPage({searchParams}:{searchParams:Search}){
  const session=await requirePageSession(); if(!hasPermission(session.membership.role,"financial.read")) return <section className="panel"><h1>Statements unavailable</h1></section>;
  const q=await searchParams; const meta=await getLedgerWorkspace(session.organization.id,{legalEntityId:q.entity,fiscalPeriodId:q.period});
  const statements=q.entity&&q.period?await getLedgerFinancialStatements(session.organization.id,{legalEntityId:q.entity,fiscalPeriodId:q.period}):null;
@@ -20,3 +21,5 @@ export default async function StatementsPage({searchParams}:{searchParams:Search
  <section className="metrics"><div className="metric"><div className="metric-label">Operating cash flow</div><div className="metric-value">{exactMoney(statements.cashFlow.operatingMinor,statements.currencyCode)}</div></div><div className="metric"><div className="metric-label">Investing</div><div className="metric-value">{exactMoney(statements.cashFlow.investingMinor,statements.currencyCode)}</div></div><div className="metric"><div className="metric-label">Financing</div><div className="metric-value">{exactMoney(statements.cashFlow.financingMinor,statements.currencyCode)}</div></div><div className="metric"><div className="metric-label">Unclassified</div><div className="metric-value">{exactMoney(statements.cashFlow.unclassifiedMinor,statements.currencyCode)}</div></div></section>
  </>}</>;
 }
+
+export default withTenantPage(StatementsPage);

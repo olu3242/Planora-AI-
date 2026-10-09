@@ -31,7 +31,7 @@ BEGIN
   END IF;
   RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
 END;
-$;
+$$;
 
 DROP TRIGGER IF EXISTS planora_posted_journal_immutable ON "AccountingJournal";
 CREATE TRIGGER planora_posted_journal_immutable

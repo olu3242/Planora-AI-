@@ -1,10 +1,11 @@
+import { withTenantApi } from "@/lib/tenant-request";
 import { validateAndImportWorkbook } from "@/application/excel/workbook-service";
 import { requireApiSession } from "@/auth/session";
 import { AppError, errorResponse } from "@/lib/errors";
 import { assertSameOrigin, correlationId, seeOther } from "@/lib/request";
 import { z } from "zod";
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function handlePOST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const cid = correlationId(request);
   let workbookId = "";
   try {
@@ -13,3 +14,5 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return seeOther(`/excel/${workbookId}?imported=1`);
   } catch (error) { if (error instanceof AppError) return seeOther(`/excel/${workbookId}?error=${encodeURIComponent(error.message)}`); return errorResponse(error, cid); }
 }
+
+export const POST = withTenantApi(handlePOST);

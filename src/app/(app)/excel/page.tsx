@@ -1,10 +1,11 @@
+import { withTenantPage } from "@/lib/tenant-request";
 import Link from "next/link";
 import { FileSpreadsheet, ShieldCheck, Upload } from "lucide-react";
 import { requirePageSession } from "@/auth/session";
 import { hasPermission } from "@/permissions/permissions";
 import { listTenantWorkbooks } from "@/repositories/excel-repository";
 
-export default async function ExcelPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+async function ExcelPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const session = await requirePageSession(); const query = await searchParams;
   if (!hasPermission(session.membership.role, "financial.import")) return <section className="panel" role="alert"><h1 className="page-heading">Excel unavailable</h1><p className="subtle">Your role does not permit workbook imports.</p></section>;
   const workbooks = await listTenantWorkbooks(session.organization.id);
@@ -15,3 +16,5 @@ export default async function ExcelPage({ searchParams }: { searchParams: Promis
     <section className="import-history"><h2>Recent workbooks</h2>{workbooks.length ? <div className="workbook-list">{workbooks.map((workbook) => <Link className="workbook-row" key={workbook.id} href={`/excel/${workbook.id}`}><FileSpreadsheet size={18} /><span><strong>{workbook.originalFileName}</strong><small>{workbook.profile?.sheetCount ?? 0} sheets · {workbook.profile?.primaryShape ?? "Pending"} · {(workbook.byteSize / 1024).toFixed(1)} KB</small></span><span className={`status ${workbook.status === "IMPORTED" ? "good" : ""}`}>{workbook.status.replaceAll("_", " ")}</span></Link>)}</div> : <div className="empty-state"><FileSpreadsheet size={24} /><h2>No workbooks yet</h2><p className="subtle">Upload the first workbook to begin profiling and mapping.</p></div>}</section>
   </>;
 }
+
+export default withTenantPage(ExcelPage);

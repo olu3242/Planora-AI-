@@ -1,3 +1,4 @@
+import { withTenantApi } from "@/lib/tenant-request";
 import { respondToRecommendation } from "@/agents/agent-service";
 import { requireApiSession } from "@/auth/session";
 import { AppError, errorResponse } from "@/lib/errors";
@@ -6,7 +7,7 @@ import { z } from "zod";
 
 const schema = z.object({ decision: z.enum(["ACCEPTED", "EDITED", "REJECTED"]), finalContent: z.string().trim().max(2000).optional(), reason: z.string().trim().min(3).max(500), forecastVersionId: z.uuid() });
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function handlePOST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const cid = correlationId(request);
   const wantsJson = request.headers.get("content-type")?.includes("application/json") ?? false;
   let forecastVersionId = "";
@@ -25,3 +26,5 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return errorResponse(error, cid);
   }
 }
+
+export const POST = withTenantApi(handlePOST);

@@ -83,7 +83,7 @@ export async function executeReadySteps(
     await runs.save(run);
 
     if (run.steps[step.id]?.status === "WAITING_APPROVAL") {
-      continue;
+      break;
     }
 
     const key = stepIdempotencyKey(run, step);

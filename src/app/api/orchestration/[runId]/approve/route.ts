@@ -1,3 +1,4 @@
+import { withTenantApi } from "@/lib/tenant-request";
 import { z } from "zod";
 import { requireApiSession } from "@/auth/session";
 import { writeAudit } from "@/audit/audit";
@@ -8,7 +9,7 @@ import { PrismaWorkflowRunStore } from "@/lib/orchestration/prisma-store";
 import { approveWorkflowStep } from "@/lib/orchestration/service";
 
 const inputSchema=z.object({stepId:z.string().min(1),evidenceId:z.string().min(1)});
-export async function POST(request:Request,{params}:{params:Promise<{runId:string}>}){
+async function handlePOST(request:Request,{params}:{params:Promise<{runId:string}>}){
  const cid=correlationId(request);
  try{
   assertSameOrigin(request);
@@ -24,3 +25,5 @@ export async function POST(request:Request,{params}:{params:Promise<{runId:strin
   return Response.json({runId:run.id,status:run.status,stepStatus:run.steps[input.data.stepId]?.status});
  }catch(error){return errorResponse(error,cid);}
 }
+
+export const POST = withTenantApi(handlePOST);

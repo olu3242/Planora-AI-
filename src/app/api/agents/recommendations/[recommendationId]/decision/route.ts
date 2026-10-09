@@ -1,3 +1,4 @@
+import { withTenantApi } from "@/lib/tenant-request";
 import { z } from "zod";
 import { requireApiSession } from "@/auth/session";
 import { decideAgentRecommendation } from "@/application/agents/decision-context";
@@ -6,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { correlationId } from "@/lib/request";
 
 const schema=z.object({decision:z.enum(["ACCEPTED","EDITED","REJECTED"]),reason:z.string().trim().min(1).max(500),finalContent:z.string().trim().max(4000).optional()});
-export async function POST(request:Request,{params}:{params:Promise<{recommendationId:string}>}){
+async function handlePOST(request:Request,{params}:{params:Promise<{recommendationId:string}>}){
  const cid=correlationId(request);
  try{
   const {recommendationId}=await params;
@@ -19,3 +20,5 @@ export async function POST(request:Request,{params}:{params:Promise<{recommendat
   return Response.json({recommendationId:decided.id,status:decided.status,correlationId:cid});
  }catch(error){return Response.json({error:error instanceof Error?error.message:"DECISION_FAILED",correlationId:cid},{status:error instanceof z.ZodError?400:403});}
 }
+
+export const POST = withTenantApi(handlePOST);

@@ -1,9 +1,10 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { buildFinancialStatements } from "@/domain/accounting/financial-statements";
 
-export async function getLedgerFinancialStatements(organizationId:string,input:{legalEntityId:string;fiscalPeriodId:string}){
- const journals=await prisma.accountingJournal.findMany({where:{organizationId,legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId,status:"POSTED"},select:{currencyCode:true,lines:{select:{debitMinor:true,creditMinor:true,account:{select:{id:true,code:true,name:true,type:true,normalBalance:true,statementClass:true,statementSection:true,reportingCode:true,cashFlowClass:true,systemPurpose:true}}}}}});
+export async function getLedgerFinancialStatements(organizationId:string,input:{legalEntityId:string;fiscalPeriodId:string},db:Prisma.TransactionClient=prisma){
+ const journals=await db.accountingJournal.findMany({where:{organizationId,legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId,status:"POSTED"},select:{currencyCode:true,lines:{select:{debitMinor:true,creditMinor:true,account:{select:{id:true,code:true,name:true,type:true,normalBalance:true,statementClass:true,statementSection:true,reportingCode:true,cashFlowClass:true,systemPurpose:true}}}}}});
  const currencies=[...new Set(journals.map(j=>j.currencyCode))]; if(currencies.length>1) throw new Error("STATEMENTS_REQUIRE_SINGLE_CURRENCY");
  type LedgerAccount=(typeof journals)[number]["lines"][number]["account"];
  type AccountBalance=Omit<LedgerAccount,"id">&{accountId:string;debitMinor:bigint;creditMinor:bigint};

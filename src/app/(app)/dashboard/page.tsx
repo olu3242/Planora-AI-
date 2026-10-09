@@ -1,3 +1,4 @@
+import { withTenantPage } from "@/lib/tenant-request";
 import Link from "next/link";
 import { requirePageSession } from "@/auth/session";
 import { hasPermission } from "@/permissions/permissions";
@@ -7,7 +8,7 @@ import { formatMoney, formatPercent } from "@/domain/financial/money";
 const labels: Record<string, string> = { REVENUE: "Revenue", OPERATING_EXPENSE: "Operating expense", EBITDA: "EBITDA / operating income" };
 const currency = (value: string) => formatMoney(value);
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const session = await requirePageSession();
   if (!hasPermission(session.membership.role, "financial.read")) return <section className="panel" role="alert"><h1>403 — Dashboard unavailable</h1><p>Platform operations does not grant access to tenant financial data.</p></section>;
   const query = await searchParams;
@@ -24,3 +25,5 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     <section className="panel"><h2>Material variance records</h2><p className="subtle" data-testid="dashboard-record-count">{dashboard.material.length} material records · {dashboard.recordCount} selected records</p>{dashboard.material.slice(0,10).map((row)=><div className="audit-row" data-testid={`material-${row.accountCode}-${row.costCenterCode}`} key={row.id}><div><strong>{row.accountName}</strong><small>{row.costCenterName} · {row.periodName}</small></div><div>{currency(row.current)}</div><div className="material-variance">{currency(row.variance)}</div></div>)}</section>
   </>;
 }
+
+export default withTenantPage(DashboardPage);

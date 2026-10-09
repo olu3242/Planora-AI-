@@ -1,0 +1,12 @@
+
+> planora@0.1.0 db:status:test
+> tsx scripts/migrate-test.ts status
+
+Migration preflight accepted isolated test database 127.0.0.1/planora_convergence_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_convergence_test", schema "public" at "127.0.0.1:55439"
+
+17 migrations found in prisma/migrations
+
+Database schema is up to date!

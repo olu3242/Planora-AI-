@@ -1,3 +1,4 @@
+import { withTenantApi } from "@/lib/tenant-request";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { requireApiSession } from "@/auth/session";
@@ -10,7 +11,7 @@ import { PrismaWorkflowRunStore } from "@/lib/orchestration/prisma-store";
 import { startWorkflow } from "@/lib/orchestration/service";
 
 const inputSchema=z.object({legalEntityId:z.string().uuid(),fiscalPeriodId:z.string().uuid()});
-export async function POST(request:Request){
+async function handlePOST(request:Request){
  const cid=correlationId(request);
  try{
   assertSameOrigin(request);
@@ -24,3 +25,5 @@ export async function POST(request:Request){
   return Response.json({runId:run.id,status:run.status},{status:201});
  }catch(error){return errorResponse(error,cid);}
 }
+
+export const POST = withTenantApi(handlePOST);

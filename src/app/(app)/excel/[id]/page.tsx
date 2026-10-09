@@ -1,3 +1,4 @@
+import { withTenantPage } from "@/lib/tenant-request";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle, ArrowLeft, CheckCircle2, FileSpreadsheet, TableProperties } from "lucide-react";
@@ -9,7 +10,7 @@ import { hasPermission } from "@/permissions/permissions";
 
 type ProfileJson = { sheets: Array<{ name: string; state: string; usedRange: string; headerRow: number | null; headers: string[]; shape: string; formulaCount: number; duplicateHeaders: string[]; preview: Array<Array<string | number | boolean | null>> }> };
 async function loadWorkbook(organizationId: string, id: string) { try { return await getTenantWorkbook(organizationId, id); } catch (error) { if (error instanceof AppError && error.code === "RESOURCE_NOT_FOUND") notFound(); throw error; } }
-export default async function WorkbookPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ imported?: string; error?: string }> }) {
+async function WorkbookPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ imported?: string; error?: string }> }) {
   const session = await requirePageSession(); const { id } = await params; const query = await searchParams;
   const workbook = await loadWorkbook(session.organization.id, id); const mapping = workbook.mappingVersions[0]; const profile = workbook.profile?.profile as unknown as ProfileJson;
   const accounts = await prisma.account.findMany({ where: { organizationId: session.organization.id, active: true }, select: { id: true, code: true, name: true }, orderBy: { code: "asc" } });
@@ -27,3 +28,5 @@ export default async function WorkbookPage({ params, searchParams }: { params: P
     <section className="import-action"><div><h2>{workbook.status === "IMPORTED" ? "Canonical import complete" : "Validate and import"}</h2><p className="subtle">{workbook.status === "IMPORTED" ? `${batch?.rowCount ?? 0} rows imported with structured workbook, sheet, row, mapping-version, and batch lineage.` : "Validation checks required columns, members, periods, currency, scenario, amounts, and canonical grain."}</p>{batch?.resultMetrics && <div className="import-metrics"><span>Revenue <strong>${Number((batch.resultMetrics as Record<string, string>).REVENUE).toLocaleString()}</strong></span><span>EBITDA <strong>${Number((batch.resultMetrics as Record<string, string>).EBITDA).toLocaleString()}</strong></span></div>}</div>{workbook.status !== "IMPORTED" && <form action={`/api/excel/workbooks/${workbook.id}/import`} method="post"><button className="button button-primary" type="submit" disabled={unresolved.length > 0}>Validate and import</button></form>}</section>
   </>;
 }
+
+export default withTenantPage(WorkbookPage);

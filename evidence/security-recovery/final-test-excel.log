@@ -1,0 +1,13 @@
+
+> planora@0.1.0 test:excel
+> vitest run tests/excel
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  2 passed (2)
+      Tests  6 passed (6)
+   Start at  13:36:08
+   Duration  993ms (transform 69ms, setup 38ms, import 629ms, tests 10ms, environment 0ms)
+

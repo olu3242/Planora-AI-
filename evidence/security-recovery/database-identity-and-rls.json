@@ -1,0 +1,113 @@
+{
+  "identity": [
+    {
+      "database": "planora_convergence_test",
+      "role": "planora_certification",
+      "address": "127.0.0.1/32",
+      "port": 55439
+    }
+  ],
+  "roles": [
+    {
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolbypassrls": false
+    }
+  ],
+  "tableCount": 61,
+  "rlsEnabledTables": [],
+  "policies": [],
+  "migrations": [
+    {
+      "migration_name": "20260831000100_phase1_foundation",
+      "finished_at": "2026-10-09T18:33:35.140Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20260831000200_login_throttle",
+      "finished_at": "2026-10-09T18:33:35.153Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20260831110936_phase2_financial_core",
+      "finished_at": "2026-10-09T18:33:35.358Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20260831113840_phase3_excel_intelligence",
+      "finished_at": "2026-10-09T18:33:36.342Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20260831114612_phase3_excel_source_type",
+      "finished_at": "2026-10-09T18:33:36.344Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20260831121058_forecast_mvp_workflow",
+      "finished_at": "2026-10-09T18:33:36.363Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20260831183000_agentic_runtime_os",
+      "finished_at": "2026-10-09T18:33:36.405Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20260831184500_fix_agentic_tenant_guard",
+      "finished_at": "2026-10-09T18:33:36.407Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20260831203000_dashboard_admin_closure",
+      "finished_at": "2026-10-09T18:33:36.410Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20261009011000_accounting_ledger_prerequisite",
+      "finished_at": "2026-10-09T18:33:36.422Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20261009012000_workflow_orchestration",
+      "finished_at": "2026-10-09T18:33:36.469Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20261009015500_bank_ap_ar_foundation",
+      "finished_at": "2026-10-09T18:33:36.529Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20261009023000_coa_reporting_metadata",
+      "finished_at": "2026-10-09T18:33:36.538Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20261009031500_reporting_governance",
+      "finished_at": "2026-10-09T18:33:36.564Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20261009040000_accounting_posting_approvals",
+      "finished_at": "2026-10-09T18:33:36.574Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20261009041000_accounting_immutability",
+      "finished_at": "2026-10-09T18:33:36.577Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20261009042000_accounting_approval_scope",
+      "finished_at": "2026-10-09T18:33:36.585Z",
+      "rolled_back_at": null
+    },
+    {
+      "migration_name": "20261009050000_reporting_evidence_guards",
+      "finished_at": "2026-10-09T18:33:36.588Z",
+      "rolled_back_at": null
+    }
+  ]
+}

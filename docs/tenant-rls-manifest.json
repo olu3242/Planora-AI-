@@ -1,0 +1,357 @@
+{
+  "tenantTables": [
+    {
+      "table": "Organization",
+      "ownership": "id",
+      "checkedReferences": 0
+    },
+    {
+      "table": "ExcelWorkbook",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "WorkbookProfile",
+      "ownership": [
+        "ExcelWorkbook",
+        "workbookId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "MappingTemplate",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "MappingVersion",
+      "ownership": [
+        "MappingTemplate",
+        "templateId"
+      ],
+      "checkedReferences": 2
+    },
+    {
+      "table": "MappingRule",
+      "ownership": [
+        "MappingVersion",
+        "mappingVersionId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "MappingSuggestion",
+      "ownership": [
+        "MappingVersion",
+        "mappingVersionId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "MappingDecision",
+      "ownership": [
+        "MappingSuggestion",
+        "suggestionId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "ImportBatch",
+      "ownership": "organizationId",
+      "checkedReferences": 3
+    },
+    {
+      "table": "ImportError",
+      "ownership": [
+        "ImportBatch",
+        "importBatchId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "LegalEntity",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "BusinessUnit",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "Geography",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "Product",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "Customer",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "CostCenter",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "Account",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "FiscalCalendar",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "FiscalYear",
+      "ownership": [
+        "FiscalCalendar",
+        "fiscalCalendarId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "FiscalPeriod",
+      "ownership": [
+        "FiscalYear",
+        "fiscalYearId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "FinancialFact",
+      "ownership": "organizationId",
+      "checkedReferences": 9
+    },
+    {
+      "table": "LineageReference",
+      "ownership": [
+        "FinancialFact",
+        "financialFactId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "MetricDefinition",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "CalculationDefinition",
+      "ownership": [
+        "MetricDefinition",
+        "metricDefinitionId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "MetricDependency",
+      "ownership": [
+        "MetricDefinition",
+        "metricDefinitionId"
+      ],
+      "checkedReferences": 2
+    },
+    {
+      "table": "MetricValue",
+      "ownership": "organizationId",
+      "checkedReferences": 3
+    },
+    {
+      "table": "Plan",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "PlanVersion",
+      "ownership": [
+        "Plan",
+        "planId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "Forecast",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "ForecastVersion",
+      "ownership": [
+        "Forecast",
+        "forecastId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "ForecastLine",
+      "ownership": [
+        "ForecastVersion",
+        "forecastVersionId"
+      ],
+      "checkedReferences": 4
+    },
+    {
+      "table": "ForecastComment",
+      "ownership": [
+        "ForecastVersion",
+        "forecastVersionId"
+      ],
+      "checkedReferences": 2
+    },
+    {
+      "table": "OrganizationMembership",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "AuditEvent",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "AgentRun",
+      "ownership": "organizationId",
+      "checkedReferences": 2
+    },
+    {
+      "table": "AgentRecommendation",
+      "ownership": "organizationId",
+      "checkedReferences": 3
+    },
+    {
+      "table": "AgentFeedback",
+      "ownership": "organizationId",
+      "checkedReferences": 2
+    },
+    {
+      "table": "RuntimeExecution",
+      "ownership": "organizationId",
+      "checkedReferences": 2
+    },
+    {
+      "table": "AccountingJournal",
+      "ownership": "organizationId",
+      "checkedReferences": 3
+    },
+    {
+      "table": "AccountingJournalLine",
+      "ownership": [
+        "AccountingJournal",
+        "journalId"
+      ],
+      "checkedReferences": 2
+    },
+    {
+      "table": "WorkflowRunRecord",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "WorkflowExecutionRecord",
+      "ownership": [
+        "WorkflowRunRecord",
+        "runId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "Vendor",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "BankAccount",
+      "ownership": "organizationId",
+      "checkedReferences": 2
+    },
+    {
+      "table": "BankTransaction",
+      "ownership": [
+        "BankAccount",
+        "bankAccountId"
+      ],
+      "checkedReferences": 2
+    },
+    {
+      "table": "ApBill",
+      "ownership": "organizationId",
+      "checkedReferences": 3
+    },
+    {
+      "table": "ApPayment",
+      "ownership": "organizationId",
+      "checkedReferences": 2
+    },
+    {
+      "table": "ApPaymentAllocation",
+      "ownership": [
+        "ApPayment",
+        "paymentId"
+      ],
+      "checkedReferences": 2
+    },
+    {
+      "table": "ArInvoice",
+      "ownership": "organizationId",
+      "checkedReferences": 3
+    },
+    {
+      "table": "ArReceipt",
+      "ownership": "organizationId",
+      "checkedReferences": 2
+    },
+    {
+      "table": "ArReceiptAllocation",
+      "ownership": [
+        "ArReceipt",
+        "receiptId"
+      ],
+      "checkedReferences": 2
+    },
+    {
+      "table": "ReportingFrameworkVersion",
+      "ownership": "organizationId",
+      "checkedReferences": 1
+    },
+    {
+      "table": "ReportingRun",
+      "ownership": "organizationId",
+      "checkedReferences": 4
+    },
+    {
+      "table": "ReportingDisclosureEvidence",
+      "ownership": [
+        "ReportingRun",
+        "runId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "ReportingApproval",
+      "ownership": [
+        "ReportingRun",
+        "runId"
+      ],
+      "checkedReferences": 1
+    },
+    {
+      "table": "AccountingPostingApproval",
+      "ownership": "organizationId",
+      "checkedReferences": 4
+    }
+  ],
+  "globals": [
+    "User",
+    "Session",
+    "LoginThrottle",
+    "Currency",
+    "AgentDefinition"
+  ]
+}

@@ -31,7 +31,7 @@ describe("AI-native accounting deterministic safeguards", () => {
   });
   it("requires valid sector/framework context", () => {
     expect(() => validatePolicySelection({ sector: "PRIVATE", framework: "GASB", jurisdiction: "US-TX", version: "1", effectiveFrom: "2026-01-01" })).toThrow();
-    expect(validatePolicySelection({ sector: "PUBLIC", framework: "GASB", jurisdiction: "US-TX", version: "1", effectiveFrom: "2026-01-01" }).framework).toBe("GASB");
+    expect(validatePolicySelection({ sector: "PUBLIC", framework: "GASB", subtype: "state_local", jurisdiction: "US-TX", version: "1", effectiveFrom: "2026-01-01" }).framework).toBe("GASB");
     expect(() => validatePolicySelection({ sector: "PUBLIC", framework: "LOCAL", jurisdiction: "NG", version: "1", effectiveFrom: "2026-01-01" })).toThrow();
   });
   it("fails closed for each posting control", () => {

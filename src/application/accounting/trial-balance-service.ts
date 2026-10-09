@@ -1,9 +1,10 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { assertTrialBalance, calculateTrialBalance } from "@/domain/accounting/trial-balance";
 
-export async function getTrialBalance(organizationId:string,input:{legalEntityId?:string;fiscalPeriodId?:string}={}){
- const journals=await prisma.accountingJournal.findMany({
+export async function getTrialBalance(organizationId:string,input:{legalEntityId?:string;fiscalPeriodId?:string}={},db:Prisma.TransactionClient=prisma){
+ const journals=await db.accountingJournal.findMany({
   where:{organizationId,status:"POSTED",...(input.legalEntityId?{legalEntityId:input.legalEntityId}:{}),...(input.fiscalPeriodId?{fiscalPeriodId:input.fiscalPeriodId}:{})},
   select:{currencyCode:true,lines:{select:{accountId:true,debitMinor:true,creditMinor:true,account:{select:{code:true,name:true,type:true}}}}}
  });

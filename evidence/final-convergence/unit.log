@@ -1,0 +1,13 @@
+
+> planora@0.1.0 test:unit
+> vitest run tests/unit
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  38 passed (38)
+      Tests  162 passed (162)
+   Start at  12:56:27
+   Duration  6.59s (transform 406ms, setup 251ms, import 1.61s, tests 204ms, environment 3ms)
+

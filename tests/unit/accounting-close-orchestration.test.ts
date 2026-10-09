@@ -15,6 +15,22 @@ const definition:WorkflowDefinition={id:"close-contract",version:1,steps:[
 const context={organizationId:"org",legalEntityId:"entity",fiscalPeriodId:"period",actorId:"actor",correlationId:"corr"};
 
 describe("accounting close orchestration contract",()=>{
+ it("stops the current dispatch batch at human approval and stays paused on retry",async()=>{
+  const gated:WorkflowDefinition={id:"approval-batch",version:1,steps:[
+   {id:"approval",kind:"HUMAN_APPROVAL",requiresApproval:true},
+   {id:"independent-work",kind:"DETERMINISTIC"},
+  ]};
+  const runs=new MemoryWorkflowRunStore(); const executions=new MemoryRuntimeExecutionStore(); const registry=new RuntimeRegistry();
+  let dispatched=0;
+  registry.register("independent-work",async()=>{dispatched++;return {evidenceId:"unexpected"};});
+  await runs.save(createWorkflowRun("approval-batch",gated,context));
+  for(let i=0;i<2;i++){
+   const run=await executeReadySteps(gated,"approval-batch",runs,executions,registry);
+   expect(run.status).toBe("WAITING_APPROVAL");
+   expect(run.steps["independent-work"].status).toBe("PENDING");
+  }
+  expect(dispatched).toBe(0);
+ });
  it("blocks trial balance when a close prerequisite fails",async()=>{
   const runs=new MemoryWorkflowRunStore(); const executions=new MemoryRuntimeExecutionStore(); const registry=new RuntimeRegistry();
   registry.register("preflight",async()=>({evidenceId:"preflight"}));

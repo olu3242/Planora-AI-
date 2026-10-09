@@ -19,6 +19,10 @@ const context = {
 };
 
 describe("workflow orchestration", () => {
+  it.each(["WAITING_APPROVAL", "FAILED", "CANCELLED", "SUCCEEDED"] as const)("does not schedule pending work for a %s run", (status) => {
+    const run = createWorkflowRun("paused-run", CLOSE_TO_FORECAST_WORKFLOW, context);
+    expect(readySteps(CLOSE_TO_FORECAST_WORKFLOW, { ...run, status })).toEqual([]);
+  });
   it("validates and starts only dependency-ready work", () => {
     validateWorkflowDefinition(CLOSE_TO_FORECAST_WORKFLOW);
     let run = createWorkflowRun("run-1", CLOSE_TO_FORECAST_WORKFLOW, context);

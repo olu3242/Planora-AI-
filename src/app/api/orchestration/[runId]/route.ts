@@ -1,9 +1,10 @@
+import { withTenantApi } from "@/lib/tenant-request";
 import { requireApiSession } from "@/auth/session";
 import { AppError, errorResponse } from "@/lib/errors";
 import { correlationId } from "@/lib/request";
 import { PrismaWorkflowRunStore } from "@/lib/orchestration/prisma-store";
 
-export async function GET(request:Request,{params}:{params:Promise<{runId:string}>}){
+async function handleGET(request:Request,{params}:{params:Promise<{runId:string}>}){
  const cid=correlationId(request);
  try{
   const session=await requireApiSession("financial.read");
@@ -14,3 +15,5 @@ export async function GET(request:Request,{params}:{params:Promise<{runId:string
   return Response.json({run});
  }catch(error){return errorResponse(error,cid);}
 }
+
+export const GET = withTenantApi(handleGET);

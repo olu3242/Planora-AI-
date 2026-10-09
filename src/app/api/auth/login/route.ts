@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { authenticationPrisma as prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/auth/password";
 import { createSession } from "@/auth/session";
 import { correlationId, logEvent } from "@/lib/request";
@@ -29,3 +29,4 @@ export async function POST(request: Request) {
     return Response.json({ ok: true });
   } catch (error) { return errorResponse(error, cid); }
 }
+

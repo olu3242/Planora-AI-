@@ -1,3 +1,4 @@
+import { withTenantPage } from "@/lib/tenant-request";
 import Link from "next/link";
 import { Activity, BookOpen, FileChartColumn, Landmark, LockKeyhole, Scale } from "lucide-react";
 import { requirePageSession } from "@/auth/session";
@@ -7,7 +8,7 @@ import { getLedgerWorkspace } from "@/application/accounting/ledger-workspace";
 type Search=Promise<{entity?:string;period?:string}>;
 const money=(v:bigint,currency:string)=>new Intl.NumberFormat("en-US",{style:"currency",currency}).format(Number(v)/100);
 
-export default async function AccountingPage({searchParams}:{searchParams:Search}){
+async function AccountingPage({searchParams}:{searchParams:Search}){
  const session=await requirePageSession();
  if(!hasPermission(session.membership.role,"financial.read")) return <section className="panel" role="alert"><h1 className="page-heading">Accounting unavailable</h1></section>;
  const q=await searchParams;
@@ -28,3 +29,5 @@ export default async function AccountingPage({searchParams}:{searchParams:Search
   </section>
  </>;
 }
+
+export default withTenantPage(AccountingPage);

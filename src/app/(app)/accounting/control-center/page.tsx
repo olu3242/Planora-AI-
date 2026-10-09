@@ -1,3 +1,4 @@
+import { withTenantPage } from "@/lib/tenant-request";
 import Link from "next/link";
 import { Activity, CheckCircle2, Clock3, TriangleAlert } from "lucide-react";
 import { requirePageSession } from "@/auth/session";
@@ -8,7 +9,7 @@ import { pendingRecommendationInbox } from "@/application/agents/decision-contex
 import { RecommendationDecision } from "@/components/recommendation-decision";
 import { recommendationReviewPermission } from "@/application/agents/recommendation-permission";
 
-export default async function AccountingControlCenter(){
+async function AccountingControlCenter(){
  const session=await requirePageSession();
  if(!hasPermission(session.membership.role,"financial.read")) return <section className="panel" role="alert"><h1 className="page-heading">Control Center unavailable</h1></section>;
  const [ops,approvals,recommendations]=await Promise.all([getWorkflowOperations(session.organization.id),getApprovalInbox(session.organization.id,session.user.id),pendingRecommendationInbox(session.organization.id,session.user.id)]);
@@ -25,3 +26,5 @@ export default async function AccountingControlCenter(){
   <Link className="button button-secondary" href="/accounting">Back to general ledger</Link>
  </>;
 }
+
+export default withTenantPage(AccountingControlCenter);

@@ -1,6 +1,6 @@
 import "server-only";
 import type { AgentKillSwitch, RoleCode } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { authenticationPrisma as prisma } from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
 import { writeAudit } from "@/audit/audit";
 import { hashPassword } from "@/auth/password";
@@ -86,3 +86,4 @@ export async function preparePilot(context: AdminContext, organizationId: string
     await writeAudit(tx, { organizationId: context.auditOrganizationId, actorId: context.actorId, action: "PLATFORM.PILOT_PREPARED", entityType: "Organization", entityId: organizationId, newState: { forecastId: forecast.id, forecastVersionId: version.id, synthetic: true }, correlationId: context.correlationId }); return version;
   });
 }
+

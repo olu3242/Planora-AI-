@@ -1,3 +1,4 @@
+import { withTenantPage } from "@/lib/tenant-request";
 import Link from "next/link";
 import { CheckCircle2, LockKeyhole, TriangleAlert } from "lucide-react";
 import { requirePageSession } from "@/auth/session";
@@ -8,7 +9,7 @@ import { getTrialBalance } from "@/application/accounting/trial-balance-service"
 import { StartCloseWorkflow } from "@/components/accounting-workflow-actions";
 
 type Search=Promise<{entity?:string;period?:string}>;
-export default async function CloseCenter({searchParams}:{searchParams:Search}){
+async function CloseCenter({searchParams}:{searchParams:Search}){
  const session=await requirePageSession();
  if(!hasPermission(session.membership.role,"financial.read")) return <section className="panel"><h1 className="page-heading">Close Center unavailable</h1></section>;
  const q=await searchParams; const meta=await getLedgerWorkspace(session.organization.id,{legalEntityId:q.entity,fiscalPeriodId:q.period});
@@ -29,3 +30,5 @@ export default async function CloseCenter({searchParams}:{searchParams:Search}){
   <Link className="button button-secondary" href="/accounting/control-center">Open Control Center</Link>
  </>;
 }
+
+export default withTenantPage(CloseCenter);

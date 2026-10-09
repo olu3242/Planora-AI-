@@ -1,0 +1,28 @@
+Isolated Wave 1 identity verified: {
+  database: 'planora_wave1_test',
+  role: 'planora_wave1_test',
+  port: 55440,
+  superuser: false,
+  bypass: false
+}
+Migration preflight accepted isolated test database 127.0.0.1/planora_wave1_test.
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_wave1_test", schema "public" at "127.0.0.1:55440"
+
+19 migrations found in prisma/migrations
+
+Applying migration `20261009060000_tenant_rls`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261009060000_tenant_rls/
+    └─ migration.sql
+      
+All migrations have been successfully applied.
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_wave1_test", schema "public" at "127.0.0.1:55440"
+
+19 migrations found in prisma/migrations
+
+Database schema is up to date!

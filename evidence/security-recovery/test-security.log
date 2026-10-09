@@ -1,0 +1,13 @@
+
+> planora@0.1.0 test:security
+> vitest run tests/security tests/auth tests/rbac
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  13:25:21
+   Duration  14.86s (transform 442ms, setup 66ms, import 13.35s, tests 519ms, environment 0ms)
+

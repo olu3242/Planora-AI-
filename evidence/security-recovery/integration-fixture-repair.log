@@ -1,0 +1,102 @@
+
+> planora@0.1.0 test:integration
+> vitest run tests/integration
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+ ❯ tests/integration/excel-import.test.ts (3 tests | 1 failed) 495ms
+     × profiles, requires human mapping, validates, and imports exact facts with lineage 129ms
+ ❯ tests/integration/forecast-workflow.test.ts (1 test | 1 failed) 268ms
+     × enforces revision, separated approval, audit, tenant scope, and locked immutability 265ms
+ ❯ tests/integration/financial-core.test.ts (6 tests | 3 failed) 296ms
+     × aggregates canonical facts and materializes the exact fixture 183ms
+     × returns source-complete EBITDA lineage 33ms
+     × preserves selected statement filters in EBITDA lineage 41ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/integration/excel-import.test.ts > Excel canonical import > profiles, requires human mapping, validates, and imports exact facts with lineage
+AssertionError: expected 'APPROVED' to be 'REVIEW_REQUIRED' // Object.is equality
+
+Expected: "REVIEW_REQUIRED"
+Received: "APPROVED"
+
+ ❯ tests/integration/excel-import.test.ts:32:32
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/integration/financial-core.test.ts > financial core persistence > aggregates canonical facts and materializes the exact fixture
+AssertionError: expected { REVENUE: '145000000', …(6) } to match object { REVENUE: '150000000', …(5) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "COGS": "40000000",
+-   "EBITDA": "87000000",
+-   "EBITDA_MARGIN_PCT": "58",
+-   "GROSS_PROFIT": "110000000",
+-   "OPERATING_EXPENSE": "23000000",
+-   "REVENUE": "150000000",
++   "COGS": "41000000",
++   "EBITDA": "79000000",
++   "EBITDA_MARGIN_PCT": "54.48275862068965517241379310344827586207",
++   "GROSS_PROFIT": "104000000",
++   "OPERATING_EXPENSE": "25000000",
++   "REVENUE": "145000000",
+  }
+
+ ❯ tests/integration/financial-core.test.ts:15:121
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/integration/financial-core.test.ts > financial core persistence > returns source-complete EBITDA lineage
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/integration/financial-core.test.ts:22:92
+     20|     expect(lineage.dependencies).toEqual(["GROSS_PROFIT", "OPERATING_E…
+     21|     expect(lineage.facts).toHaveLength(12);
+     22|     expect(lineage.facts.every((fact) => fact.source[0]?.identifier ==…
+       |                                                                                            ^
+     23|   });
+     24|   it("preserves selected statement filters in EBITDA lineage", async (…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/integration/financial-core.test.ts > financial core persistence > preserves selected statement filters in EBITDA lineage
+AssertionError: expected 0 to be greater than 0
+ ❯ tests/integration/financial-core.test.ts:33:34
+     31|     const lineage = await explainMetricValue(org.id, ebitda.metricValu…
+     32|     expect(lineage.value).toBe(ebitda.value);
+     33|     expect(lineage.facts.length).toBeGreaterThan(0);
+       |                                  ^
+     34|     expect(lineage.facts.every((fact) => fact.geography === geography.…
+     35|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/integration/forecast-workflow.test.ts > governed forecast workflow > enforces revision, separated approval, audit, tenant scope, and locked immutability
+Error: This forecast version is not editable.
+ ❯ src/application/forecast/forecast-service.ts:26:149
+
+ ❯ Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:722:17
+ ❯ tests/integration/forecast-workflow.test.ts:27:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  3 failed | 6 passed (9)
+      Tests  5 failed | 34 passed (39)
+   Start at  13:27:24
+   Duration  6.13s (transform 478ms, setup 90ms, import 1.84s, tests 2.71s, environment 1ms)
+

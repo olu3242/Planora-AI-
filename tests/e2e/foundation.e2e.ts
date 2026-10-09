@@ -1,3 +1,4 @@
+const evidenceRoot = process.env.PLANORA_EVIDENCE_DIR ?? "evidence";
 import { expect, test } from "@playwright/test";
 import { PrismaClient } from "@prisma/client";
 import { mkdir } from "node:fs/promises";
@@ -19,11 +20,11 @@ test("unauthenticated users are redirected and can sign in", async ({ page }) =>
 test("landing navigation, calls to action, footer links, and keyboard focus work", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Turn fragmented financial data into decisions you can stand behind." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /From numbers to what/ })).toBeVisible();
   await page.getByRole("link", { name: "Product" }).click();
-  await expect(page).toHaveURL(/#capabilities$/);
-  await expect(page.locator("#capabilities")).toBeInViewport();
-  await page.getByRole("link", { name: "Planora" }).focus();
+  await expect(page).toHaveURL(/#features$/);
+  await expect(page.locator("#features")).toBeInViewport();
+  await page.getByRole("link", { name: "Planora home" }).focus();
   await page.keyboard.press("Tab");
   const focus = await page.evaluate(() => {
     const element = document.activeElement as HTMLElement;
@@ -35,8 +36,8 @@ test("landing navigation, calls to action, footer links, and keyboard focus work
   expect(focus.width).not.toBe("0px");
   const deadLinks = await page.locator("a").evaluateAll((links) => links.filter((link) => link.getAttribute("href") === "#").length);
   expect(deadLinks).toBe(0);
-  await expect(page.locator("footer").getByRole("link", { name: "Documentation" })).toHaveAttribute("href", "#capabilities");
-  await page.getByRole("link", { name: "Get started" }).first().click();
+  await expect(page.locator("footer").getByRole("link", { name: "Financial Reporting" })).toHaveAttribute("href", "#features");
+  await page.locator("a:visible").filter({ hasText: /^Get Started/ }).first().click();
   await expect(page).toHaveURL(/\/login$/);
 });
 
@@ -45,13 +46,13 @@ for (const width of [375, 430, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
     expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
-    await expect(page.getByRole("link", { name: "Get started" }).first()).toBeVisible();
-    if (width <= 700) {
-      const menu = page.locator("details.mobile-menu");
-      await menu.locator("summary").click();
+    await expect(page.locator("a:visible").filter({ hasText: /^Get Started/ }).first()).toBeVisible();
+    if (width <= 900) {
+      const menu = page.locator(".nav-panel");
+      await page.getByRole("button", { name: "Open menu" }).click();
       await expect(menu.getByRole("link", { name: "Product" })).toBeVisible();
-      await menu.locator("summary").click();
-      await expect(menu).not.toHaveAttribute("open", "");
+      await page.getByRole("button", { name: "Open menu" }).click();
+      await expect(page.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
     } else {
       await expect(page.getByRole("navigation", { name: "Primary navigation" })).toBeVisible();
     }
@@ -83,8 +84,8 @@ test("visual certification has content, key controls, and no browser errors", as
   await expect(page.getByRole("link", { name: "Planora" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
   expect(errors).toEqual([]);
-  await mkdir("evidence/phase-1", { recursive: true });
-  await page.screenshot({ path: "evidence/phase-1/command-center-1440.png", fullPage: true });
+  await mkdir(`${evidenceRoot}/phase-1`, { recursive: true });
+  await page.screenshot({ path: `${evidenceRoot}/phase-1/command-center-1440.png`, fullPage: true });
 });
 
 for (const width of [375, 430, 768, 1024, 1440]) {

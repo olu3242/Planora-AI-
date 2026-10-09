@@ -1,3 +1,4 @@
+import { withTenantApi } from "@/lib/tenant-request";
 import { requireApiSession } from "@/auth/session";
 import { writeAudit } from "@/audit/audit";
 import { prisma } from "@/lib/prisma";
@@ -8,7 +9,7 @@ import { CLOSE_TO_FORECAST_WORKFLOW } from "@/lib/orchestration/close-to-forecas
 import { PrismaRuntimeExecutionStore, PrismaWorkflowRunStore } from "@/lib/orchestration/prisma-store";
 import { resumeWorkflow } from "@/lib/orchestration/service";
 
-export async function POST(request:Request,{params}:{params:Promise<{runId:string}>}){
+async function handlePOST(request:Request,{params}:{params:Promise<{runId:string}>}){
  const cid=correlationId(request);
  try{
   assertSameOrigin(request);
@@ -22,3 +23,5 @@ export async function POST(request:Request,{params}:{params:Promise<{runId:strin
   return Response.json({runId:run.id,status:run.status,steps:run.steps});
  }catch(error){return errorResponse(error,cid);}
 }
+
+export const POST = withTenantApi(handlePOST);

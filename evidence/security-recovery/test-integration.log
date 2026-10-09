@@ -1,0 +1,88 @@
+
+> planora@0.1.0 test:integration
+> vitest run tests/integration
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+ ❯ tests/integration/accounting-database-certification.test.ts (6 tests | 2 failed) 305ms
+     × rejects an expired approval both through posting and at database consumption 54ms
+     × consumes an approval atomically and rejects changes to posted journals, lines, audit and approval evidence 33ms
+ ❯ tests/integration/reporting-governance.test.ts (5 tests | 3 failed) 524ms
+     × blocks cross-tenant review 364ms
+     × blocks preparer self-review even with a review-capable role 28ms
+     × requires independent CFO approval and makes locked evidence immutable 60ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/integration/accounting-database-certification.test.ts > accounting database certification > rejects an expired approval both through posting and at database consumption
+AssertionError: expected [Function] to throw error including 'APPROVAL_EXPIRED' but got 'APPROVAL_SCOPE_MISMATCH'
+
+Expected: "APPROVAL_EXPIRED"
+Received: "APPROVAL_SCOPE_MISMATCH"
+
+ ❯ tests/integration/accounting-database-certification.test.ts:179:8
+    177|       lines: postingLines(context),
+    178|       actorId: context.poster.id,
+    179|     })).rejects.toThrow("APPROVAL_EXPIRED");
+       |        ^
+    180|     await expect(prisma.accountingPostingApproval.update({
+    181|       where: { id: approval.id },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/integration/accounting-database-certification.test.ts > accounting database certification > consumes an approval atomically and rejects changes to posted journals, lines, audit and approval evidence
+Error: APPROVAL_SCOPE_MISMATCH
+ ❯ assertAccountingApproval src/lib/accounting/approval-policy.ts:32:56
+     30|       approval.fiscalPeriodId !== context.fiscalPeriodId ||
+     31|       approval.sourceKey !== context.sourceKey ||
+     32|       approval.preparedById !== context.actorId) throw new Error("APPR…
+       |                                                        ^
+     33|   if (approval.approvedById === approval.preparedById) throw new Error…
+     34|   if (!(approval.expiresAt instanceof Date) || !Number.isFinite(approv…
+ ❯ verifyPersistedAccountingApproval src/lib/accounting/persisted-approval.ts:22:3
+ ❯ prisma.$transaction.isolationLevel src/lib/accounting/prisma-posting-adapter.ts:69:26
+ ❯ Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:722:17
+ ❯ tests/integration/accounting-database-certification.test.ts:190:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/integration/reporting-governance.test.ts > reporting governance persistence > blocks cross-tenant review
+AssertionError: expected [Function] to throw error including 'REPORTING_RUN_NOT_REVIEWABLE' but got 'REPORTING_ACTOR_NOT_ACTIVE_IN_TENANT'
+
+Expected: "REPORTING_RUN_NOT_REVIEWABLE"
+Received: "REPORTING_ACTOR_NOT_ACTIVE_IN_TENANT"
+
+ ❯ tests/integration/reporting-governance.test.ts:24:185
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/integration/reporting-governance.test.ts > reporting governance persistence > blocks preparer self-review even with a review-capable role
+AssertionError: expected [Function] to throw error including 'REPORTING_SELF_REVIEW_FORBIDDEN' but got 'Missing permission: reporting.review'
+
+Expected: "REPORTING_SELF_REVIEW_FORBIDDEN"
+Received: "Missing permission: reporting.review"
+
+ ❯ tests/integration/reporting-governance.test.ts:26:337
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/integration/reporting-governance.test.ts > reporting governance persistence > requires independent CFO approval and makes locked evidence immutable
+AssertionError: expected [Function] to throw error including 'REPORTING_SELF_APPROVAL_FORBIDDEN' but got 'Missing permission: reporting.approve'
+
+Expected: "REPORTING_SELF_APPROVAL_FORBIDDEN"
+Received: "Missing permission: reporting.approve"
+
+ ❯ tests/integration/reporting-governance.test.ts:28:460
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  2 failed | 7 passed (9)
+      Tests  5 failed | 33 passed (38)
+   Start at  13:25:37
+   Duration  8.57s (transform 614ms, setup 131ms, import 2.27s, tests 4.21s, environment 1ms)
+

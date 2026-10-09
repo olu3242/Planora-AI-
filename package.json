@@ -6,10 +6,10 @@
   "description": "Governed financial planning, analysis, and decision intelligence platform.",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run db:generate && next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npm run db:generate && tsc --noEmit",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "vitest run tests/unit",
     "test:integration": "tsx scripts/run-isolated-integration.ts",
@@ -29,7 +29,7 @@
     "db:seed": "tsx database/seeds/index.ts",
     "db:seed:test": "tsx scripts/seed-test.ts",
     "db:generate": "prisma generate",
-    "certify": "npm run db:generate && npm run db:validate && npm run db:reset:test && npm run db:seed:test && npm run db:status:test && npm run lint && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:financial && npm run test:excel && npm run test:security && npm run test:performance && npm run test:e2e && npm run build"
+    "certify": "npm run db:generate && npm run db:validate && npm run db:reset:test && npm run db:seed:test && npm run db:status:test && npm run lint && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:financial && npm run test:excel && npm run test:security && npm run test:performance && npm run db:reset:test && npm run db:seed:test && npm run test:e2e && npm run build"
   },
   "dependencies": {
     "@prisma/client": "6.19.1",

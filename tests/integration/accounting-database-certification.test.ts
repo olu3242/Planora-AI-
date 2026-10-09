@@ -9,7 +9,8 @@ afterAll(() => prisma.$disconnect());
 async function fixture() {
   const organization = await prisma.organization.findUniqueOrThrow({ where: { code: "NORTHSTAR" } });
   const otherOrganization = await prisma.organization.findUniqueOrThrow({ where: { code: "HORIZON" } });
-  const preparer = await prisma.user.findUniqueOrThrow({ where: { email: "analyst@planora.local" } });
+  // The approved preparer must be the authenticated poster under the canonical policy.
+  const preparer = await prisma.user.findUniqueOrThrow({ where: { email: "cfo@planora.local" } });
   const reviewer = await prisma.user.findUniqueOrThrow({ where: { email: "director@planora.local" } });
   const poster = await prisma.user.findUniqueOrThrow({ where: { email: "cfo@planora.local" } });
   const entity = await prisma.legalEntity.findFirstOrThrow({ where: { organizationId: organization.id } });
@@ -76,6 +77,20 @@ function postingLines(context: Awaited<ReturnType<typeof fixture>>) {
 }
 
 describe("accounting database certification", () => {
+  it("denies unauthorized roles, missing approvals, and forged tenant context", async () => {
+    const context = await fixture();
+    const analyst = await prisma.user.findUniqueOrThrow({ where: { email: "analyst@planora.local" } });
+    const command = { organizationId: context.organization.id, legalEntityId: context.entity.id,
+      fiscalPeriodId: context.period.id, sourceKey: `unauthorized-${randomUUID()}`, currencyCode: "USD",
+      lines: postingLines(context), actorId: analyst.id };
+    const restricted = createPrismaJournalPostingRepository(prisma, analyst.id, context.organization.id);
+    await expect(restricted.postAtomically(command)).rejects.toThrow("POSTING_ROLE_DENIED");
+    await expect(postingRepository(context).postAtomically({ ...command, actorId: context.poster.id }))
+      .rejects.toThrow("APPROVAL_REQUIRED");
+    await expect(postingRepository(context).postAtomically({ ...command, actorId: context.poster.id, organizationId: context.otherOrganization.id }))
+      .rejects.toThrow("UNTRUSTED_POSTING_CONTEXT");
+    expect(await prisma.accountingJournal.count({ where: { sourceKey: command.sourceKey } })).toBe(0);
+  });
   beforeAll(async () => {
     await prisma.$queryRaw`SELECT 1`;
   });

@@ -1,3 +1,4 @@
+import { withTenantPage } from "@/lib/tenant-request";
 import Link from "next/link";
 import { Scale } from "lucide-react";
 import { requirePageSession } from "@/auth/session";
@@ -8,7 +9,7 @@ import { getTrialBalance } from "@/application/accounting/trial-balance-service"
 type Search=Promise<{entity?:string;period?:string}>;
 const money=(v:bigint,c:string)=>new Intl.NumberFormat("en-US",{style:"currency",currency:c}).format(Number(v)/100);
 
-export default async function TrialBalancePage({searchParams}:{searchParams:Search}){
+async function TrialBalancePage({searchParams}:{searchParams:Search}){
  const session=await requirePageSession();
  if(!hasPermission(session.membership.role,"financial.read")) return <section className="panel" role="alert"><h1 className="page-heading">Trial balance unavailable</h1></section>;
  const q=await searchParams;
@@ -26,3 +27,5 @@ export default async function TrialBalancePage({searchParams}:{searchParams:Sear
    <div className="statement-row statement-total"><span>Total</span><strong>{money(tb.debitMinor,tb.currencyCode)} = {money(tb.creditMinor,tb.currencyCode)}</strong></div></div></section>
  </>;
 }
+
+export default withTenantPage(TrialBalancePage);

@@ -1,3 +1,4 @@
+import { withTenantApi } from "@/lib/tenant-request";
 import { runAgent } from "@/agents/agent-service";
 import { requireApiSession } from "@/auth/session";
 import { AppError, errorResponse } from "@/lib/errors";
@@ -11,7 +12,7 @@ const schema = z.object({
   prompt: z.string().trim().max(1000).optional(),
 });
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const cid = correlationId(request);
   const wantsJson = request.headers.get("content-type")?.includes("application/json") ?? false;
   let forecastVersionId = "";
@@ -29,3 +30,5 @@ export async function POST(request: Request) {
     return errorResponse(error, cid);
   }
 }
+
+export const POST = withTenantApi(handlePOST);

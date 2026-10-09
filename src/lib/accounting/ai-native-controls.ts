@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /** Pure deterministic controls. No model inference or database mutation. */
 export const AccountingSector = z.enum(["PRIVATE", "PUBLIC", "NOT_FOR_PROFIT"]);
-export const AccountingFramework = z.enum(["US_GAAP", "IFRS", "IFRS_FOR_SMES", "GASB", "IPSAS", "LOCAL"]);
+export const AccountingFramework = z.enum(["US_GAAP", "IFRS", "IFRS_FOR_SMES", "GASB", "FASAB", "IPSAS", "UK_GAAP", "LOCAL"]);
 export const AccountingPolicyInput = z.object({
   sector: AccountingSector,
   framework: AccountingFramework,
@@ -11,6 +11,7 @@ export const AccountingPolicyInput = z.object({
   effectiveFrom: z.iso.date(),
   effectiveTo: z.iso.date().optional(),
   localAuthority: z.string().trim().min(1).optional(),
+  subtype: z.enum(["state_local", "federal"]).optional(),
 }).superRefine((policy, ctx) => {
   if (policy.effectiveTo && policy.effectiveTo < policy.effectiveFrom) {
     ctx.addIssue({ code: "custom", message: "End date precedes start date", path: ["effectiveTo"] });
@@ -18,8 +19,20 @@ export const AccountingPolicyInput = z.object({
   if (policy.framework === "LOCAL" && !policy.localAuthority) {
     ctx.addIssue({ code: "custom", message: "Local framework requires authority", path: ["localAuthority"] });
   }
-  if (policy.framework === "GASB" && !(policy.sector === "PUBLIC" && policy.jurisdiction.toUpperCase().startsWith("US"))) {
+  if (policy.framework === "GASB" && !(policy.sector === "PUBLIC" && /^US(?:-|$)/.test(policy.jurisdiction.toUpperCase()) && policy.subtype === "state_local")) {
     ctx.addIssue({ code: "custom", message: "GASB requires US public-sector context", path: ["framework"] });
+  }
+  if (policy.framework === "FASAB" && !(policy.sector === "PUBLIC" && /^US(?:-|$)/.test(policy.jurisdiction.toUpperCase()) && policy.subtype === "federal")) {
+    ctx.addIssue({ code: "custom", message: "FASAB requires US federal public-sector context", path: ["framework"] });
+  }
+  if (policy.framework === "US_GAAP" && (policy.sector === "PUBLIC" || !/^US(?:-|$)/.test(policy.jurisdiction.toUpperCase()))) {
+    ctx.addIssue({ code: "custom", message: "US GAAP requires US private or nonprofit context", path: ["framework"] });
+  }
+  if (["IFRS", "UK_GAAP"].includes(policy.framework) && policy.sector === "PUBLIC") {
+    ctx.addIssue({ code: "custom", message: "Framework requires private or nonprofit context", path: ["framework"] });
+  }
+  if (policy.framework === "UK_GAAP" && !/^(GB|IE)(?:-|$)/.test(policy.jurisdiction.toUpperCase())) {
+    ctx.addIssue({ code: "custom", message: "UK GAAP routing requires GB or IE context", path: ["framework"] });
   }
   if (policy.framework === "IPSAS" && policy.sector !== "PUBLIC") {
     ctx.addIssue({ code: "custom", message: "IPSAS requires public-sector context", path: ["framework"] });

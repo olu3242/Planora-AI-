@@ -1,10 +1,11 @@
+import { withTenantPage } from "@/lib/tenant-request";
 import Link from "next/link";
 import { BarChart3, Database, FileChartColumn, FileSpreadsheet, ShieldCheck } from "lucide-react";
 import { requirePageSession } from "@/auth/session";
 import { hasPermission } from "@/permissions/permissions";
 import { prisma } from "@/lib/prisma";
 
-export default async function CommandCenter() {
+async function CommandCenter() {
   const session = await requirePageSession();
   const auditCount = await prisma.auditEvent.count({ where: { organizationId: session.organization.id } });
   const modules = [
@@ -20,3 +21,5 @@ export default async function CommandCenter() {
     <section className="panel"><div className="section-heading"><div><h2>Continue the governed workflow</h2><p>Each destination preserves tenant scope, role checks, source evidence, and audit controls.</p></div></div><div className="journey-grid">{modules.map(({ label, accessibleLabel, description, href, Icon }) => <Link aria-label={accessibleLabel} className="journey-card" href={href} key={href}><Icon size={20} /><span><strong>{label}</strong><small>{description}</small></span><span aria-hidden="true">→</span></Link>)}</div></section>
   </>;
 }
+
+export default withTenantPage(CommandCenter);
