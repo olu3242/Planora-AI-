@@ -10,12 +10,20 @@ dist/
 coverage/
 playwright-report/
 test-results/
+<<<<<<< HEAD
+=======
+*.tsbuildinfo
+>>>>>>> main
 
 # environment
 .env
 .env.local
 .env.*.local
 !.env.example
+<<<<<<< HEAD
+=======
+storage/uploads/
+>>>>>>> main
 
 # logs
 npm-debug.log*
@@ -28,6 +36,10 @@ pnpm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
+<<<<<<< HEAD
+=======
+workspace.code-workspace
+>>>>>>> main
 
 # Prisma/local databases
 *.db
@@ -35,3 +47,9 @@ Thumbs.db
 
 # generated delivery archives
 planora-e2e.zip
+<<<<<<< HEAD
+=======
+planora-docs.zip
+
+.vercel
+>>>>>>> main
