@@ -63,6 +63,7 @@ describe("Prisma posting adapter (mock transaction boundary)", () => {
       accountingJournal: {
         findUnique: vi.fn().mockResolvedValue({ id: "existing", status: "POSTED", legalEntityId: "entity", fiscalPeriodId: "period", currencyCode: "USD" }),
         create: vi.fn(),
+        update: vi.fn(),
       },
       accountingJournalLine: { findMany: vi.fn().mockResolvedValue([
         { accountId: "cash", debitMinor: 101n, creditMinor: 0n },
