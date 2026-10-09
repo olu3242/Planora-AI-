@@ -50,7 +50,7 @@ export function createPrismaJournalPostingRepository(
           where: { organizationId_sourceKey: { organizationId: trustedOrganizationId, sourceKey: input.sourceKey } },
         });
         if (existing) {
-          if (existing.status !== "POSTED" || existing.legalEntityId !== input.legalEntityId ||
+          if (existing.postedById !== trustedActorId || existing.status !== "POSTED" || existing.legalEntityId !== input.legalEntityId ||
               existing.fiscalPeriodId !== input.fiscalPeriodId || existing.currencyCode !== input.currencyCode) {
             throw new Error("IDEMPOTENCY_CONFLICT");
           }
