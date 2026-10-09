@@ -14,7 +14,7 @@ function fakeDb(overrides: Record<string, unknown> = {}) {
   const tx = {
     organizationMembership: { findFirst: vi.fn().mockResolvedValue({ role: "CFO" }) },
     legalEntity: { findFirst: vi.fn().mockResolvedValue({ id: "entity" }) },
-    fiscalPeriod: { findFirst: vi.fn().mockResolvedValue({ accountingCloseState: "OPEN" }) },
+    fiscalPeriod: { findFirst: vi.fn().mockResolvedValue({ accountingCloseState: "OPEN", startDate: new Date("2026-01-01"), endDate: new Date("2026-01-31") }) },
     currency: { findUnique: vi.fn().mockResolvedValue({ code: "USD" }) },
     account: { findMany: vi.fn().mockResolvedValue([{ id: "cash", effectiveFrom: new Date("2020-01-01"), effectiveTo: null }, { id: "sales", effectiveFrom: new Date("2020-01-01"), effectiveTo: null }]) },
     accountingJournal: {
