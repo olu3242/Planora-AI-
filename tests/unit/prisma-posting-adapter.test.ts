@@ -22,6 +22,7 @@ function fakeDb(overrides: Record<string, unknown> = {}) {
       create: vi.fn().mockResolvedValue({ id: "posted-1" }),
     },
     accountingJournalLine: { findMany: vi.fn().mockResolvedValue([]) },
+    auditEvent: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
     ...overrides,
   };
   const db = { $transaction: vi.fn(async (callback: (value: typeof tx) => unknown) => callback(tx)) };
@@ -34,6 +35,8 @@ describe("Prisma posting adapter (mock transaction boundary)", () => {
     const repo = createPrismaJournalPostingRepository(db as never, "actor", "org");
     expect(await repo.postAtomically(input)).toEqual({ journalId: "posted-1", created: true });
     expect(tx.accountingJournal.create).toHaveBeenCalledTimes(1);
+    expect(tx.auditEvent.create).toHaveBeenCalledTimes(1);
+    expect(tx.auditEvent.create.mock.calls[0][0].data.action).toBe("ACCOUNTING_JOURNAL_POSTED");
     expect(tx.accountingJournal.create.mock.calls[0][0].data.lines.create).toHaveLength(2);
   });
   it("rejects forged actor and organization before starting transaction", async () => {
