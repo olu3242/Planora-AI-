@@ -1,0 +1,10 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {CloseRepository} from "./close-repository.mjs";
+const base={entityId:"e1",period:"2026-10",status:"PENDING_APPROVAL"};
+test("new close persists with version 1",async()=>{const repo=new CloseRepository();const saved=await repo.save(base,{actor:"controller"});assert.equal(saved.version,1);assert.equal((await repo.get("e1","2026-10")).status,"PENDING_APPROVAL")});
+test("status transition uses expected status",async()=>{const repo=new CloseRepository();await repo.save(base,{actor:"controller"});const saved=await repo.save({...base,status:"APPROVED"},{expectedStatus:"PENDING_APPROVAL",actor:"cfo"});assert.equal(saved.version,2)});
+test("stale update rejected",async()=>{const repo=new CloseRepository();await repo.save(base,{actor:"controller"});await assert.rejects(()=>repo.save({...base,status:"APPROVED"},{actor:"cfo"}),/concurrency/)});
+test("approved close cannot be overwritten",async()=>{const repo=new CloseRepository();await repo.save(base,{actor:"controller"});await repo.save({...base,status:"APPROVED"},{expectedStatus:"PENDING_APPROVAL",actor:"cfo"});await assert.rejects(()=>repo.save(base,{expectedStatus:"APPROVED",actor:"controller"}),/immutable/)});
+test("audit hash chain verifies",async()=>{const repo=new CloseRepository();await repo.save(base,{actor:"controller"});assert.equal(repo.verifyAudit(),true);assert.equal(repo.audit().length,1)});
+test("returned records cannot mutate repository",async()=>{const repo=new CloseRepository();const item=await repo.save(base,{actor:"controller"});item.status="TAMPERED";assert.equal((await repo.get("e1","2026-10")).status,"PENDING_APPROVAL")});
