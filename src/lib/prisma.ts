@@ -1,5 +1,6 @@
 import "server-only";
 import { PrismaClient } from "@prisma/client";
+<<<<<<< HEAD
 import type { Prisma } from "@prisma/client";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
@@ -35,3 +36,10 @@ export const prisma = new Proxy(authenticationPrisma, {
     return Reflect.get(tx, property, tx);
   },
 });
+=======
+
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+>>>>>>> origin/main

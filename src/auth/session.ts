@@ -2,7 +2,11 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+<<<<<<< HEAD
 import { authenticationPrisma as prisma } from "@/lib/prisma";
+=======
+import { prisma } from "@/lib/prisma";
+>>>>>>> origin/main
 import { env } from "@/validation/env";
 import { AppError } from "@/lib/errors";
 import type { Permission } from "@/permissions/permissions";
@@ -64,4 +68,7 @@ export async function requireApiSession(permission?: Permission) {
   if (permission && !hasPermission(session.membership.role, permission)) throw new AppError("FORBIDDEN", "You do not have permission for this action.", 403);
   return session;
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main

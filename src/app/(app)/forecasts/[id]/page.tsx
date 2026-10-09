@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { withTenantPage } from "@/lib/tenant-request";
+=======
+>>>>>>> origin/main
 import { Download } from "lucide-react";
 import { notFound } from "next/navigation";
 import { requirePageSession } from "@/auth/session";
@@ -18,11 +21,19 @@ const actionsByState: Record<string, Record<string, Array<[string, string]>>> = 
 };
 async function loadWorkspace(organizationId: string, id: string, query: { search?: string; period?: string; page?: string }) { try { return await forecastWorkspace(organizationId, id, query); } catch (error) { if (error instanceof AppError && error.code === "RESOURCE_NOT_FOUND") notFound(); throw error; } }
 
+<<<<<<< HEAD
 async function ForecastPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ search?: string; period?: string; page?: string; error?: string; agentRun?: string; agentDecision?: string }> }) {
   const session = await requirePageSession(); if (!hasPermission(session.membership.role, "financial.read")) return <section className="panel" role="alert"><h1>403 — Forecast unavailable</h1><p>Platform operations does not grant tenant financial access.</p></section>; const { id } = await params; const query = await searchParams;
   const workspace = await loadWorkspace(session.organization.id, id, query);
   const periods = [...new Map(workspace.version.lines.map((line) => [line.fiscalPeriod.id, line.fiscalPeriod])).values()];
   const audits = await prisma.auditEvent.findMany({ where: { organizationId: session.organization.id, OR: [{ entityId: id }, { metadata: { path: ["forecastVersionId"], equals: id } }] }, orderBy: { occurredAt: "desc" }, take: 40, include: { actor: { select: { id: true, name: true, email: true } } } });
+=======
+export default async function ForecastPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ search?: string; period?: string; page?: string; error?: string; agentRun?: string; agentDecision?: string }> }) {
+  const session = await requirePageSession(); if (!hasPermission(session.membership.role, "financial.read")) return <section className="panel" role="alert"><h1>403 — Forecast unavailable</h1><p>Platform operations does not grant tenant financial access.</p></section>; const { id } = await params; const query = await searchParams;
+  const workspace = await loadWorkspace(session.organization.id, id, query);
+  const periods = [...new Map(workspace.version.lines.map((line) => [line.fiscalPeriod.id, line.fiscalPeriod])).values()];
+  const audits = await prisma.auditEvent.findMany({ where: { organizationId: session.organization.id, OR: [{ entityId: id }, { metadata: { path: ["forecastVersionId"], equals: id } }] }, orderBy: { occurredAt: "desc" }, take: 40, include: { actor: true } });
+>>>>>>> origin/main
   const recommendations = await listForecastRecommendations(session.organization.id, id);
   const byType = (type: string) => workspace.version.lines.filter((line) => line.account.type === type).reduce((sum, line) => sum + Number(line.currentForecast), 0);
   const revenue = byType("REVENUE"); const cogs = byType("COGS"); const opex = byType("OPERATING_EXPENSE"); const ebitda = revenue - cogs - opex;
@@ -48,6 +59,9 @@ async function ForecastPage({ params, searchParams }: { params: Promise<{ id: st
     <section className="workspace-section"><div className="section-heading"><div><h2>Audit history</h2><p>Who changed what, when, and in this version</p></div></div>{audits.map((audit) => <div className="audit-row" key={audit.id}><strong>{audit.action}</strong><span>{audit.actor?.name ?? "System"}</span><time>{audit.occurredAt.toISOString()}</time></div>)}</section>
   </>;
 }
+<<<<<<< HEAD
 
 export default withTenantPage(ForecastPage);
 
+=======
+>>>>>>> origin/main

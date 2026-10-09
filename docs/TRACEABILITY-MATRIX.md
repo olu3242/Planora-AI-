@@ -38,7 +38,15 @@ Populate this table as implementation proceeds. Rows below are seeded examples s
 | Lost management actions | Decision → Action → Outcome chain with realization tracking | Decision Hub | `Decision`, `DecisionOption`, `Action`, `Outcome` | `POST /api/decisions`, `POST /api/actions/:id/complete`, `POST /api/outcomes` | `/decide` | `decision-lifecycle.test`, `decision-action-outcome.e2e` | `evidence/e2e/decision-outcome/` | NOT STARTED |
 | Slow what-if analysis | Dynamic scenario recalculation without mutating approved plans | Scenario Lab | `Scenario`, `ScenarioVariable`, `ScenarioResult` | `POST /api/scenarios`, `POST /api/scenarios/:id/recalculate` | `/simulate/scenarios` | `scenario-recalc.test`, `scenario-analysis.e2e` | `evidence/e2e/scenario-analysis/` | NOT STARTED |
 | Manual repetitive analysis | Grounded conversational Q&A over governed metrics | Planora Copilot | `MetricDefinition`, `MetricValue` (read-only consumer) | `POST /api/copilot/query` | `/ai/copilot` | `copilot-grounding.test`, `copilot-grounding.e2e` | `evidence/e2e/copilot/` | NOT STARTED |
+<<<<<<< HEAD
 | Reactive finance teams | Agent recommends within approval gate, never auto-commits | Workflow, Variance, Commentary and Review Assistants | `AgentDefinition`, `AgentRun`, `AgentRecommendation`, `AgentFeedback`, `RuntimeExecution` | `POST /api/agents/run`, `POST /api/agent-recommendations/:id/feedback` | `/forecasts/:id#assistants` | `agent-runtime.test`, `agentic-runtime.test`, canonical Playwright workflow | `evidence/mvp-e2e/` | CERTIFIED |
+=======
+<<<<<<< HEAD
+| Reactive finance teams | Agent recommends within approval gate, never auto-commits | Variance Agent (first agent) | `Agent`, `AgentRun`, `AgentRecommendation` | `POST /api/agents/variance/run`, `POST /api/agent-recommendations/:id/approve` | `/ai/agents` | `agent-approval-gate.test`, `agents.e2e` | `evidence/e2e/agents/` | NOT STARTED |
+=======
+| Reactive finance teams | Agent recommends within approval gate, never auto-commits | Workflow, Variance, Commentary and Review Assistants | `AgentDefinition`, `AgentRun`, `AgentRecommendation`, `AgentFeedback`, `RuntimeExecution` | `POST /api/agents/run`, `POST /api/agent-recommendations/:id/feedback` | `/forecasts/:id#assistants` | `agent-runtime.test`, `agentic-runtime.test`, canonical Playwright workflow | `evidence/mvp-e2e/` | CERTIFIED |
+>>>>>>> main
+>>>>>>> origin/main
 
 Add rows as capabilities are implemented. Do not batch-populate this table from the PRD at the start of a project — populate it as evidence exists, per §1.
 
@@ -49,6 +57,11 @@ Add rows as capabilities are implemented. Do not batch-populate this table from 
 This file is checked, not just written. Before marking any capability COMPLETE in `docs/IMPLEMENTATION-STATUS.md` or a delivery report (CLAUDE.md §7), confirm its row here is fully populated and every referenced path/route/test actually exists in the repository at the stated location. A row that references a test file that doesn't exist is worse than no row at all — it actively misleads the next session.
 
 When a schema, route, or test file is renamed, update the corresponding row in the same commit. Stale traceability rows are a form of technical debt and should be tracked in `docs/KNOWN-GAPS.md` if they can't be fixed immediately.
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/main
 
 ## 5. Phase 0 Target Traceability
 
@@ -78,3 +91,7 @@ This target matrix prevents orphaned requirements before executable paths exist.
 |---|---|---|---|---|---|---|---|---|
 | Numbers are not trusted | Canonical facts produce exact explainable metrics | Financial Core | `Account`, `FiscalPeriod`, `FinancialFact`, `MetricDefinition`, `MetricValue`, `LineageReference` | `GET /api/financial/statement`, `GET /api/metrics/:id/lineage`, tenant-scoped account/fact routes | `/actuals` | `money.test`, `financial-domain.test`, `phase2-fixture.test`, `financial-core.test`, `authorization.test`, `financial-core.e2e` | `evidence/phase-2/actuals-1440.png` | COMPLETE |
 | Approved baselines can be silently changed | Corrections are new attributed drafts | Version Foundations | `Plan`, `PlanVersion`, `Forecast`, `ForecastVersion`, `AuditEvent` | correction service boundary; no mutation API exposed | Version UI deferred to planning phase | `financial-domain.test`, `financial-core.test` | Database trigger and audit evidence in certification | COMPLETE |
+<<<<<<< HEAD
+=======
+>>>>>>> main
+>>>>>>> origin/main

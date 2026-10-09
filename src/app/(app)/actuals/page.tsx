@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { withTenantPage } from "@/lib/tenant-request";
+=======
+>>>>>>> origin/main
 import Link from "next/link";
 import { ChevronRight, Database, FileSearch } from "lucide-react";
 import { getActualStatement } from "@/application/financial/statement-service";
@@ -8,7 +11,11 @@ import { hasPermission } from "@/permissions/permissions";
 
 type Search = Promise<{ period?: string; geography?: string; product?: string }>;
 
+<<<<<<< HEAD
 async function ActualsPage({ searchParams }: { searchParams: Search }) {
+=======
+export default async function ActualsPage({ searchParams }: { searchParams: Search }) {
+>>>>>>> origin/main
   const session = await requirePageSession();
   if (!hasPermission(session.membership.role, "financial.read")) return <section className="panel" role="alert"><h1 className="page-heading">Actuals unavailable</h1><p className="subtle">Your role does not permit access to financial statements.</p></section>;
   const query = await searchParams;
@@ -33,5 +40,8 @@ async function ActualsPage({ searchParams }: { searchParams: Search }) {
     <details className="lineage-panel"><summary><span><strong>Explain EBITDA</strong><small>Formula, inputs, and source evidence</small></span><ChevronRight size={18} /></summary>{explanation && <div className="lineage-content"><div className="lineage-summary"><div><span>Calculated value</span><strong>{ebitda.formatted}</strong></div><div><span>Formula</span><strong>{explanation.formula}</strong></div><div><span>Source facts</span><strong>{explanation.facts.length}</strong></div></div><h3>Calculation inputs</h3><div className="fact-list">{explanation.facts.map((fact) => <div className="fact-row" key={fact.id}><div><strong>{fact.account.name}</strong><span>{fact.geography} · {fact.product}</span></div><div><strong>{new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(fact.amount))}</strong><span>{fact.source[0]?.type} · {fact.source[0]?.identifier}</span></div></div>)}</div><Link className="api-link" href={`/api/metrics/${explanation.id}/lineage${lineageQuery.size ? `?${lineageQuery}` : ""}`}>Structured lineage API</Link></div>}</details>
   </>;
 }
+<<<<<<< HEAD
 
 export default withTenantPage(ActualsPage);
+=======
+>>>>>>> origin/main

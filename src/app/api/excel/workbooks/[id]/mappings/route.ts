@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { withTenantApi } from "@/lib/tenant-request";
+=======
+>>>>>>> origin/main
 import { decideAccountMapping, decideColumnMapping } from "@/application/excel/workbook-service";
 import { requiredMappingPermission } from "@/application/excel/mapping-authorization";
 import { requireApiSession } from "@/auth/session";
@@ -8,7 +11,11 @@ import { hasPermission } from "@/permissions/permissions";
 import { z } from "zod";
 
 const schema = z.union([z.object({ suggestionId: z.uuid(), accountId: z.uuid(), reason: z.string().trim().min(3).max(240) }), z.object({ ruleId: z.uuid(), targetConcept: z.enum(["ACCOUNT", "PERIOD", "COST_CENTER", "ACTUAL_AMOUNT", "FORECAST_AMOUNT"]), reason: z.string().trim().min(3).max(240) })]);
+<<<<<<< HEAD
 async function handlePOST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+=======
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+>>>>>>> origin/main
   const cid = correlationId(request); let workbookId = "";
   try {
     assertSameOrigin(request); const session = await requireApiSession();
@@ -18,5 +25,8 @@ async function handlePOST(request: Request, { params }: { params: Promise<{ id: 
     return seeOther(`/excel/${workbookId}`);
   } catch (error) { if (error instanceof AppError) return seeOther(`${workbookId ? `/excel/${workbookId}` : "/excel"}?error=${encodeURIComponent(error.message)}`); return errorResponse(error, cid); }
 }
+<<<<<<< HEAD
 
 export const POST = withTenantApi(handlePOST);
+=======
+>>>>>>> origin/main

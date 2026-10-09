@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 const evidenceRoot = process.env.PLANORA_EVIDENCE_DIR ?? "evidence";
+=======
+>>>>>>> origin/main
 import { expect, test } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
@@ -23,8 +26,13 @@ test("login to actuals exposes exact EBITDA and source evidence", async ({ page 
   await expect(page.getByText("GROSS_PROFIT - OPERATING_EXPENSE", { exact: true })).toBeVisible();
   await expect(page.getByText("SEED · PHASE2-FIXTURE").first()).toBeVisible();
   await expect(page.getByText("North America · Industrial").first()).toBeVisible();
+<<<<<<< HEAD
   await mkdir(`${evidenceRoot}/phase-2`, { recursive: true });
   await page.screenshot({ path: `${evidenceRoot}/phase-2/actuals-1440.png` });
+=======
+  await mkdir("evidence/phase-2", { recursive: true });
+  await page.screenshot({ path: "evidence/phase-2/actuals-1440.png" });
+>>>>>>> origin/main
 });
 
 for (const width of [375, 430, 768, 1024, 1440]) {
