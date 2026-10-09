@@ -34,12 +34,16 @@ export async function reverseJournal(
         fiscalPeriodId: original.fiscalPeriodId, postedById: actor.userId,
         sourceKey: request.sourceKey, currencyCode: original.currencyCode,
         description: request.reason, reversalOfId: original.id,
-        status: "POSTED", postedAt: new Date(),
+        status: "DRAFT",
         lines: { create: original.lines.map(line => ({
           ordinal: line.ordinal, accountId: line.accountId,
           debitMinor: line.creditMinor, creditMinor: line.debitMinor,
         })) },
       },
+    });
+    await tx.accountingJournal.update({
+      where: { id: created.id },
+      data: { status: "POSTED", postedAt: new Date() },
     });
     await tx.auditEvent.create({
       data: {
