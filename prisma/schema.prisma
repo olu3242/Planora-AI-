@@ -197,6 +197,7 @@ model User {
   agentFeedback           AgentFeedback[]
   runtimeExecutions       RuntimeExecution[]
   postedAccountingJournals AccountingJournal[]
+  workflowRuns            WorkflowRunRecord[]
 
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
@@ -231,6 +232,7 @@ model Organization {
   agentFeedback        AgentFeedback[]
   runtimeExecutions    RuntimeExecution[]
   accountingJournals   AccountingJournal[]
+  workflowRuns         WorkflowRunRecord[]
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
 }
@@ -1014,4 +1016,37 @@ model AccountingJournalLine {
 
   @@unique([journalId, ordinal])
   @@index([accountId])
+}
+
+
+model WorkflowRunRecord {
+  id                String                    @id
+  organizationId    String                    @db.Uuid
+  definitionId      String
+  definitionVersion Int
+  status            String
+  state             Json
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  organization      Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  executions        WorkflowExecutionRecord[]
+
+  @@index([organizationId, status, updatedAt])
+  @@index([definitionId, definitionVersion])
+}
+
+model WorkflowExecutionRecord {
+  id             String            @id @default(uuid()) @db.Uuid
+  idempotencyKey String            @unique
+  runId          String
+  stepId         String
+  status         String
+  evidenceId     String?
+  error          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  run            WorkflowRunRecord @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@index([runId, stepId])
+  @@index([status, updatedAt])
 }
