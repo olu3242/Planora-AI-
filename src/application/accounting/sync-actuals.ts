@@ -35,6 +35,25 @@ export async function syncLedgerActuals(input:Readonly<{
   for(const totals of journalTotals.values()){
    if(totals.debits!==totals.credits) throw new Error("LEDGER_ACTUALS_UNBALANCED");
   }
+  const expectedKeys = new Set(journals.flatMap(journal =>
+    journal.lines.map(line => ["ledger", input.organizationId, input.legalEntityId,
+      input.fiscalPeriodId, journal.currencyCode, line.accountId, "ACTUAL"].join(":"))
+  ));
+  const existing = await tx.financialFact.findMany({
+    where: {
+      organizationId: input.organizationId,
+      legalEntityId: input.legalEntityId,
+      fiscalPeriodId: input.fiscalPeriodId,
+      scenario: FinancialScenario.ACTUAL,
+      sourceType: FinancialSourceType.SYSTEM_CALCULATION,
+      sourceIdentifier: { startsWith: ["ledger", input.organizationId,
+        input.legalEntityId, input.fiscalPeriodId].join(":") + ":" },
+    },
+    select: { grainKey: true },
+  });
+  if (existing.some(fact => !expectedKeys.has(fact.grainKey))) {
+    throw new Error("STALE_LEDGER_ACTUALS_REQUIRES_RECONCILIATION");
+  }
   const currencies=[...new Set(journals.map(j=>j.currencyCode))];
   let count=0;
   for(const currency of currencies){
