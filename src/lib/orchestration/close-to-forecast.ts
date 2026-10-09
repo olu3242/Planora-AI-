@@ -2,7 +2,7 @@ import type { WorkflowDefinition } from "./types";
 
 export const CLOSE_TO_FORECAST_WORKFLOW: WorkflowDefinition = {
   id: "accounting-close-to-forecast",
-  version: 1,
+  version: 2,
   steps: [
     { id: "preflight", kind: "DETERMINISTIC" },
     { id: "bank-reconciliation", kind: "DATABASE", dependsOn: ["preflight"] },
@@ -13,7 +13,8 @@ export const CLOSE_TO_FORECAST_WORKFLOW: WorkflowDefinition = {
       kind: "DETERMINISTIC",
       dependsOn: ["bank-reconciliation", "ap-validation", "ar-validation"],
     },
-    { id: "close-analysis", kind: "AGENT", dependsOn: ["trial-balance"] },
+    { id: "statement-review", kind: "AGENT", dependsOn: ["trial-balance"] },
+    { id: "close-analysis", kind: "AGENT", dependsOn: ["statement-review"] },
     {
       id: "controller-approval",
       kind: "HUMAN_APPROVAL",
