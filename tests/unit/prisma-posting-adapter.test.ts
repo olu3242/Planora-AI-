@@ -42,6 +42,24 @@ describe("Prisma posting adapter (mock transaction boundary)", () => {
     expect(tx.auditEvent.create.mock.calls[0][0].data.action).toBe("ACCOUNTING_JOURNAL_POSTED");
     expect(tx.accountingJournal.create.mock.calls[0][0].data.lines.create).toHaveLength(2);
   });
+  it("rejects posting when approval is missing", async () => {
+    const { tx, db } = fakeDb({
+      accountingPostingApproval: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        updateMany: vi.fn(),
+      },
+    });
+    await expect(createPrismaJournalPostingRepository(db as never, "actor", "org").postAtomically(input))
+      .rejects.toThrow("APPROVAL_REQUIRED");
+    expect(tx.accountingJournal.create).not.toHaveBeenCalled();
+  });
+  it("rejects posting when approval consumption loses a race", async () => {
+    const { tx, db } = fakeDb();
+    tx.accountingPostingApproval.updateMany.mockResolvedValue({ count: 0 });
+    await expect(createPrismaJournalPostingRepository(db as never, "actor", "org").postAtomically(input))
+      .rejects.toThrow("APPROVAL_ALREADY_CONSUMED");
+    expect(tx.auditEvent.create).not.toHaveBeenCalled();
+  });
   it("rejects forged actor and organization before starting transaction", async () => {
     const { db } = fakeDb();
     const repo = createPrismaJournalPostingRepository(db as never, "actor", "org");
