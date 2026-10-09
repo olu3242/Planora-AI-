@@ -69,6 +69,24 @@ describe("Prisma posting adapter (mock transaction boundary)", () => {
       .rejects.toThrow("ACCOUNT_NOT_EFFECTIVE");
     expect(tx.accountingJournal.create).not.toHaveBeenCalled();
   });
+  it("does not bypass account effectiveness on idempotent replay", async () => {
+    const { db, tx } = fakeDb({
+      account: { findMany: vi.fn().mockResolvedValue([
+        { id: "cash", effectiveFrom: new Date("2026-02-01"), effectiveTo: null },
+        { id: "sales", effectiveFrom: new Date("2020-01-01"), effectiveTo: null },
+      ]) },
+      accountingJournal: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "existing", status: "POSTED", postedById: "actor",
+          legalEntityId: "entity", fiscalPeriodId: "period", currencyCode: "USD",
+        }),
+        create: vi.fn(), update: vi.fn(),
+      },
+    });
+    await expect(createPrismaJournalPostingRepository(db as never, "actor", "org").postAtomically(input))
+      .rejects.toThrow("ACCOUNT_NOT_EFFECTIVE");
+    expect(tx.accountingJournal.create).not.toHaveBeenCalled();
+  });
   it("replays an identical journal without a second posting", async () => {
     const { db, tx } = fakeDb({
       accountingJournal: {
