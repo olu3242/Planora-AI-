@@ -21,6 +21,7 @@ export async function reverseJournal(
       where: { id: original.fiscalPeriodId, year: { calendar: { organizationId: actor.organizationId } } },
     });
     if (!period || period.accountingCloseState !== "OPEN") throw new Error("PERIOD_LOCKED");
+    if (original.reversalOfId) throw new Error("REVERSAL_OF_REVERSAL_DENIED");
     const prior = await tx.accountingJournal.findFirst({
       where: { organizationId: actor.organizationId, reversalOfId: original.id },
     });
