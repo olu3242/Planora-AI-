@@ -1,0 +1,12 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {executeFramework,frameworkContract} from "./framework-engine.mjs";
+const config={entityId:"e1",sector:"private",jurisdiction:"US",framework:"US_GAAP",standardVersion:"2026",effectiveDate:"2026-01-01",currency:"USD"};
+const entries=[{entityId:"e1",account:"Cash",debitMinor:100,creditMinor:0},{entityId:"e1",account:"Revenue",debitMinor:0,creditMinor:100}];
+const mappings={Cash:{statement:"balance_sheet",section:"assets"},Revenue:{statement:"income_statement",section:"revenue"}};
+test("working US GAAP mapping engine yields verifiable draft",()=>{const result=executeFramework({config,entries,period:"2026-10",mappings});assert.equal(result.status,"DRAFT_UNCERTIFIED");assert.equal(result.checks.ledgerBalanced,true);assert.equal(result.statements.find(s=>s.name==="balance_sheet").sections[0].amountMinor,100)});
+test("rejects missing mappings",()=>assert.throws(()=>executeFramework({config,entries,period:"2026-10",mappings:{}}),/mapping/));
+test("rejects framework-incompatible mappings",()=>assert.throws(()=>executeFramework({config,entries,period:"2026-10",mappings:{...mappings,Cash:{statement:"governmental_funds",section:"assets"}}}),/mapping/));
+test("rejects sector-framework mismatch",()=>assert.throws(()=>frameworkContract({...config,sector:"public"}),/mismatch/));
+test("rejects cross-entity data",()=>assert.throws(()=>executeFramework({config,entries:[{...entries[0],entityId:"other"},entries[1]],period:"2026-10",mappings}),/Cross-entity/));
+test("GASB requires state local subtype",()=>assert.throws(()=>frameworkContract({...config,framework:"GASB",sector:"public",subtype:"federal"}),/subtype/));
