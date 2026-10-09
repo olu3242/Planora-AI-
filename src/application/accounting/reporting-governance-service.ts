@@ -1,4 +1,5 @@
 import "server-only";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { assertPermission } from "@/permissions/permissions";
 import { getLedgerFinancialStatements } from "@/application/accounting/financial-statements-service";
@@ -24,7 +25,7 @@ export async function prepareReportingRun(input:{organizationId:string;legalEnti
  if(!statements.controls.trialBalanceBalanced||!statements.controls.balanceSheetBalanced||!statements.coaControl.mapped) throw new Error("REPORTING_STATEMENT_CONTROLS_FAILED");
  const requirements=Array.isArray(framework.disclosureManifest)?framework.disclosureManifest:[];
  return prisma.$transaction(async tx=>{
-  const run=await tx.reportingRun.create({data:{organizationId:input.organizationId,legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId,frameworkVersionId:framework.id,preparedById:input.actor.id,statementEvidence:statements as any,controlEvidence:{controls:statements.controls,coaControl:statements.coaControl}}});
+  const run=await tx.reportingRun.create({data:{organizationId:input.organizationId,legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId,frameworkVersionId:framework.id,preparedById:input.actor.id,statementEvidence:JSON.parse(JSON.stringify(statements, (_key, value: unknown) => typeof value === "bigint" ? value.toString() : value)) as Prisma.InputJsonValue,controlEvidence:{controls:statements.controls,coaControl:statements.coaControl}}});
   for(const raw of requirements){const r=raw as {code?:unknown;required?:unknown};if(typeof r?.code!=="string"||!r.code.trim()) continue;await tx.reportingDisclosureEvidence.create({data:{runId:run.id,requirementCode:r.code,required:r.required!==false,satisfied:false,evidence:{}}});}
   await tx.auditEvent.create({data:{organizationId:input.organizationId,actorId:input.actor.id,action:"reporting.run.prepared",entityType:"ReportingRun",entityId:run.id,newState:{status:run.status,frameworkVersionId:framework.id},correlationId:`reporting:${run.id}:prepare`}});
   return run;
@@ -35,7 +36,7 @@ export async function recordDisclosureEvidence(input:{organizationId:string;runI
  await authorizeActor(input.organizationId,input.actor.id,"reporting.prepare");
  const run=await prisma.reportingRun.findFirst({where:{id:input.runId,organizationId:input.organizationId,status:"DRAFT"}});
  if(!run||run.lockedAt) throw new Error("REPORTING_RUN_NOT_EDITABLE");
- return prisma.reportingDisclosureEvidence.update({where:{runId_requirementCode:{runId:run.id,requirementCode:input.requirementCode}},data:{satisfied:true,evidence:input.evidence as any}});
+ return prisma.reportingDisclosureEvidence.update({where:{runId_requirementCode:{runId:run.id,requirementCode:input.requirementCode}},data:{satisfied:true,evidence:input.evidence as Prisma.InputJsonValue}});
 }
 
 export async function reviewReportingRun(input:{organizationId:string;runId:string;actor:Actor;reason:string}){
