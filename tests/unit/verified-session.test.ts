@@ -6,6 +6,7 @@ const token = "a".repeat(40);
 const active = {
   userId: "actor",
   expiresAt: new Date("2099-01-01"),
+  user: { active: true },
   membership: { active: true, userId: "actor", organizationId: "org", role: "CFO" },
 };
 
@@ -18,7 +19,7 @@ describe("accounting session identity", () => {
     });
     expect(findUnique).toHaveBeenCalledWith({
       where: { tokenHash: createHash("sha256").update(token).digest("hex") },
-      include: { membership: true },
+      include: { membership: true, user: true },
     });
   });
   it("rejects expired or mismatched membership", async () => {
@@ -26,6 +27,7 @@ describe("accounting session identity", () => {
       { ...active, expiresAt: new Date("2020-01-01") },
       { ...active, membership: { ...active.membership, userId: "other" } },
       { ...active, membership: { ...active.membership, active: false } },
+      { ...active, user: { active: false } },
     ]) {
       const db = { session: { findUnique: vi.fn().mockResolvedValue(record) } };
       await expect(resolveAccountingPrincipal(db as never, token)).rejects.toThrow("AUTHENTICATION_REQUIRED");
