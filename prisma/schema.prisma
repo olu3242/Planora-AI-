@@ -196,6 +196,8 @@ model User {
   recommendationDecisions AgentRecommendation[]    @relation("RecommendationDecisionMaker")
   agentFeedback           AgentFeedback[]
   runtimeExecutions       RuntimeExecution[]
+  postedAccountingJournals AccountingJournal[]
+
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
 }
@@ -228,6 +230,7 @@ model Organization {
   agentRecommendations AgentRecommendation[]
   agentFeedback        AgentFeedback[]
   runtimeExecutions    RuntimeExecution[]
+  accountingJournals   AccountingJournal[]
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
 }
@@ -400,6 +403,8 @@ model LegalEntity {
   children       LegalEntity[]   @relation("LegalEntityHierarchy")
   facts          FinancialFact[]
 
+  accountingJournals AccountingJournal[]
+
   @@unique([organizationId, code])
   @@index([organizationId, parentId])
 }
@@ -508,6 +513,8 @@ model Account {
   facts          FinancialFact[]
   forecastLines  ForecastLine[]
 
+  accountingLines AccountingJournalLine[]
+
   @@unique([organizationId, code])
   @@index([organizationId, type])
 }
@@ -555,6 +562,8 @@ model FiscalPeriod {
   facts         FinancialFact[]
   metricValues  MetricValue[]
   forecastLines ForecastLine[]
+
+  accountingJournals AccountingJournal[]
 
   @@unique([fiscalYearId, code])
   @@unique([fiscalYearId, ordinal])
@@ -954,4 +963,48 @@ model RuntimeExecution {
   @@unique([organizationId, command, idempotencyKey])
   @@index([organizationId, startedAt])
   @@index([correlationId])
+}
+
+enum AccountingJournalStatus {
+  DRAFT
+  POSTED
+}
+
+model AccountingJournal {
+  id              String @id @default(uuid()) @db.Uuid
+  organizationId  String @db.Uuid
+  legalEntityId   String @db.Uuid
+  fiscalPeriodId  String @db.Uuid
+  postedById      String? @db.Uuid
+  sourceKey       String
+  currencyCode    String @db.Char(3)
+  description     String?
+  status          AccountingJournalStatus @default(DRAFT)
+  postedAt        DateTime?
+  reversalOfId    String? @unique @db.Uuid
+  createdAt       DateTime @default(now())
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity     LegalEntity @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  fiscalPeriod    FiscalPeriod @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+  postedBy        User? @relation(fields: [postedById], references: [id], onDelete: Restrict)
+  reversalOf      AccountingJournal? @relation("JournalReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
+  reversedBy      AccountingJournal? @relation("JournalReversal")
+  lines           AccountingJournalLine[]
+
+  @@unique([organizationId, sourceKey])
+  @@index([organizationId, legalEntityId, fiscalPeriodId, status])
+}
+
+model AccountingJournalLine {
+  id         String @id @default(uuid()) @db.Uuid
+  journalId  String @db.Uuid
+  accountId  String @db.Uuid
+  ordinal    Int
+  debitMinor BigInt @default(0)
+  creditMinor BigInt @default(0)
+  journal    AccountingJournal @relation(fields: [journalId], references: [id], onDelete: Restrict)
+  account    Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@unique([journalId, ordinal])
+  @@index([accountId])
 }
