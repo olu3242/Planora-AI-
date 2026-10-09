@@ -29,6 +29,10 @@ export async function reverseJournal(
     validateJournalLines(original.lines.map(line => ({
       accountId: line.accountId, debitMinor: line.debitMinor, creditMinor: line.creditMinor,
     })));
+    const existingKey = await tx.accountingJournal.findUnique({
+      where: { organizationId_sourceKey: { organizationId: actor.organizationId, sourceKey: request.sourceKey } },
+    });
+    if (existingKey) throw new Error("REVERSAL_SOURCE_KEY_CONFLICT");
     const created = await tx.accountingJournal.create({
       data: {
         organizationId: actor.organizationId, legalEntityId: original.legalEntityId,
