@@ -7,10 +7,10 @@ export async function resolveAccountingPrincipal(db: PrismaClient, sessionToken:
   const tokenHash = createHash("sha256").update(sessionToken).digest("hex");
   const session = await db.session.findUnique({
     where: { tokenHash },
-    include: { membership: true },
+    include: { membership: true, user: true },
   });
   if (!session || session.expiresAt <= new Date() ||
-      !session.membership.active || session.membership.userId !== session.userId) {
+      !session.user.active || !session.membership.active || session.membership.userId !== session.userId) {
     throw new Error("AUTHENTICATION_REQUIRED");
   }
   return {
