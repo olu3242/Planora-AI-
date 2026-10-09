@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planora — Governed Financial Planning &amp; Decision Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#10233A;
+    --ink-soft:#1C3652;
+    --paper:#F6F5F1;
+    --paper-dim:#EEEBE2;
+    --ledger-green:#1E6F5C;
+    --variance-amber:#B4632B;
+    --rule:#D8D3C7;
+    --rule-dark:#33465E;
+    --muted:#5B6472;
+    --muted-on-dark:#9FB0C3;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px;}
+  h1,h2,h3{font-family:var(--serif);font-weight:500;margin:0;line-height:1.15;}
+  p{margin:0;}
+  .rule{border:none;border-top:1px solid var(--rule);margin:0;}
+  .rule-dark{border:none;border-top:1px solid var(--rule-dark);margin:0;}
+  .num{font-family:var(--mono);}
+  header.site{position:sticky;top:0;z-index:50;background:rgba(246,245,241,0.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--rule);}
+  .nav-row{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;max-width:1120px;margin:0 auto;}
+  .wordmark{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:-0.01em;display:flex;align-items:baseline;gap:8px;}
+  .wordmark .mark{display:inline-block;width:9px;height:9px;background:var(--ledger-green);border-radius:1px;transform:translateY(-1px);}
+  nav.primary{display:flex;gap:32px;font-size:15px;}
+  nav.primary a{text-decoration:none;color:var(--ink-soft);}
+  nav.primary a:hover{color:var(--ink);}
+  .nav-actions{display:flex;align-items:center;gap:18px;font-size:15px;}
+  .btn{font-family:var(--sans);font-size:15px;font-weight:500;padding:9px 18px;border-radius:3px;text-decoration:none;display:inline-block;border:1px solid transparent;cursor:pointer;}
+  .btn-primary{background:var(--ink);color:var(--paper);}
+  .btn-primary:hover{background:var(--ink-soft);}
+  .btn-ghost{color:var(--ink);}
+  .nav-toggle{display:none;background:none;border:none;cursor:pointer;padding:4px;}
+  .nav-toggle span{display:block;width:22px;height:2px;background:var(--ink);margin:5px 0;}
+  .hero{padding:76px 0 64px;}
+  .hero-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:64px;align-items:start;}
+  .eyebrow-line{display:flex;align-items:center;gap:10px;margin-bottom:22px;color:var(--muted);font-size:14px;}
+  .eyebrow-line .dash{width:20px;height:1px;background:var(--muted);}
+  .hero h1{font-size:47px;letter-spacing:-0.01em;max-width:600px;}
+  .hero .sub{margin-top:22px;font-size:18px;color:var(--muted);max-width:480px;line-height:1.6;}
+  .hero-ctas{margin-top:34px;display:flex;gap:14px;align-items:center;}
+  .hero-ctas .link-inline{font-size:15px;color:var(--ink-soft);text-decoration:underline;text-underline-offset:3px;}
+  .recon-card{background:var(--ink);color:var(--paper);border-radius:6px;padding:26px 26px 22px;box-shadow:0 24px 48px -20px rgba(16,35,58,0.45);}
+  .recon-card .card-label{font-size:12.5px;color:var(--muted-on-dark);display:flex;justify-content:space-between;margin-bottom:18px;}
+  .recon-card .card-label .status{color:var(--ledger-green);font-family:var(--mono);}
+  .recon-row{display:flex;justify-content:space-between;padding:11px 0;font-size:14.5px;}
+  .recon-row .l{color:var(--muted-on-dark);}
+  .recon-row .v{font-family:var(--mono);}
+  .recon-total{display:flex;justify-content:space-between;padding-top:14px;margin-top:4px;border-top:1px solid var(--rule-dark);font-size:16px;}
+  .recon-total .v{font-family:var(--mono);color:var(--ledger-green);}
+  .drivers{margin-top:20px;}
+  .drivers .dh{font-size:12px;color:var(--muted-on-dark);margin-bottom:9px;}
+  .drv-row{display:flex;justify-content:space-between;font-size:13.5px;padding:4px 0;}
+  .drv-row .v{font-family:var(--mono);color:var(--variance-amber);}
+  .card-source{margin-top:18px;padding-top:14px;border-top:1px solid var(--rule-dark);font-size:12px;color:var(--muted-on-dark);font-family:var(--mono);}
+  section{padding:64px 0;}
+  .section-head{max-width:620px;margin-bottom:40px;}
+  .section-head .kicker{font-size:14px;color:var(--ledger-green);margin-bottom:10px;font-family:var(--mono);}
+  .section-head h2{font-size:32px;}
+  .section-head .desc{margin-top:14px;color:var(--muted);font-size:16px;line-height:1.6;}
+  .ledger{border-top:1px solid var(--rule);}
+  .ledger-row{display:grid;grid-template-columns:180px 1fr 1fr;gap:24px;padding:22px 0;border-bottom:1px solid var(--rule);align-items:baseline;}
+  .ledger-row .metric{font-family:var(--mono);font-size:22px;color:var(--variance-amber);}
+  .ledger-row .label{font-size:15px;font-weight:500;}
+  .ledger-row .detail{font-size:14.5px;color:var(--muted);}
+  .flow{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;}
+  .flow-step{flex:1 1 130px;padding:16px 14px;border-right:1px solid var(--rule);font-size:13px;text-align:center;background:var(--paper-dim);}
+  .flow-step:last-child{border-right:none;}
+  .flow-step.on{background:var(--ink);color:var(--paper);}
+  .cap-table{border-top:1px solid var(--rule);}
+  .cap-row{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:18px 0;border-bottom:1px solid var(--rule);font-size:15px;}
+  .cap-row .pain{color:var(--muted);}
+  .cap-row .cap{font-weight:500;}
+  .cap-head{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding-bottom:12px;font-size:12.5px;color:var(--muted);font-family:var(--mono);}
+  .excel-band{background:var(--ink);color:var(--paper);border-radius:6px;padding:44px 40px;}
+  .excel-band h2{color:var(--paper);font-size:28px;max-width:520px;}
+  .excel-band .desc{color:var(--muted-on-dark);margin-top:14px;max-width:520px;font-size:15.5px;line-height:1.6;}
+  .excel-strip{margin-top:30px;display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid var(--rule-dark);border-radius:4px;overflow:hidden;}
+  .excel-cell{padding:18px 20px;border-right:1px solid var(--rule-dark);}
+  .excel-cell:last-child{border-right:none;}
+  .excel-cell .l{font-size:12px;color:var(--muted-on-dark);margin-bottom:8px;}
+  .excel-cell .v{font-family:var(--mono);font-size:19px;}
+  .excel-cell.ok .v{color:var(--ledger-green);}
+  .gov-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0;border-top:1px solid var(--rule);}
+  .gov-item{padding:22px 0;border-bottom:1px solid var(--rule);padding-right:32px;}
+  .gov-item:nth-child(odd){border-right:1px solid var(--rule);padding-right:32px;padding-left:0;}
+  .gov-item:nth-child(even){padding-left:32px;}
+  .gov-item h3{font-size:17px;font-weight:500;margin-bottom:8px;}
+  .gov-item p{font-size:14.5px;color:var(--muted);line-height:1.55;}
+  .faq-list{border-top:1px solid var(--rule);}
+  details.faq-item{border-bottom:1px solid var(--rule);padding:20px 0;}
+  details.faq-item summary{cursor:pointer;font-size:16px;font-weight:500;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:20px;}
+  details.faq-item summary::-webkit-details-marker{display:none;}
+  details.faq-item summary .plus{font-family:var(--mono);color:var(--muted);font-size:18px;flex:none;}
+  details.faq-item[open] summary .plus{color:var(--ledger-green);}
+  details.faq-item .a{margin-top:14px;font-size:14.5px;color:var(--muted);max-width:640px;line-height:1.6;}
+  .cta-band{text-align:left;padding:56px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;}
+  .cta-band h2{font-size:28px;max-width:440px;}
+  footer{background:var(--ink);color:var(--muted-on-dark);padding:56px 0 28px;font-size:14px;}
+  .foot-grid{display:grid;grid-template-columns:1.4fr repeat(4,1fr);gap:32px;}
+  .foot-brand .wordmark{color:var(--paper);}
+  .foot-brand p{margin-top:14px;color:var(--muted-on-dark);max-width:260px;line-height:1.6;}
+  .foot-col h4{color:var(--paper);font-size:13px;font-weight:500;margin-bottom:14px;font-family:var(--sans);}
+  .foot-col ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .foot-col a{text-decoration:none;color:var(--muted-on-dark);}
+  .foot-col a:hover{color:var(--paper);}
+  .foot-bottom{margin-top:48px;padding-top:24px;border-top:1px solid var(--rule-dark);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:13px;}
+  @media (max-width:900px){.hero-grid{grid-template-columns:1fr;gap:40px;}.gov-grid{grid-template-columns:1fr;}.gov-item:nth-child(odd){border-right:none;padding-right:0;}.gov-item:nth-child(even){padding-left:0;}.foot-grid{grid-template-columns:1fr 1fr;}.foot-brand{grid-column:1 / -1;}}
+  @media (max-width:700px){nav.primary{display:none;}.nav-toggle{display:block;}.hero h1{font-size:34px;}.ledger-row{grid-template-columns:1fr;gap:6px;}.cap-row,.cap-head{grid-template-columns:1fr;gap:6px;}.excel-strip{grid-template-columns:1fr;}.excel-cell{border-right:none;border-bottom:1px solid var(--rule-dark);}.excel-cell:last-child{border-bottom:none;}.foot-grid{grid-template-columns:1fr;}.cta-band{flex-direction:column;align-items:flex-start;}}
+</style>
+</head>
+<body>
+<header class="site"><div class="nav-row"><a href="#top" class="wordmark"><span class="mark"></span>Planora</a><nav class="primary"><a href="#capabilities">Product</a><a href="#excel">Excel</a><a href="#governance">Governance</a><a href="#faq">FAQ</a></nav><div class="nav-actions"><a href="#" class="btn btn-ghost">Sign in</a><a href="#" class="btn btn-primary">Get started</a></div><button class="nav-toggle" aria-label="Menu"><span></span><span></span><span></span></button></div></header>
+<main id="top">
+<section class="hero"><div class="wrap hero-grid"><div><div class="eyebrow-line"><span class="dash"></span>Financial planning, governance &amp; decision intelligence</div><h1>Turn fragmented financial data into decisions you can stand behind.</h1><p class="sub">Planora connects your ERP, CRM, HRIS, and existing Excel models into one governed source of financial truth — then carries every number from variance to explanation to decision to measured outcome.</p><div class="hero-ctas"><a href="#" class="btn btn-primary">Get started</a><a href="#e2e" class="link-inline">See the full workflow →</a></div></div><div class="recon-card"><div class="card-label"><span>EBITDA — FY26 Latest Estimate</span><span class="status">RECONCILED</span></div><div class="recon-row"><span class="l">Forecast</span><span class="v">$94.0M</span></div><div class="recon-row"><span class="l">Latest</span><span class="v">$87.0M</span></div><div class="recon-total"><span>Variance</span><span class="v">-$7.0M</span></div><div class="drivers"><div class="dh">DRIVER DECOMPOSITION</div><div class="drv-row"><span>Volume</span><span class="v">-$3.1M</span></div><div class="drv-row"><span>Labor</span><span class="v">-$1.8M</span></div><div class="drv-row"><span>Pricing</span><span class="v">-$1.2M</span></div><div class="drv-row"><span>Logistics</span><span class="v">-$0.6M</span></div><div class="drv-row"><span>FX</span><span class="v">-$0.3M</span></div></div><div class="card-source">FY26_Forecast.xlsx → P&amp;L → N42</div></div></div></section>
+<hr class="rule">
+<section id="pain-points"><div class="wrap"><div class="section-head"><div class="kicker">// the problem</div><h2>Finance teams already know these numbers.</h2><p class="desc">Not because they're proud of them — because they've lived them every close.</p></div><div class="ledger"><div class="ledger-row"><div class="metric">6 wks</div><div class="label">Average budget cycle</div><div class="detail">Spreadsheets pass hand to hand across business units before a number is trusted enough to submit.</div></div><div class="ledger-row"><div class="metric">3+ hrs</div><div class="label">To investigate one variance</div><div class="detail">Explaining "why EBITDA missed" means chasing five systems and hoping the drivers still add up.</div></div><div class="ledger-row"><div class="metric">0</div><div class="label">Actions tracked after the review</div><div class="detail">The deck gets approved. The commitments inside it are rarely followed through to an outcome.</div></div></div></div></section>
+<hr class="rule">
+<section id="e2e"><div class="wrap"><div class="section-head"><div class="kicker">// how planora works</div><h2>One lifecycle, not a folder of dashboards.</h2><p class="desc">Every figure in Planora sits on the same chain — from raw data to a measured, learned-from outcome.</p></div><div class="flow"><div class="flow-step">Data</div><div class="flow-step">Plan</div><div class="flow-step">Forecast</div><div class="flow-step">Actual</div><div class="flow-step on">Variance</div><div class="flow-step">Root Cause</div><div class="flow-step">Scenario</div><div class="flow-step">Recommendation</div><div class="flow-step">Decision</div><div class="flow-step">Action</div><div class="flow-step">Outcome</div><div class="flow-step">Reforecast</div></div></div></section>
+<hr class="rule">
+<section id="capabilities"><div class="wrap"><div class="section-head"><div class="kicker">// built around pain points</div><h2>Every capability answers one recurring problem.</h2></div><div class="cap-head"><span>Pain point</span><span>Planora capability</span></div><div class="cap-table"><div class="cap-row"><span class="pain">Fragmented systems and data</span><span class="cap">Financial Data Hub</span></div><div class="cap-row"><span class="pain">Spreadsheet dependency</span><span class="cap">Planning Engine + Excel Integration</span></div><div class="cap-row"><span class="pain">Static forecasts</span><span class="cap">Continuous Forecast Engine</span></div><div class="cap-row"><span class="pain">Difficult variance investigation</span><span class="cap">Variance Intelligence</span></div><div class="cap-row"><span class="pain">Slow what-if analysis</span><span class="cap">Scenario Lab</span></div><div class="cap-row"><span class="pain">Reports don't create accountability</span><span class="cap">Decision Hub</span></div><div class="cap-row"><span class="pain">Numbers aren't trusted</span><span class="cap">Governance Engine</span></div><div class="cap-row"><span class="pain">Manual repetitive analysis</span><span class="cap">Planora Copilot</span></div><div class="cap-row"><span class="pain">Reactive finance teams</span><span class="cap">Agentic Intelligence</span></div></div></div></section>
+<section id="excel"><div class="wrap"><div class="excel-band"><h2>Excel isn't the enemy. It's the input.</h2><p class="desc">Any reasonably structured FP&amp;A workbook maps into Planora without a rebuild — wide or long format, sheet-based departments, one file per business unit. Nothing executes inside your workbook; nothing gets overwritten without your review.</p><div class="excel-strip"><div class="excel-cell"><div class="l">Excel</div><div class="v">$428,612,934</div></div><div class="excel-cell"><div class="l">Planora</div><div class="v">$428,612,934</div></div><div class="excel-cell ok"><div class="l">Difference</div><div class="v">$0 — RECONCILED</div></div></div></div></div></section>
+<hr class="rule">
+<section id="governance"><div class="wrap"><div class="section-head"><div class="kicker">// trust</div><h2>Every number can explain itself.</h2><p class="desc">Select any metric and Planora shows the formula, the owner, the source, and how fresh it is — before anyone has to ask.</p></div><div class="gov-grid"><div class="gov-item"><h3>Full lineage</h3><p>Trace any figure back to its workbook, cell, mapping rule, and the person who approved it — not a black box.</p></div><div class="gov-item"><h3>Server-side RBAC</h3><p>Roles and tenant boundaries are enforced where it matters, not just hidden in the interface.</p></div><div class="gov-item"><h3>Immutable audit trail</h3><p>Approvals, overrides, and imports are recorded permanently — actor, timestamp, previous value, reason.</p></div><div class="gov-item"><h3>Human approval, always</h3><p>AI proposes mappings, forecasts, and recommendations. A person approves anything material before it commits.</p></div></div></div></section>
+<hr class="rule">
+<section id="faq"><div class="wrap"><div class="section-head"><div class="kicker">// questions</div><h2>Frequently asked</h2></div><div class="faq-list"><details class="faq-item"><summary>Does Planora replace Excel?<span class="plus">+</span></summary><div class="a">No. Excel can remain a data source, a planning input, an offline working environment, or a reporting output indefinitely. Planora is designed for progressive adoption, not a forced migration.</div></details><details class="faq-item"><summary>Can it map our existing FP&amp;A workbooks?<span class="plus">+</span></summary><div class="a">Planora profiles your workbook's actual structure — wide format, long format, sheet-based periods or departments, even one file per business unit — and proposes a mapping rather than requiring you to rebuild it to fit a template.</div></details><details class="faq-item"><summary>What systems can it connect to?<span class="plus">+</span></summary><div class="a">ERP, CRM, HRIS, payroll, procurement, and treasury systems, plus data warehouses and operational APIs, alongside CSV and Excel uploads — all normalized into one governed financial model.</div></details><details class="faq-item"><summary>How does reconciliation work?<span class="plus">+</span></summary><div class="a">Every import is checked against the source total. A reconciled import shows $0 difference; anything else surfaces the likely cause — unmapped accounts, period mismatch, currency mismatch — before the data is trusted downstream.</div></details><details class="faq-item"><summary>Does AI ever change financial data automatically?<span class="plus">+</span></summary><div class="a">No. AI proposes mappings, forecasts, and recommendations with evidence attached. Committing any material change requires explicit human approval.</div></details><details class="faq-item"><summary>Can users trace a number back to its source?<span class="plus">+</span></summary><div class="a">Yes — every governed metric can show its formula, owner, data source, freshness, and, for Excel-sourced figures, the exact workbook, sheet, and cell it came from.</div></details><details class="faq-item"><summary>Is Planora multi-tenant?<span class="plus">+</span></summary><div class="a">Yes. Tenant isolation and role-based access are enforced server-side across every query and mutation, not only in the interface.</div></details><details class="faq-item"><summary>Can Planora export back to Excel?<span class="plus">+</span></summary><div class="a">Yes. Scenario results, forecasts, and reports can round-trip back into Excel templates, and the exported workbook reconciles against Planora before you rely on it.</div></details></div></div></section>
+<div class="wrap"><div class="cta-band"><h2>Bring your first forecast in and see where it actually breaks.</h2><a href="#" class="btn btn-primary">Get started</a></div></div>
+</main>
+<footer><div class="wrap"><div class="foot-grid"><div class="foot-brand"><div class="wordmark"><span class="mark"></span>Planora</div><p>Governed financial planning, analysis, and decision intelligence — built so Excel and trust can coexist.</p></div><div class="foot-col"><h4>Product</h4><ul><li><a href="#capabilities">Planning</a></li><li><a href="#capabilities">Forecasting</a></li><li><a href="#capabilities">Variance</a></li><li><a href="#capabilities">Scenarios</a></li></ul></div><div class="foot-col"><h4>Solutions</h4><ul><li><a href="#excel">Excel migration</a></li><li><a href="#governance">Governance</a></li><li><a href="#capabilities">Decision intelligence</a></li></ul></div><div class="foot-col"><h4>Resources</h4><ul><li><a href="#faq">FAQ</a></li><li><a href="#">Documentation</a></li><li><a href="#">Security</a></li></ul></div><div class="foot-col"><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Contact</a></li><li><a href="#">Legal</a></li></ul></div></div><div class="foot-bottom"><span>© 2026 Planora. All rights reserved.</span><span>Built for finance teams who still trust a workbook.</span></div></div></footer>
+<script>document.querySelector('.nav-toggle').addEventListener('click',function(){var nav=document.querySelector('nav.primary');nav.style.display=(nav.style.display==='flex')?'none':'flex';nav.style.flexDirection='column';nav.style.gap='16px';});</script>
+</body>
+</html>
