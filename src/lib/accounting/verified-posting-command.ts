@@ -1,11 +1,13 @@
 import type { PrismaClient } from "@prisma/client";
 import { resolveAccountingPrincipal } from "./verified-session";
+import { createPrismaJournalPostingRepository } from "./prisma-posting-adapter";
 import type { AuthorizedPosting } from "./governed-posting";
 
 /**
- * Fail-closed command boundary. The caller supplies a server-received session token;
- * the principal is always resolved from persisted session state.
- * Not a public API route: approval evidence must be verified before activation.
+ * Trusted server-only posting boundary. The session establishes actor and tenant.
+ * The Prisma adapter independently verifies and consumes a persisted, independent
+ * approval in the same serializable transaction as journal creation and audit.
+ * No caller-supplied humanApproved flag is accepted.
  */
 export async function postAccountingFromSession(
   db: PrismaClient,
@@ -16,8 +18,12 @@ export async function postAccountingFromSession(
   if (!["CFO", "FPA_DIRECTOR"].includes(principal.role)) {
     throw new Error("POSTING_ROLE_DENIED");
   }
-  // No persisted approval decision is currently bound to accounting journals.
-  // Deny rather than fabricate a humanApproved=true gate.
-  void command;
-  throw new Error("PERSISTED_ACCOUNTING_APPROVAL_NOT_IMPLEMENTED");
+  const repository = createPrismaJournalPostingRepository(
+    db, principal.userId, principal.organizationId,
+  );
+  return repository.postAtomically({
+    ...command,
+    organizationId: principal.organizationId,
+    actorId: principal.userId,
+  });
 }
