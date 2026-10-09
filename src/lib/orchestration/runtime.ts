@@ -28,7 +28,9 @@ export interface RuntimeExecutionRecord {
   idempotencyKey: string;
   runId: string;
   stepId: string;
-  status: "RUNNING" | "SUCCEEDED" | "FAILED";
+  status: "RUNNING" | "RETRYING" | "SUCCEEDED" | "FAILED";
+  attempts?: number;
+  errorClass?: "RETRYABLE" | "TERMINAL";
   evidenceId?: string;
   error?: string;
 }
@@ -51,6 +53,15 @@ export class RuntimeRegistry {
     if (!handler) throw new Error(`No runtime handler registered for ${stepId}`);
     return handler;
   }
+}
+
+export function classifyRuntimeError(error: unknown): "RETRYABLE" | "TERMINAL" {
+  const message = error instanceof Error ? error.message : "Unknown runtime failure";
+  const terminalPrefixes = [
+    "RUNTIME_CAPABILITY_PENDING:", "WORKFLOW_SCOPE_", "PERIOD_", "TRIAL_BALANCE_",
+    "INVALID_", "FORBIDDEN", "TENANT_", "ENTITY_", "AUTHENTICATION_",
+  ];
+  return terminalPrefixes.some((prefix) => message.startsWith(prefix)) ? "TERMINAL" : "RETRYABLE";
 }
 
 export function stepIdempotencyKey(run: WorkflowRun, step: WorkflowStepDefinition): string {
@@ -83,26 +94,44 @@ export async function executeReadySteps(
       continue;
     }
 
-    await executions.save({ idempotencyKey: key, runId, stepId: step.id, status: "RUNNING" });
+    const maxAttempts = Math.max(1, step.maxAttempts ?? 1);
+    let attempt = existing?.attempts ?? 0;
+    let result: StepExecutionResult | undefined;
+    let lastError: unknown;
+    while (attempt < maxAttempts) {
+      attempt += 1;
+      await executions.save({ idempotencyKey: key, runId, stepId: step.id, status: attempt > 1 ? "RETRYING" : "RUNNING", attempts: attempt });
+      try {
+        result = await registry.get(step.id)(run, step);
+        break;
+      } catch (error) {
+        lastError = error;
+        if (classifyRuntimeError(error) === "TERMINAL") break;
+      }
+    }
 
     try {
-      const result = await registry.get(step.id)(run, step);
+      if (!result) throw lastError ?? new Error("Runtime handler returned no result");
       await executions.save({
         idempotencyKey: key,
         runId,
         stepId: step.id,
         status: "SUCCEEDED",
         evidenceId: result.evidenceId,
+        attempts: attempt,
       });
       run = completeStep(run, step.id, result.evidenceId);
       await runs.save(run);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown runtime failure";
+      const errorClass = classifyRuntimeError(error);
       await executions.save({
         idempotencyKey: key,
         runId,
         stepId: step.id,
         status: "FAILED",
+        attempts: attempt,
+        errorClass,
         error: message,
       });
       run = {
