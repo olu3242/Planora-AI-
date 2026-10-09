@@ -1,0 +1,55 @@
+-- Accounting immutability guard. Apply only after reviewing existing migrations.
+-- PostgreSQL triggers protect posted journals, journal lines, and accounting audit history.
+CREATE OR REPLACE FUNCTION planora_protect_posted_journal()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF TG_OP = 'DELETE' AND OLD.status = 'POSTED' THEN
+    RAISE EXCEPTION 'POSTED_JOURNAL_IMMUTABLE' USING ERRCODE = '23514';
+  END IF;
+  IF TG_OP = 'UPDATE' AND OLD.status = 'POSTED' THEN
+    RAISE EXCEPTION 'POSTED_JOURNAL_IMMUTABLE' USING ERRCODE = '23514';
+  END IF;
+  RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS planora_posted_journal_immutable ON "AccountingJournal";
+CREATE TRIGGER planora_posted_journal_immutable
+BEFORE UPDATE OR DELETE ON "AccountingJournal"
+FOR EACH ROW EXECUTE FUNCTION planora_protect_posted_journal();
+
+CREATE OR REPLACE FUNCTION planora_protect_posted_journal_line()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  parent_status text;
+BEGIN
+  SELECT status::text INTO parent_status FROM "AccountingJournal"
+    WHERE id = CASE WHEN TG_OP = 'INSERT' THEN NEW."journalId" ELSE OLD."journalId" END
+    FOR UPDATE;
+  IF parent_status = 'POSTED' THEN
+    RAISE EXCEPTION 'POSTED_JOURNAL_LINE_IMMUTABLE' USING ERRCODE = '23514';
+  END IF;
+  IF TG_OP = 'UPDATE' AND NEW."journalId" <> OLD."journalId" THEN
+    RAISE EXCEPTION 'JOURNAL_LINE_REPARENT_DENIED' USING ERRCODE = '23514';
+  END IF;
+  RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS planora_posted_journal_line_immutable ON "AccountingJournalLine";
+CREATE TRIGGER planora_posted_journal_line_immutable
+BEFORE INSERT OR UPDATE OR DELETE ON "AccountingJournalLine"
+FOR EACH ROW EXECUTE FUNCTION planora_protect_posted_journal_line();
+
+-- Audit events are append-only. Corrections require a new compensating event.
+CREATE OR REPLACE FUNCTION planora_protect_audit_event()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  RAISE EXCEPTION 'AUDIT_EVENT_IMMUTABLE' USING ERRCODE = '23514';
+END;
+$$;
+
+DROP TRIGGER IF EXISTS planora_audit_event_immutable ON "AuditEvent";
+CREATE TRIGGER planora_audit_event_immutable
+BEFORE UPDATE OR DELETE ON "AuditEvent"
+FOR EACH ROW EXECUTE FUNCTION planora_protect_audit_event();
