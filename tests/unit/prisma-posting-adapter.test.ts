@@ -16,7 +16,7 @@ function fakeDb(overrides: Record<string, unknown> = {}) {
     legalEntity: { findFirst: vi.fn().mockResolvedValue({ id: "entity" }) },
     fiscalPeriod: { findFirst: vi.fn().mockResolvedValue({ accountingCloseState: "OPEN" }) },
     currency: { findUnique: vi.fn().mockResolvedValue({ code: "USD" }) },
-    account: { findMany: vi.fn().mockResolvedValue([{ id: "cash" }, { id: "sales" }]) },
+    account: { findMany: vi.fn().mockResolvedValue([{ id: "cash", effectiveFrom: new Date("2020-01-01"), effectiveTo: null }, { id: "sales", effectiveFrom: new Date("2020-01-01"), effectiveTo: null }]) },
     accountingJournal: {
       findUnique: vi.fn().mockResolvedValue(null),
       create: vi.fn().mockResolvedValue({ id: "posted-1" }),
@@ -61,7 +61,7 @@ describe("Prisma posting adapter (mock transaction boundary)", () => {
   it("rejects replay with different amounts", async () => {
     const { tx, db } = fakeDb({
       accountingJournal: {
-        findUnique: vi.fn().mockResolvedValue({ id: "existing", status: "POSTED", legalEntityId: "entity", fiscalPeriodId: "period", currencyCode: "USD" }),
+        findUnique: vi.fn().mockResolvedValue({ id: "existing", status: "POSTED", postedById: "actor", legalEntityId: "entity", fiscalPeriodId: "period", currencyCode: "USD" }),
         create: vi.fn(),
         update: vi.fn(),
       },
