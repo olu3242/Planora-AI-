@@ -17,6 +17,7 @@ function fixture(options: { closed?: boolean; reversed?: boolean; role?: string 
               ],
             })),
       create: vi.fn().mockResolvedValue({ id: "reversal" }),
+      update: vi.fn().mockResolvedValue({ id: "reversal", status: "POSTED" }),
     },
     fiscalPeriod: { findFirst: vi.fn().mockResolvedValue({ accountingCloseState: options.closed ? "HARD_CLOSED" : "OPEN" }) },
     auditEvent: { create: vi.fn().mockResolvedValue({ id: "audit" }) },
@@ -33,6 +34,8 @@ describe("journal reversal transaction", () => {
     await expect(reverseJournal(db as never, actor, request)).resolves.toEqual({ journalId: "reversal" });
     const data = tx.accountingJournal.create.mock.calls[0][0].data;
     expect(data.reversalOfId).toBe("original");
+    expect(data.status).toBe("DRAFT");
+    expect(tx.accountingJournal.update).toHaveBeenCalledWith({ where: { id: "reversal" }, data: { status: "POSTED", postedAt: expect.any(Date) } });
     expect(data.lines.create[0]).toMatchObject({ debitMinor: 0n, creditMinor: 100n });
     expect(tx.auditEvent.create).toHaveBeenCalledTimes(1);
   });
