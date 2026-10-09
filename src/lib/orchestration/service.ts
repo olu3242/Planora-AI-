@@ -25,5 +25,6 @@ export async function resumeWorkflow(definition: WorkflowDefinition, runId: stri
 export async function approveWorkflowStep(runId: string, stepId: string, evidenceId: string, auth: OrchestrationAuthorization, runs: WorkflowRunStore): Promise<WorkflowRun> {
   if(!auth.canApprove) throw new OrchestrationAuthorizationError("Workflow approval permission required");
   const run=await runs.load(runId); if(!run) throw new Error(`Workflow run not found: ${runId}`); assertOrganization(auth,run);
+  if (run.context.actorId === auth.actorId) throw new OrchestrationAuthorizationError("Requester cannot approve own workflow");
   const approved=approveStep(run,stepId,evidenceId); await runs.save(approved); return approved;
 }
