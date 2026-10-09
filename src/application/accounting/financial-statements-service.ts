@@ -1,0 +1,11 @@
+import "server-only";
+import { prisma } from "@/lib/prisma";
+import { buildFinancialStatements } from "@/domain/accounting/financial-statements";
+
+export async function getLedgerFinancialStatements(organizationId:string,input:{legalEntityId:string;fiscalPeriodId:string}){
+ const journals=await prisma.accountingJournal.findMany({where:{organizationId,legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId,status:"POSTED"},select:{currencyCode:true,lines:{select:{debitMinor:true,creditMinor:true,account:{select:{id:true,code:true,name:true,type:true,normalBalance:true}}}}}});
+ const currencies=[...new Set(journals.map(j=>j.currencyCode))]; if(currencies.length>1) throw new Error("STATEMENTS_REQUIRE_SINGLE_CURRENCY");
+ const byAccount=new Map<string,{accountId:string;code:string;name:string;type:string;normalBalance:"DEBIT"|"CREDIT";debitMinor:bigint;creditMinor:bigint}>();
+ for(const line of journals.flatMap(j=>j.lines)){const a=line.account;const row=byAccount.get(a.id)??{accountId:a.id,code:a.code,name:a.name,type:a.type,normalBalance:a.normalBalance,debitMinor:0n,creditMinor:0n};row.debitMinor+=line.debitMinor;row.creditMinor+=line.creditMinor;byAccount.set(a.id,row);}
+ return {currencyCode:currencies[0]??null,...buildFinancialStatements([...byAccount.values()])};
+}
