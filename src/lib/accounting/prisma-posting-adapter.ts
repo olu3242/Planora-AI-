@@ -1,5 +1,6 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import type { JournalPostingRepository } from "./governed-posting";
+import { validateJournalLines } from "./ai-native-controls";
 
 /**
  * Persistence adapter for approved human-initiated postings only.
@@ -16,6 +17,7 @@ export function createPrismaJournalPostingRepository(
       if (input.actorId !== trustedActorId || input.organizationId !== trustedOrganizationId) {
         throw new Error("UNTRUSTED_POSTING_CONTEXT");
       }
+      validateJournalLines(input.lines);
       if (!input.sourceKey.trim()) throw new Error("IDEMPOTENCY_KEY_REQUIRED");
       if (!/^[A-Z]{3}$/.test(input.currencyCode)) throw new Error("CURRENCY_CODE_INVALID");
       return prisma.$transaction(async (tx) => {
