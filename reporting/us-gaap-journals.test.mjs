@@ -1,0 +1,14 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {postJournal,trialBalanceFromJournals} from "./us-gaap-journals.mjs";
+const config={entityId:"e1",sector:"private",jurisdiction:"US",framework:"US_GAAP",standardVersion:"2026",effectiveDate:"2026-01-01",currency:"USD"};
+const chart={Cash:{type:"asset",active:true},Revenue:{type:"revenue",active:true}};
+const journal={id:"j1",entityId:"e1",date:"2026-10-08",lines:[{account:"Cash",debitMinor:500,creditMinor:0},{account:"Revenue",debitMinor:0,creditMinor:500}]};
+test("balanced journal validates",()=>assert.equal(postJournal({config,chart,journal}).status,"VALIDATED_NOT_PERSISTED"));
+test("trial balance calculates",()=>assert.equal(trialBalanceFromJournals({config,chart,journals:[journal]}).find(x=>x.account==="Cash").netMinor,500));
+test("unbalanced journal blocked",()=>assert.throws(()=>postJournal({config,chart,journal:{...journal,lines:[journal.lines[0],{...journal.lines[1],creditMinor:499}]}}),/balanced/));
+test("closed period blocked",()=>assert.throws(()=>postJournal({config,chart,journal,periodStatus:"CLOSED"}),/Closed/));
+test("cross entity blocked",()=>assert.throws(()=>postJournal({config,chart,journal:{...journal,entityId:"e2"}}),/Cross-entity/));
+test("inactive account blocked",()=>assert.throws(()=>postJournal({config,chart:{...chart,Cash:{type:"asset",active:false}},journal}),/inactive/));
+test("duplicate journal blocked",()=>assert.throws(()=>trialBalanceFromJournals({config,chart,journals:[journal,journal]}),/Duplicate/));
+test("non GAAP framework blocked",()=>assert.throws(()=>postJournal({config:{...config,framework:"IFRS"},chart,journal}),/US GAAP/));
