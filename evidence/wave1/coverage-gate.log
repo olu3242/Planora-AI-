@@ -1,0 +1,19 @@
+┌─────────┬───────────────────────────────────────────┬────────────┬──────────┬───────────┬───────┬────────┐
+│ (index) │ feature                                   │ statements │ branches │ functions │ lines │ gate   │
+├─────────┼───────────────────────────────────────────┼────────────┼──────────┼───────────┼───────┼────────┤
+│ 0       │ 'General Ledger and Chart of Accounts'    │ 44.35      │ 39.09    │ 41.66     │ 47.94 │ 'FAIL' │
+│ 1       │ 'Journal Entries and Bookkeeping'         │ 67.33      │ 78.59    │ 66.66     │ 70.89 │ 'FAIL' │
+│ 2       │ 'Accounts Payable'                        │ 29.62      │ 41.66    │ 13.33     │ 37.83 │ 'FAIL' │
+│ 3       │ 'Accounts Receivable'                     │ 29.62      │ 41.66    │ 13.33     │ 37.83 │ 'FAIL' │
+│ 4       │ 'Banking and Reconciliation'              │ 47.76      │ 45.45    │ 38.88     │ 48.88 │ 'FAIL' │
+│ 5       │ 'Budgeting and Forecasting'               │ 44.49      │ 35.02    │ 46.66     │ 62.79 │ 'FAIL' │
+│ 6       │ 'FP&A and Variance Analysis'              │ 63.38      │ 62.11    │ 71.05     │ 65.42 │ 'FAIL' │
+│ 7       │ 'Financial Statements and Reporting'      │ 75.52      │ 61.03    │ 77.27     │ 87.56 │ 'FAIL' │
+│ 8       │ 'IFRS, US GAAP, and Sector Configuration' │ 87.67      │ 81       │ 100       │ 97.05 │ 'PASS' │
+│ 9       │ 'Treasury and Cash Management'            │ 'N/A'      │ 'N/A'    │ 'N/A'     │ 'N/A' │ 'FAIL' │
+│ 10      │ 'AI Accounting and Financial Agents'      │ 39.14      │ 41.49    │ 32.2      │ 42.97 │ 'FAIL' │
+│ 11      │ 'Workflow Orchestration'                  │ 48.6       │ 56       │ 55.42     │ 52.66 │ 'FAIL' │
+│ 12      │ 'Integration and Data Import'             │ 75.18      │ 62.53    │ 81.41     │ 79.66 │ 'FAIL' │
+│ 13      │ 'Persona Dashboards'                      │ 50.98      │ 35.93    │ 48.14     │ 50.68 │ 'FAIL' │
+│ 14      │ 'Administration and Configuration'        │ 52.6       │ 32.53    │ 53.33     │ 53.23 │ 'FAIL' │
+└─────────┴───────────────────────────────────────────┴────────────┴──────────┴───────────┴───────┴────────┘

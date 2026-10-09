@@ -1,0 +1,9 @@
+
+> planora@0.1.0 lint
+> eslint .
+
+
+C:\Cdev\Planora MVP\postcss.config.mjs
+  1:1  warning  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
+
+✖ 1 problem (0 errors, 1 warning)

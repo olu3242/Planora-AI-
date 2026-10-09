@@ -1,4 +1,15 @@
 import type { Metadata } from "next";
+<<<<<<< HEAD
+import { BrandLanding } from "@/components/brand-landing";
+import "./brand-landing.css";
+export const metadata: Metadata = {
+ title: { absolute: "Planora | From numbers to what's next." },
+ description: "Bring accounting, financial reporting, forecasting, and governed insights into one connected finance workspace.",
+ icons: { icon: "/brand/planora-mark.svg" },
+};
+export default function Home(){ return <BrandLanding />; }
+import "./feature-cluster.css";
+=======
 import Link from "next/link";
 import styles from "./landing.module.css";
 
@@ -62,3 +73,4 @@ export default function Home() {
     <footer><div className="wrap"><div className="foot-grid"><div className="foot-brand"><div className="wordmark"><span className="mark" />Planora</div><p>Governed financial planning, analysis, and decision intelligence — built so Excel and trust can coexist.</p></div>{footerColumns.map(([heading, links]) => <div className="foot-col" key={heading}><h4>{heading}</h4><ul>{links.map(([label, href]) => <li key={label}><Link href={href}>{label}</Link></li>)}</ul></div>)}</div><div className="foot-bottom"><span>© 2026 Planora. All rights reserved.</span><span>Built for finance teams who still trust a workbook.</span></div></div></footer>
   </div>;
 }
+>>>>>>> origin/main

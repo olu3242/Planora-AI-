@@ -1,0 +1,25 @@
+Isolated Wave 1 identity verified: {
+  database: 'planora_wave1_test',
+  role: 'planora_wave1_test',
+  port: 55440,
+  superuser: false,
+  bypass: false
+}
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+ ✓ tests/security/authorization.test.ts > authorization boundaries > does not grant privileged approval or administration to an analyst 2ms
+ ✓ tests/security/authorization.test.ts > authorization boundaries > routes account mapping overrides through mapping approval authority 0ms
+ ✓ tests/security/authorization.test.ts > authorization boundaries > keeps platform operations separate from financial authority 0ms
+ ✓ tests/security/authorization.test.ts > authorization boundaries > fails a direct cross-tenant organization ID as not found 50ms
+ ✓ tests/security/authorization.test.ts > authorization boundaries > denies cross-tenant account, fact, and metric IDs without disclosure 129ms
+ ✓ tests/security/authorization.test.ts > authorization boundaries > denies cross-tenant workbook IDs without disclosure 25ms
+ ✓ tests/security/authorization.test.ts > authorization boundaries > denies manipulated cross-tenant import and mapping IDs 79ms
+ ✓ tests/security/authorization.test.ts > authorization boundaries > denies cross-tenant forecast and commentary IDs without disclosure 25ms
+ ✓ tests/security/authorization.test.ts > authorization boundaries > denies agent role elevation before reading forecast context 44ms
+ ✓ tests/security/authorization.test.ts > authorization boundaries > denies cross-tenant recommendation, feedback, execution, and database references 67ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  15:56:11
+   Duration  2.78s (transform 311ms, setup 48ms, import 1.50s, tests 425ms, environment 0ms)

@@ -1,0 +1,115 @@
+Isolated Wave 1 identity verified: {
+  database: 'planora_wave1_test',
+  role: 'planora_wave1_test',
+  port: 55440,
+  superuser: false,
+  bypass: false
+}
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+      Coverage enabled with v8
+
+
+ Test Files  42 passed (42)
+      Tests  181 passed (181)
+   Start at  15:56:12
+   Duration  17.63s (transform 874ms, setup 474ms, import 4.95s, tests 482ms, environment 5ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   38.33 |     41.9 |   42.37 |   40.82 |
+ agents            |   11.27 |    18.81 |    5.88 |    9.61 |
+  agent-service.ts |       0 |        0 |       0 |       0 | 15-147
+  ...est-action.ts |   76.47 |    73.07 |     100 |      80 | 20,25
+ ...ion/accounting |       0 |        0 |       0 |       0 |
+  ...-workspace.ts |       0 |        0 |       0 |       0 | 4-8
+  ...-workspace.ts |       0 |        0 |       0 |       0 | 4-5
+  ...ts-service.ts |       0 |        0 |       0 |       0 | 5-6
+  close-period.ts  |       0 |        0 |       0 |       0 | 7-21
+  ...-readiness.ts |       0 |        0 |       0 |       0 | 7-38
+  ...ts-service.ts |       0 |        0 |       0 |       0 | 7-16
+  ...-workspace.ts |       0 |        0 |       0 |       0 | 5-11
+  post-journal.ts  |       0 |        0 |       0 |       0 | 18-81
+  ...on-service.ts |       0 |        0 |       0 |       0 | 5-12
+  ...ce-service.ts |       0 |        0 |       0 |       0 | 12-137
+  ...se-journal.ts |       0 |        0 |       0 |       0 | 7-21
+  ...-drilldown.ts |       0 |        0 |       0 |       0 | 5-8
+  sync-actuals.ts  |       0 |        0 |       0 |       0 | 11-77
+  ...ce-service.ts |       0 |        0 |       0 |       0 | 7-17
+  ...oa-mapping.ts |       0 |        0 |       0 |       0 | 7-14
+ ...ication/agents |    5.14 |     6.66 |    2.77 |    4.59 |
+  close-agent.ts   |       0 |        0 |       0 |       0 | 8-30
+  ...ping-agent.ts |       0 |        0 |       0 |       0 | 6-17
+  ...on-context.ts |       0 |        0 |       0 |       0 | 7-33
+  ...cast-agent.ts |       0 |        0 |       0 |       0 | 8-24
+  insight-agent.ts |       0 |        0 |       0 |       0 | 6-17
+  report-agent.ts  |       0 |        0 |       0 |       0 | 6-26
+  ...ment-agent.ts |       0 |        0 |       0 |       0 | 7-14
+ ...tion/dashboard |       0 |        0 |       0 |       0 |
+  ...rd-service.ts |       0 |        0 |       0 |       0 | 7-32
+ application/excel |    0.53 |     1.55 |    2.43 |    0.81 |
+  ...ok-service.ts |       0 |        0 |       0 |       0 | 18-167
+ ...tion/financial |       0 |        0 |       0 |       0 |
+  ...ge-service.ts |       0 |        0 |       0 |       0 | 6-24
+  ...nt-service.ts |       0 |        0 |       0 |       0 | 9-22
+  ...on-service.ts |       0 |      100 |       0 |       0 | 7-12
+ ...ation/forecast |       0 |        0 |       0 |       0 |
+  ...st-service.ts |       0 |        0 |       0 |       0 | 10-55
+  ...on-service.ts |       0 |        0 |       0 |       0 | 10-20
+  value-metrics.ts |       0 |        0 |       0 |       0 | 5-24
+ ...platform-admin |       0 |        0 |       0 |       0 |
+  ...in-service.ts |       0 |        0 |       0 |       0 | 10-86
+ domain/accounting |    89.4 |    83.91 |   93.33 |   93.78 |
+  ...t-proposal.ts |      80 |    77.27 |     100 |    87.5 | 32
+  aging.ts         |   94.11 |    93.75 |     100 |     100 | 17
+  ...statements.ts |   80.85 |    71.42 |   92.85 |      85 | 38,51-52
+  ...validation.ts |   93.33 |    91.66 |     100 |     100 | 13
+  ...ing-policy.ts |   93.33 |    95.45 |     100 |     100 | 29
+  ...foundation.ts |   94.44 |    91.66 |     100 |     100 | 32,62,71
+  suspense.ts      |     100 |       50 |     100 |     100 | 16
+  trial-balance.ts |   42.85 |    14.28 |      50 |   33.33 | 14-22
+ domain/dashboard  |     100 |    82.14 |     100 |     100 |
+  ...-dashboard.ts |     100 |    82.14 |     100 |     100 | 49-53,68
+ domain/financial  |   93.42 |    69.23 |   95.45 |   98.11 |
+  ...ion-engine.ts |   97.22 |    83.33 |     100 |     100 | 26-27
+  ...l-calendar.ts |   88.88 |    88.88 |     100 |     100 | 7
+  hierarchy.ts     |   91.66 |       75 |     100 |     100 | 8
+  money.ts         |      75 |        0 |   66.66 |      75 | 12
+  versions.ts      |      90 |    66.66 |     100 |     100 | 6-13
+ ...s/spreadsheets |   79.71 |    66.12 |   80.39 |   84.28 |
+  csv-connector.ts |       0 |        0 |       0 |       0 | 5-7
+  ...-connector.ts |   66.66 |       50 |      75 |   80.95 | 14-17
+  ...ing-engine.ts |     100 |    83.33 |     100 |     100 | 9,16-17
+  ...d-security.ts |   69.44 |       65 |   28.57 |   78.94 | 26-32
+  ...k-profiler.ts |   98.03 |    73.68 |     100 |     100 | 8-11,14-26
+ lib/accounting    |      85 |    87.17 |   95.23 |   89.68 |
+  ...e-controls.ts |   83.33 |    83.05 |     100 |   85.71 | 17,29,32,38,41
+  ...ed-posting.ts |   66.66 |       70 |     100 |   85.71 | 36
+  ...d-approval.ts |   83.33 |    88.88 |     100 |   83.33 | 38
+  ...ng-adapter.ts |   88.46 |    87.27 |     100 |    97.5 | 58
+  ...se-journal.ts |    93.1 |       92 |     100 |     100 | 19,24
+  ...ng-command.ts |       0 |        0 |       0 |       0 | 17-24
+ lib/orchestration |   54.82 |     56.7 |      60 |   58.58 |
+  ...ng-runtime.ts |       0 |        0 |       0 |       0 | 14-82
+  engine.ts        |   82.85 |    77.77 |     100 |   88.46 | ...,30,86,104,123
+  operations.ts    |       0 |      100 |       0 |       0 | 5-27
+  prisma-store.ts  |       0 |        0 |       0 |       0 | 8-44
+  recovery.ts      |   91.66 |    83.33 |     100 |     100 | 11,23
+  runtime.ts       |   89.83 |    77.77 |     100 |   94.33 | 92-94
+  service.ts       |   70.37 |    72.22 |      75 |   81.81 | 22-23
+  trigger.ts       |       0 |        0 |       0 |       0 | 21-32
+ permissions       |   55.55 |        0 |      75 |   83.33 |
+  permissions.ts   |   55.55 |        0 |      75 |   83.33 | 23
+ runtime           |   31.37 |       48 |   28.57 |   23.25 |
+  ...on-runtime.ts |       0 |        0 |       0 |       0 | 26-86
+  ...sification.ts |     100 |       96 |     100 |     100 | 8
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 38.33% ( 777/2027 )
+Branches     : 41.9% ( 619/1477 )
+Functions    : 42.37% ( 214/505 )
+Lines        : 40.82% ( 565/1384 )
+================================================================================

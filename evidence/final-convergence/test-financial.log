@@ -1,0 +1,13 @@
+
+> planora@0.1.0 test:financial
+> vitest run tests/financial-calculations
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  12:57:21
+   Duration  188ms (transform 36ms, setup 28ms, import 30ms, tests 3ms, environment 0ms)
+

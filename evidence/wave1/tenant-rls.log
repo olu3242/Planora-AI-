@@ -1,0 +1,23 @@
+Isolated Wave 1 identity verified: {
+  database: 'planora_wave1_test',
+  role: 'planora_wave1_test',
+  port: 55440,
+  superuser: false,
+  bypass: false
+}
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+ ✓ tests/security/tenant-rls.test.ts > forced PostgreSQL tenant policies using a non-owner runtime role > forces policies on all 56 tenant tables and denies reads without session identity 187ms
+ ✓ tests/security/tenant-rls.test.ts > forced PostgreSQL tenant policies using a non-owner runtime role > does not let caller-provided tenant or role settings establish authority 14ms
+ ✓ tests/security/tenant-rls.test.ts > forced PostgreSQL tenant policies using a non-owner runtime role > rejects owner credentials and denies runtime access to password/session stores 18ms
+ ✓ tests/security/tenant-rls.test.ts > forced PostgreSQL tenant policies using a non-owner runtime role > isolates SELECT, INSERT, UPDATE and DELETE, including attempted tenant reassignment 36ms
+ ✓ tests/security/tenant-rls.test.ts > forced PostgreSQL tenant policies using a non-owner runtime role > protects indirect ownership and cross-tenant foreign references 19ms
+ ✓ tests/security/tenant-rls.test.ts > forced PostgreSQL tenant policies using a non-owner runtime role > does not leak pooled context across concurrent tenants or rollback 210ms
+ ✓ tests/security/tenant-rls.test.ts > forced PostgreSQL tenant policies using a non-owner runtime role > revokes authority for inactive memberships and expired sessions 9ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  16:24:00
+   Duration  789ms (transform 42ms, setup 28ms, import 54ms, tests 560ms, environment 0ms)
+

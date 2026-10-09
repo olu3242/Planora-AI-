@@ -1,0 +1,16 @@
+Isolated Wave 1 identity verified: {
+  database: 'planora_wave1_test',
+  role: 'planora_wave1_test',
+  port: 55440,
+  superuser: false,
+  bypass: false
+}
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+      Coverage enabled with v8
+
+
+ Test Files  43 passed (43)
+      Tests  191 passed (191)
+   Start at  15:59:09
+   Duration  21.60s (transform 1.22s, setup 532ms, import 5.84s, tests 1.03s, environment 8ms)

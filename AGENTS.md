@@ -143,6 +143,9 @@ A tenant may configure a narrow auto-approval policy for a specific agent and re
 Per `docs/TEST-STRATEGY.md`, every agent requires: an approval-gate test proving the agent cannot write to protected objects (`agent-approval-gate.test`), an evidence-completeness test proving every recommendation carries traceable inputs, and inclusion in the `tests/e2e/agents.e2e.*` suite exercising at least one full OBSERVE→...→OUTCOME cycle per agent that participates in the critical E2E journey (`docs/E2E-ACCEPTANCE.md`).
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/main
 
 <!-- BEGIN:nextjs-agent-rules -->
 
@@ -153,4 +156,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+<<<<<<< HEAD
+=======
 >>>>>>> main
+>>>>>>> origin/main

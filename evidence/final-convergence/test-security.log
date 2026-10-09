@@ -1,0 +1,181 @@
+
+> planora@0.1.0 test:security
+> vitest run tests/security tests/auth tests/rbac
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+ ❯ tests/security/authorization.test.ts (10 tests | 7 failed) 14347ms
+     × fails a direct cross-tenant organization ID as not found 2079ms
+     × denies cross-tenant account, fact, and metric IDs without disclosure 2041ms
+     × denies cross-tenant workbook IDs without disclosure 2045ms
+     × denies manipulated cross-tenant import and mapping IDs 2041ms
+     × denies cross-tenant forecast and commentary IDs without disclosure 2051ms
+     × denies agent role elevation before reading forecast context 2044ms
+     × denies cross-tenant recommendation, feedback, execution, and database references 2039ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/security/authorization.test.ts > authorization boundaries > fails a direct cross-tenant organization ID as not found
+PrismaClientInitializationError: 
+Invalid `prisma.organization.findMany()` invocation in
+C:/Cdev/Planora MVP/tests/security/authorization.test.ts:40:53
+
+  37 });
+  38 
+  39 it("fails a direct cross-tenant organization ID as not found", async () => {
+→ 40   const organizations = await prisma.organization.findMany(
+Can't reach database server at `127.0.0.1:1`
+
+Please make sure your database server is running at `127.0.0.1:1`.
+ ❯ ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:242:12
+ ❯ ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:11
+ ❯ ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:11
+ ❯ a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:23
+ ❯ tests/security/authorization.test.ts:40:27
+     38|
+     39|   it("fails a direct cross-tenant organization ID as not found", async…
+     40|     const organizations = await prisma.organization.findMany({ orderBy…
+       |                           ^
+     41|     expect(organizations).toHaveLength(2);
+     42|     await expect(getOrganizationResource(organizations[0].id, organiza…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  tests/security/authorization.test.ts > authorization boundaries > denies cross-tenant account, fact, and metric IDs without disclosure
+PrismaClientInitializationError: 
+Invalid `prisma.organization.findUniqueOrThrow()` invocation in
+C:/Cdev/Planora MVP/tests/security/authorization.test.ts:46:47
+
+  43 });
+  44 
+  45 it("denies cross-tenant account, fact, and metric IDs without disclosure", async () => {
+→ 46   const tenantA = await prisma.organization.findUniqueOrThrow(
+Can't reach database server at `127.0.0.1:1`
+
+Please make sure your database server is running at `127.0.0.1:1`.
+ ❯ ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:242:12
+ ❯ ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:11
+ ❯ ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:11
+ ❯ a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:23
+ ❯ tests/security/authorization.test.ts:46:21
+     44|
+     45|   it("denies cross-tenant account, fact, and metric IDs without disclo…
+     46|     const tenantA = await prisma.organization.findUniqueOrThrow({ wher…
+       |                     ^
+     47|     const tenantB = await prisma.organization.findUniqueOrThrow({ wher…
+     48|     const [account, fact, metric] = await Promise.all([
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  tests/security/authorization.test.ts > authorization boundaries > denies cross-tenant workbook IDs without disclosure
+PrismaClientInitializationError: 
+Invalid `prisma.organization.findUniqueOrThrow()` invocation in
+C:/Cdev/Planora MVP/tests/security/authorization.test.ts:59:47
+
+  56 });
+  57 
+  58 it("denies cross-tenant workbook IDs without disclosure", async () => {
+→ 59   const tenantA = await prisma.organization.findUniqueOrThrow(
+Can't reach database server at `127.0.0.1:1`
+
+Please make sure your database server is running at `127.0.0.1:1`.
+ ❯ ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:242:12
+ ❯ ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:11
+ ❯ ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:11
+ ❯ a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:23
+ ❯ tests/security/authorization.test.ts:59:21
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  tests/security/authorization.test.ts > authorization boundaries > denies manipulated cross-tenant import and mapping IDs
+PrismaClientInitializationError: 
+Invalid `prisma.organization.findUniqueOrThrow()` invocation in
+C:/Cdev/Planora MVP/tests/security/authorization.test.ts:66:47
+
+  63 });
+  64 
+  65 it("denies manipulated cross-tenant import and mapping IDs", async () => {
+→ 66   const tenantA = await prisma.organization.findUniqueOrThrow(
+Can't reach database server at `127.0.0.1:1`
+
+Please make sure your database server is running at `127.0.0.1:1`.
+ ❯ ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:242:12
+ ❯ ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:11
+ ❯ ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:11
+ ❯ a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:23
+ ❯ tests/security/authorization.test.ts:66:21
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  tests/security/authorization.test.ts > authorization boundaries > denies cross-tenant forecast and commentary IDs without disclosure
+PrismaClientInitializationError: 
+Invalid `prisma.organization.findUniqueOrThrow()` invocation in
+C:/Cdev/Planora MVP/tests/security/authorization.test.ts:79:47
+
+  76 });
+  77 
+  78 it("denies cross-tenant forecast and commentary IDs without disclosure", async () => {
+→ 79   const tenantA = await prisma.organization.findUniqueOrThrow(
+Can't reach database server at `127.0.0.1:1`
+
+Please make sure your database server is running at `127.0.0.1:1`.
+ ❯ ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:242:12
+ ❯ ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:11
+ ❯ ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:11
+ ❯ a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:23
+ ❯ tests/security/authorization.test.ts:79:21
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  tests/security/authorization.test.ts > authorization boundaries > denies agent role elevation before reading forecast context
+PrismaClientInitializationError: 
+Invalid `prisma.organization.findUniqueOrThrow()` invocation in
+C:/Cdev/Planora MVP/tests/security/authorization.test.ts:86:46
+
+  83 });
+  84 
+  85 it("denies agent role elevation before reading forecast context", async () => {
+→ 86   const tenant = await prisma.organization.findUniqueOrThrow(
+Can't reach database server at `127.0.0.1:1`
+
+Please make sure your database server is running at `127.0.0.1:1`.
+ ❯ ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:242:12
+ ❯ ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:11
+ ❯ ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:11
+ ❯ a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:23
+ ❯ tests/security/authorization.test.ts:86:20
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  tests/security/authorization.test.ts > authorization boundaries > denies cross-tenant recommendation, feedback, execution, and database references
+PrismaClientInitializationError: 
+Invalid `prisma.organization.findUniqueOrThrow()` invocation in
+C:/Cdev/Planora MVP/tests/security/authorization.test.ts:92:47
+
+  89 });
+  90 
+  91 it("denies cross-tenant recommendation, feedback, execution, and database references", async () => {
+→ 92   const tenantA = await prisma.organization.findUniqueOrThrow(
+Can't reach database server at `127.0.0.1:1`
+
+Please make sure your database server is running at `127.0.0.1:1`.
+ ❯ ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:242:12
+ ❯ ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:11
+ ❯ ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:11
+ ❯ a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:23
+ ❯ tests/security/authorization.test.ts:92:21
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 3 passed (10)
+   Start at  12:57:24
+   Duration  15.15s (transform 203ms, setup 28ms, import 516ms, tests 14.35s, environment 0ms)
+

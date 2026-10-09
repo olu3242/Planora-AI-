@@ -1,0 +1,2 @@
+6cc96586bb664bcf1809c3333bf9d93cd5bead6d On fix/accounting-fpa-schema-harmonization: Planora pre-integration working files 20261009
+bd84c1f5712282ca6b31aab22d0c20a4bfa489e1 On feat/ai-native-accounting-execution: Preserve pre-existing Planora work before required baseline switch

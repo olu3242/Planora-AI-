@@ -25,10 +25,14 @@ Planora must be able to continuously answer:
 Governance surrounds the lifecycle. AI accelerates the lifecycle. Humans remain accountable for material financial decisions. Excel remains interoperable with the lifecycle rather than being displaced by it.
 
 <<<<<<< HEAD
+See `PRD.md` for full product scope, `docs/CANONICAL-FINANCIAL-MODEL.md` for the data model, `docs/EXCEL-INTEROPERABILITY.md` for the Excel adapter architecture, `docs/E2E-ACCEPTANCE.md` for the acceptance test, and `docs/TRACEABILITY-MATRIX.md` for pain-point-to-evidence traceability. These five documents are load-bearing — do not implement a capability that isn't traceable to at least one of them.
+=======
+<<<<<<< HEAD
 See `docs/PLANORA-PRD.md` for full product scope, `docs/CANONICAL-FINANCIAL-MODEL.md` for the data model, `docs/EXCEL-INTEROPERABILITY.md` for the Excel adapter architecture, `docs/E2E-ACCEPTANCE.md` for the acceptance test, and `docs/TRACEABILITY-MATRIX.md` for pain-point-to-evidence traceability. These five documents are load-bearing — do not implement a capability that isn't traceable to at least one of them.
 =======
 See `PRD.md` for full product scope, `docs/CANONICAL-FINANCIAL-MODEL.md` for the data model, `docs/EXCEL-INTEROPERABILITY.md` for the Excel adapter architecture, `docs/E2E-ACCEPTANCE.md` for the acceptance test, and `docs/TRACEABILITY-MATRIX.md` for pain-point-to-evidence traceability. These five documents are load-bearing — do not implement a capability that isn't traceable to at least one of them.
 >>>>>>> main
+>>>>>>> origin/main
 
 ---
 
@@ -53,10 +57,14 @@ See `PRD.md` for full product scope, `docs/CANONICAL-FINANCIAL-MODEL.md` for the
 3. Produce `docs/GAP-MATRIX.md` — classify every Planora capability as COMPLETE / PARTIAL / MISSING / BLOCKED against what was found in step 2.
 4. Produce or update `docs/TARGET-ARCHITECTURE.md` and `docs/DOMAIN-MODEL.md`.
 <<<<<<< HEAD
+5. Produce `docs/IMPLEMENTATION-PLAN.md` with vertical-slice iterations (see suggested sequencing in `PRD.md`).
+=======
+<<<<<<< HEAD
 5. Produce `docs/IMPLEMENTATION-PLAN.md` with vertical-slice iterations (see suggested sequencing in `docs/PLANORA-PRD.md`).
 =======
 5. Produce `docs/IMPLEMENTATION-PLAN.md` with vertical-slice iterations (see suggested sequencing in `PRD.md`).
 >>>>>>> main
+>>>>>>> origin/main
 6. Select the highest-leverage first vertical slice. The recommended first proof chain is: **Excel → Mapping → Validation → Reconciliation → Canonical Financial Model → Command Center → Variance → Scenario → Decision → Action → Outcome.**
 7. Implement in vertical slices, not horizontal scaffolding. A slice is not done until it satisfies §6.
 8. Do not unnecessarily rewrite stable existing functionality discovered in step 1.
@@ -152,10 +160,14 @@ Do not merge or promote to production without explicit authorization from the us
 Maintain these files as living documents, updated as implementation progresses — not written once and abandoned:
 
 <<<<<<< HEAD
+`README.md`, `docs/PAIN-POINT-MATRIX.md`, `docs/CURRENT-STATE-AUDIT.md`, `docs/GAP-MATRIX.md`, `docs/TARGET-ARCHITECTURE.md`, `docs/E2E-WORKFLOW.md`, `docs/DOMAIN-MODEL.md`, `docs/CANONICAL-FINANCIAL-MODEL.md`, `docs/EXCEL-INTEROPERABILITY.md`, `docs/EXCEL-MAPPING-SPEC.md`, `docs/DATA-GOVERNANCE.md`, `docs/SECURITY-RBAC.md`, `docs/AI-AGENT-ARCHITECTURE.md`, `docs/DECISION-INTELLIGENCE.md`, `docs/IMPLEMENTATION-PLAN.md`, `docs/TEST-STRATEGY.md`, `docs/E2E-ACCEPTANCE.md`, `docs/DEPLOYMENT.md`, `docs/OPERATIONS.md`, `docs/KNOWN-GAPS.md`, `docs/DECISIONS.md`, `docs/CHANGELOG.md`, `docs/IMPLEMENTATION-STATUS.md`, `docs/TRACEABILITY-MATRIX.md`, `AGENTS.md`, `PRD.md`, `BRD.md`.
+=======
+<<<<<<< HEAD
 `README.md`, `docs/PLANORA-PRD.md`, `docs/PAIN-POINT-MATRIX.md`, `docs/CURRENT-STATE-AUDIT.md`, `docs/GAP-MATRIX.md`, `docs/TARGET-ARCHITECTURE.md`, `docs/E2E-WORKFLOW.md`, `docs/DOMAIN-MODEL.md`, `docs/CANONICAL-FINANCIAL-MODEL.md`, `docs/EXCEL-INTEROPERABILITY.md`, `docs/EXCEL-MAPPING-SPEC.md`, `docs/DATA-GOVERNANCE.md`, `docs/SECURITY-RBAC.md`, `docs/AI-AGENT-ARCHITECTURE.md`, `docs/DECISION-INTELLIGENCE.md`, `docs/IMPLEMENTATION-PLAN.md`, `docs/TEST-STRATEGY.md`, `docs/E2E-ACCEPTANCE.md`, `docs/DEPLOYMENT.md`, `docs/OPERATIONS.md`, `docs/KNOWN-GAPS.md`, `docs/DECISIONS.md`, `docs/CHANGELOG.md`, `docs/IMPLEMENTATION-STATUS.md`, `docs/TRACEABILITY-MATRIX.md`, `AGENTS.md`, `PRD.md`, `BRD.md`.
 =======
 `README.md`, `docs/PAIN-POINT-MATRIX.md`, `docs/CURRENT-STATE-AUDIT.md`, `docs/GAP-MATRIX.md`, `docs/TARGET-ARCHITECTURE.md`, `docs/E2E-WORKFLOW.md`, `docs/DOMAIN-MODEL.md`, `docs/CANONICAL-FINANCIAL-MODEL.md`, `docs/EXCEL-INTEROPERABILITY.md`, `docs/EXCEL-MAPPING-SPEC.md`, `docs/DATA-GOVERNANCE.md`, `docs/SECURITY-RBAC.md`, `docs/AI-AGENT-ARCHITECTURE.md`, `docs/DECISION-INTELLIGENCE.md`, `docs/IMPLEMENTATION-PLAN.md`, `docs/TEST-STRATEGY.md`, `docs/E2E-ACCEPTANCE.md`, `docs/DEPLOYMENT.md`, `docs/OPERATIONS.md`, `docs/KNOWN-GAPS.md`, `docs/DECISIONS.md`, `docs/CHANGELOG.md`, `docs/IMPLEMENTATION-STATUS.md`, `docs/TRACEABILITY-MATRIX.md`, `AGENTS.md`, `PRD.md`, `BRD.md`.
 >>>>>>> main
+>>>>>>> origin/main
 
 If a required doc doesn't exist yet, create it before or during the iteration that first needs it — don't backfill documentation after the fact from memory.
 
@@ -191,6 +203,15 @@ Do not generate `planora-e2e.zip` until lint, typecheck, build, tests, and E2E c
 
 ## 11. When Uncertain
 
+<<<<<<< HEAD
+### PostgreSQL certification preflight
+
+Before reporting a database blocker, read `.env.local` securely and classify its connection variables by environment. Never print credentials or complete URLs. Credentials alone are not proof of connectivity or test isolation. Never use a development or hosted database for destructive tests, migrations, or fixture mutations.
+
+Wave 1 uses the separately provisioned, ignored `.env.wave1.local`, validated by `scripts/wave1-command.ts`. `.env.convergence.local` is not assumed to be a test configuration. Verify actual database identity, least-privilege role, schema/migration alignment, and all seven database-dependent scenarios in `tests/security/authorization.test.ts` before claiming PostgreSQL certification. Record failures; continue only dependency-ready work. Environment files must never be committed.
+
+=======
+>>>>>>> origin/main
 If a repository convention conflicts with a rule in this file, prefer the repository convention for style/tooling but never for the non-negotiables in §2. If the correct behavior for an ambiguous case isn't covered here or in the linked docs, stop and ask rather than guessing — record the question and the eventual answer in `docs/DECISIONS.md`.
 
 Do not claim E2E completion without executable evidence. If the acceptance chain in `docs/E2E-ACCEPTANCE.md` breaks somewhere, say exactly where it breaks and continue implementation from that point — do not round up to "done."

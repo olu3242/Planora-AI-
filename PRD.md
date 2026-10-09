@@ -3,10 +3,14 @@
 Status: Living document — update as scope is implemented or revised.
 Owner: Product Architecture
 <<<<<<< HEAD
+Related: `BRD.md`, `docs/PAIN-POINT-MATRIX.md`, `docs/CANONICAL-FINANCIAL-MODEL.md`, `docs/EXCEL-INTEROPERABILITY.md`, `docs/E2E-ACCEPTANCE.md`
+=======
+<<<<<<< HEAD
 Related: `docs/BRD.md`, `docs/PAIN-POINT-MATRIX.md`, `docs/CANONICAL-FINANCIAL-MODEL.md`, `docs/EXCEL-INTEROPERABILITY.md`, `docs/E2E-ACCEPTANCE.md`
 =======
 Related: `BRD.md`, `docs/PAIN-POINT-MATRIX.md`, `docs/CANONICAL-FINANCIAL-MODEL.md`, `docs/EXCEL-INTEROPERABILITY.md`, `docs/E2E-ACCEPTANCE.md`
 >>>>>>> main
+>>>>>>> origin/main
 
 ---
 
@@ -122,10 +126,14 @@ ADMIN       — Organization, Users, Roles, Dimensions, Fiscal Calendar, Integra
 ```
 
 <<<<<<< HEAD
+Public-facing surface (marketing/product site) is a separate concern; the authenticated product navigation above is the implementation priority.
+=======
+<<<<<<< HEAD
 Public-facing surface (marketing/product site) is a separate concern — see `docs/PLANORA-PRD.md` §8 and the site sitemap maintained alongside `README.md`.
 =======
 Public-facing surface (marketing/product site) is a separate concern; the authenticated product navigation above is the implementation priority.
 >>>>>>> main
+>>>>>>> origin/main
 
 ---
 

@@ -1,0 +1,4 @@
+
+> planora@0.1.0 db:seed:test
+> tsx scripts/seed-test.ts
+

@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+import { withTenantApi } from "@/lib/tenant-request";
+=======
+>>>>>>> origin/main
 import { transitionForecast } from "@/application/forecast/forecast-service";
 import { requireApiSession } from "@/auth/session";
 import { AppError, errorResponse } from "@/lib/errors";
@@ -5,4 +9,10 @@ import { assertSameOrigin, correlationId, seeOther } from "@/lib/request";
 import { executeRuntimeCommand } from "@/runtime/execution-runtime";
 import { z } from "zod";
 const schema = z.object({ action: z.enum(["submit", "review", "revise", "approve", "lock"]), reason: z.string().trim().min(3).max(500), idempotencyKey: z.string().trim().min(8).max(200).optional() });
+<<<<<<< HEAD
+async function handlePOST(request: Request, { params }: { params: Promise<{ id: string }> }) { const cid = correlationId(request); let id = ""; try { assertSameOrigin(request); const session = await requireApiSession("financial.read"); id = z.uuid().parse((await params).id); const body = schema.parse(Object.fromEntries(await request.formData())); const idempotencyKey = request.headers.get("idempotency-key") ?? body.idempotencyKey ?? cid; await executeRuntimeCommand({ correlationId: cid, idempotencyKey, actorId: session.user.id, organizationId: session.organization.id, forecastVersionId: id, command: `Forecast.${body.action}`, targetId: id, retrySafe: false, request: { action: body.action, reason: body.reason } }, () => transitionForecast({ organizationId: session.organization.id, actorId: session.user.id, role: session.membership.role, correlationId: cid, versionId: id, action: body.action, reason: body.reason }), (value) => ({ id: value.id, status: value.status })); return seeOther(`/forecasts/${id}`); } catch (error) { if (error instanceof AppError && error.status < 403) return seeOther(`/forecasts/${id}?error=${encodeURIComponent(error.message)}`); return errorResponse(error, cid); } }
+
+export const POST = withTenantApi(handlePOST);
+=======
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) { const cid = correlationId(request); let id = ""; try { assertSameOrigin(request); const session = await requireApiSession("financial.read"); id = z.uuid().parse((await params).id); const body = schema.parse(Object.fromEntries(await request.formData())); const idempotencyKey = request.headers.get("idempotency-key") ?? body.idempotencyKey ?? cid; await executeRuntimeCommand({ correlationId: cid, idempotencyKey, actorId: session.user.id, organizationId: session.organization.id, forecastVersionId: id, command: `Forecast.${body.action}`, targetId: id, retrySafe: false, request: { action: body.action, reason: body.reason } }, () => transitionForecast({ organizationId: session.organization.id, actorId: session.user.id, role: session.membership.role, correlationId: cid, versionId: id, action: body.action, reason: body.reason }), (value) => ({ id: value.id, status: value.status })); return seeOther(`/forecasts/${id}`); } catch (error) { if (error instanceof AppError && error.status < 403) return seeOther(`/forecasts/${id}?error=${encodeURIComponent(error.message)}`); return errorResponse(error, cid); } }
+>>>>>>> origin/main

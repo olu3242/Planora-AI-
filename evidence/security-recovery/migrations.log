@@ -1,0 +1,58 @@
+
+> planora@0.1.0 db:migrate:test
+> tsx scripts/migrate-test.ts
+
+Migration preflight accepted isolated test database 127.0.0.1/planora_convergence_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_convergence_test", schema "public" at "127.0.0.1:55439"
+
+16 migrations found in prisma/migrations
+
+Applying migration `20260831000100_phase1_foundation`
+Applying migration `20260831000200_login_throttle`
+Applying migration `20260831110936_phase2_financial_core`
+Applying migration `20260831113840_phase3_excel_intelligence`
+Applying migration `20260831114612_phase3_excel_source_type`
+Applying migration `20260831121058_forecast_mvp_workflow`
+Applying migration `20260831183000_agentic_runtime_os`
+Applying migration `20260831184500_fix_agentic_tenant_guard`
+Applying migration `20260831203000_dashboard_admin_closure`
+Applying migration `20261009012000_workflow_orchestration`
+Applying migration `20261009015500_bank_ap_ar_foundation`
+Error: P3018
+
+A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve
+
+Migration name: 20261009015500_bank_ap_ar_foundation
+
+Database error code: 42P01
+
+Database error:
+ERROR: relation "AccountingJournal" does not exist
+
+DbError { severity: "ERROR", parsed_severity: Some(Error), code: SqlState(E42P01), message: "relation \"AccountingJournal\" does not exist", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("namespace.c"), line: Some(639), routine: Some("RangeVarGetRelidExtended") }
+
+
+node:internal/errors:985
+  const err = new Error(message);
+              ^
+
+Error: Command failed: C:\Program Files\nodejs\node.exe C:\Cdev\Planora MVP\node_modules\prisma\build\index.js migrate deploy
+    at genericNodeError (node:internal/errors:985:15)
+    at wrappedFn (node:internal/errors:539:14)
+    at checkExecSyncError (node:child_process:925:11)
+    at execFileSync (node:child_process:961:15)
+    at <anonymous> (C:\Cdev\Planora MVP\scripts\migrate-test.ts:16:3)
+    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+    at async node:internal/modules/esm/loader:633:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  status: 1,
+  signal: null,
+  output: [ null, null, null ],
+  pid: 13028,
+  stdout: null,
+  stderr: null
+}
+
+Node.js v24.16.0

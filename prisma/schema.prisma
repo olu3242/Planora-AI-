@@ -31,6 +31,33 @@ enum NormalBalance {
   CREDIT
 }
 
+<<<<<<< HEAD
+enum FinancialStatementClass {
+  PROFIT_AND_LOSS
+  BALANCE_SHEET
+  STATISTICAL
+}
+
+enum CashFlowClass {
+  OPERATING
+  INVESTING
+  FINANCING
+  CASH
+  NOT_APPLICABLE
+}
+
+enum SystemAccountPurpose {
+  NONE
+  CASH
+  ACCOUNTS_RECEIVABLE
+  ACCOUNTS_PAYABLE
+  RETAINED_EARNINGS
+  SUSPENSE
+}
+
+
+=======
+>>>>>>> origin/main
 enum FinancialScenario {
   ACTUAL
   BUDGET
@@ -179,6 +206,23 @@ enum RuntimeErrorCategory {
   UNKNOWN
 }
 
+<<<<<<< HEAD
+enum ReportingRunStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  REJECTED
+}
+
+enum ReportingApprovalDecision {
+  REVIEWED
+  APPROVED
+  REJECTED
+}
+
+=======
+>>>>>>> origin/main
 model User {
   id                      String                   @id @default(uuid()) @db.Uuid
   email                   String                   @unique
@@ -196,6 +240,16 @@ model User {
   recommendationDecisions AgentRecommendation[]    @relation("RecommendationDecisionMaker")
   agentFeedback           AgentFeedback[]
   runtimeExecutions       RuntimeExecution[]
+<<<<<<< HEAD
+  accountingApprovalsPrepared AccountingPostingApproval[] @relation("AccountingApprovalPreparer")
+  accountingApprovalsDecided AccountingPostingApproval[] @relation("AccountingApprovalDecider")
+  postedAccountingJournals AccountingJournal[]
+  workflowRuns            WorkflowRunRecord[] @relation("WorkflowRunActor")
+  preparedReportingRuns   ReportingRun[] @relation("ReportingRunPreparer")
+  reportingApprovals      ReportingApproval[] @relation("ReportingApprovalActor")
+
+=======
+>>>>>>> origin/main
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
 }
@@ -228,6 +282,20 @@ model Organization {
   agentRecommendations AgentRecommendation[]
   agentFeedback        AgentFeedback[]
   runtimeExecutions    RuntimeExecution[]
+<<<<<<< HEAD
+  accountingJournals   AccountingJournal[]
+  accountingPostingApprovals AccountingPostingApproval[]
+  workflowRuns         WorkflowRunRecord[]
+  vendors              Vendor[]
+  bankAccounts         BankAccount[]
+  apBills              ApBill[]
+  apPayments           ApPayment[]
+  arInvoices           ArInvoice[]
+  arReceipts           ArReceipt[]
+  reportingFrameworks  ReportingFrameworkVersion[]
+  reportingRuns        ReportingRun[]
+=======
+>>>>>>> origin/main
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
 }
@@ -400,6 +468,18 @@ model LegalEntity {
   children       LegalEntity[]   @relation("LegalEntityHierarchy")
   facts          FinancialFact[]
 
+<<<<<<< HEAD
+  accountingJournals AccountingJournal[]
+  accountingApprovals AccountingPostingApproval[] @relation("AccountingApprovalEntity")
+  bankAccounts       BankAccount[]
+  apBills            ApBill[]
+  apPayments         ApPayment[]
+  arInvoices         ArInvoice[]
+  arReceipts         ArReceipt[]
+  reportingRuns      ReportingRun[]
+
+=======
+>>>>>>> origin/main
   @@unique([organizationId, code])
   @@index([organizationId, parentId])
 }
@@ -468,6 +548,10 @@ model Customer {
   effectiveTo    DateTime?
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   facts          FinancialFact[]
+<<<<<<< HEAD
+  arInvoices     ArInvoice[]
+=======
+>>>>>>> origin/main
 
   @@unique([organizationId, code])
 }
@@ -498,6 +582,15 @@ model Account {
   name           String
   type           AccountType
   normalBalance  NormalBalance
+<<<<<<< HEAD
+  statementClass FinancialStatementClass?
+  statementSection String?
+  reportingCode String?
+  cashFlowClass CashFlowClass?
+  systemPurpose SystemAccountPurpose @default(NONE)
+  suspenseAllowed Boolean @default(false)
+=======
+>>>>>>> origin/main
   parentId       String?         @db.Uuid
   active         Boolean         @default(true)
   effectiveFrom  DateTime
@@ -508,6 +601,11 @@ model Account {
   facts          FinancialFact[]
   forecastLines  ForecastLine[]
 
+<<<<<<< HEAD
+  accountingLines AccountingJournalLine[]
+
+=======
+>>>>>>> origin/main
   @@unique([organizationId, code])
   @@index([organizationId, type])
 }
@@ -556,6 +654,14 @@ model FiscalPeriod {
   metricValues  MetricValue[]
   forecastLines ForecastLine[]
 
+<<<<<<< HEAD
+  accountingJournals AccountingJournal[]
+  accountingApprovals  AccountingPostingApproval[] @relation("AccountingApprovalPeriod")
+  accountingCloseState AccountingPeriodState @default(OPEN)
+  reportingRuns ReportingRun[]
+
+=======
+>>>>>>> origin/main
   @@unique([fiscalYearId, code])
   @@unique([fiscalYearId, ordinal])
 }
@@ -955,3 +1061,343 @@ model RuntimeExecution {
   @@index([organizationId, startedAt])
   @@index([correlationId])
 }
+<<<<<<< HEAD
+
+enum AccountingPeriodState {
+  OPEN
+  SOFT_CLOSED
+  HARD_CLOSED
+}
+
+enum AccountingJournalStatus {
+  DRAFT
+  POSTED
+}
+
+model AccountingJournal {
+  id              String @id @default(uuid()) @db.Uuid
+  organizationId  String @db.Uuid
+  legalEntityId   String @db.Uuid
+  fiscalPeriodId  String @db.Uuid
+  postedById      String? @db.Uuid
+  sourceKey       String
+  currencyCode    String @db.Char(3)
+  description     String?
+  status          AccountingJournalStatus @default(DRAFT)
+  postedAt        DateTime?
+  reversalOfId    String? @unique @db.Uuid
+  createdAt       DateTime @default(now())
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity     LegalEntity @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  fiscalPeriod    FiscalPeriod @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+  postedBy        User? @relation(fields: [postedById], references: [id], onDelete: Restrict)
+  reversalOf      AccountingJournal? @relation("JournalReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
+  reversedBy      AccountingJournal? @relation("JournalReversal")
+  lines           AccountingJournalLine[]
+  postingApproval AccountingPostingApproval? @relation("AccountingPostingApprovalJournal")
+  matchedBankTransactions BankTransaction[]
+
+  @@unique([organizationId, sourceKey])
+  @@index([organizationId, legalEntityId, fiscalPeriodId, status])
+}
+
+model AccountingJournalLine {
+  id         String @id @default(uuid()) @db.Uuid
+  journalId  String @db.Uuid
+  accountId  String @db.Uuid
+  ordinal    Int
+  debitMinor BigInt @default(0)
+  creditMinor BigInt @default(0)
+  journal    AccountingJournal @relation(fields: [journalId], references: [id], onDelete: Restrict)
+  account    Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@unique([journalId, ordinal])
+  @@index([accountId])
+}
+
+
+model WorkflowRunRecord {
+  id                String                    @id
+  organizationId    String                    @db.Uuid
+  actorId           String                    @db.Uuid
+  definitionId      String
+  definitionVersion Int
+  status            String
+  state             Json
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  organization      Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor             User                      @relation("WorkflowRunActor", fields: [actorId], references: [id], onDelete: Restrict)
+  executions        WorkflowExecutionRecord[]
+
+  @@index([organizationId, status, updatedAt])
+  @@index([definitionId, definitionVersion])
+}
+
+model WorkflowExecutionRecord {
+  id             String            @id @default(uuid()) @db.Uuid
+  idempotencyKey String            @unique
+  runId          String
+  stepId         String
+  status         String
+  evidenceId     String?
+  error          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  run            WorkflowRunRecord @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@index([runId, stepId])
+  @@index([status, updatedAt])
+}
+
+
+enum SettlementStatus {
+  OPEN
+  PARTIALLY_PAID
+  PAID
+  VOID
+}
+
+enum BankTransactionStatus {
+  UNMATCHED
+  MATCHED
+  EXCLUDED
+}
+
+model Vendor {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  code           String
+  name           String
+  active         Boolean      @default(true)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  bills          ApBill[]
+  @@unique([organizationId, code])
+}
+
+model BankAccount {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @db.Uuid
+  legalEntityId  String            @db.Uuid
+  name           String
+  currencyCode   String            @db.Char(3)
+  active         Boolean           @default(true)
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity    LegalEntity       @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  transactions   BankTransaction[]
+  @@index([organizationId, legalEntityId])
+}
+
+model BankTransaction {
+  id            String                @id @default(uuid()) @db.Uuid
+  bankAccountId String                @db.Uuid
+  externalId    String
+  postedDate    DateTime              @db.Date
+  reference     String
+  amountMinor   BigInt
+  status        BankTransactionStatus @default(UNMATCHED)
+  matchedJournalId String?            @db.Uuid
+  bankAccount   BankAccount           @relation(fields: [bankAccountId], references: [id], onDelete: Restrict)
+  matchedJournal AccountingJournal?   @relation(fields: [matchedJournalId], references: [id], onDelete: Restrict)
+  @@unique([bankAccountId, externalId])
+  @@index([bankAccountId, postedDate, status])
+}
+
+model ApBill {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @db.Uuid
+  legalEntityId  String           @db.Uuid
+  vendorId       String           @db.Uuid
+  invoiceNumber  String
+  invoiceDate    DateTime         @db.Date
+  dueDate        DateTime         @db.Date
+  currencyCode   String           @db.Char(3)
+  totalMinor     BigInt
+  status         SettlementStatus @default(OPEN)
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity    LegalEntity      @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  vendor         Vendor           @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  allocations    ApPaymentAllocation[]
+  @@unique([organizationId, vendorId, invoiceNumber])
+  @@index([organizationId, legalEntityId, dueDate, status])
+}
+
+model ApPayment {
+  id             String                @id @default(uuid()) @db.Uuid
+  organizationId String                @db.Uuid
+  legalEntityId  String                @db.Uuid
+  currencyCode   String                @db.Char(3)
+  paidDate       DateTime              @db.Date
+  amountMinor    BigInt
+  reference      String
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity    LegalEntity           @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  allocations    ApPaymentAllocation[]
+  @@unique([organizationId, reference])
+  @@index([organizationId, legalEntityId, paidDate])
+}
+
+model ApPaymentAllocation {
+  id          String    @id @default(uuid()) @db.Uuid
+  paymentId   String    @db.Uuid
+  billId      String    @db.Uuid
+  amountMinor BigInt
+  payment     ApPayment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  bill        ApBill    @relation(fields: [billId], references: [id], onDelete: Restrict)
+  @@unique([paymentId, billId])
+  @@index([billId])
+}
+
+model ArInvoice {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @db.Uuid
+  legalEntityId  String           @db.Uuid
+  customerId     String           @db.Uuid
+  invoiceNumber  String
+  invoiceDate    DateTime         @db.Date
+  dueDate        DateTime         @db.Date
+  currencyCode   String           @db.Char(3)
+  totalMinor     BigInt
+  status         SettlementStatus @default(OPEN)
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity    LegalEntity      @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  customer       Customer         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  allocations    ArReceiptAllocation[]
+  @@unique([organizationId, customerId, invoiceNumber])
+  @@index([organizationId, legalEntityId, dueDate, status])
+}
+
+model ArReceipt {
+  id             String                @id @default(uuid()) @db.Uuid
+  organizationId String                @db.Uuid
+  legalEntityId  String                @db.Uuid
+  currencyCode   String                @db.Char(3)
+  receivedDate   DateTime              @db.Date
+  amountMinor    BigInt
+  reference      String
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity    LegalEntity           @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  allocations    ArReceiptAllocation[]
+  @@unique([organizationId, reference])
+  @@index([organizationId, legalEntityId, receivedDate])
+}
+
+model ArReceiptAllocation {
+  id          String    @id @default(uuid()) @db.Uuid
+  receiptId   String    @db.Uuid
+  invoiceId   String    @db.Uuid
+  amountMinor BigInt
+  receipt     ArReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict)
+  invoice     ArInvoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  @@unique([receiptId, invoiceId])
+  @@index([invoiceId])
+}
+
+
+model ReportingFrameworkVersion {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  frameworkCode  String
+  version        String
+  effectiveFrom  DateTime     @db.Date
+  effectiveTo    DateTime?    @db.Date
+  ruleManifest   Json
+  disclosureManifest Json
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  runs           ReportingRun[]
+
+  @@unique([organizationId, frameworkCode, version])
+  @@index([organizationId, frameworkCode, effectiveFrom])
+}
+
+model ReportingRun {
+  id                 String             @id @default(uuid()) @db.Uuid
+  organizationId     String             @db.Uuid
+  legalEntityId      String             @db.Uuid
+  fiscalPeriodId     String             @db.Uuid
+  frameworkVersionId String             @db.Uuid
+  preparedById       String             @db.Uuid
+  status             ReportingRunStatus @default(DRAFT)
+  statementEvidence  Json
+  controlEvidence    Json
+  lockedAt           DateTime?
+  publishedAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity        LegalEntity        @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  fiscalPeriod       FiscalPeriod       @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+  frameworkVersion   ReportingFrameworkVersion @relation(fields: [frameworkVersionId], references: [id], onDelete: Restrict)
+  preparedBy         User               @relation("ReportingRunPreparer", fields: [preparedById], references: [id], onDelete: Restrict)
+  disclosures        ReportingDisclosureEvidence[]
+  approvals          ReportingApproval[]
+
+  @@unique([organizationId, legalEntityId, fiscalPeriodId, frameworkVersionId])
+  @@index([organizationId, status, updatedAt])
+}
+
+model ReportingDisclosureEvidence {
+  id          String       @id @default(uuid()) @db.Uuid
+  runId       String       @db.Uuid
+  requirementCode String
+  required    Boolean      @default(true)
+  satisfied   Boolean      @default(false)
+  evidence    Json
+  createdAt   DateTime     @default(now())
+  run         ReportingRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@unique([runId, requirementCode])
+  @@index([runId, required, satisfied])
+}
+
+model ReportingApproval {
+  id          String                    @id @default(uuid()) @db.Uuid
+  runId       String                    @db.Uuid
+  actorId     String                    @db.Uuid
+  decision    ReportingApprovalDecision
+  reason      String
+  evidence    Json
+  createdAt   DateTime                  @default(now())
+  run         ReportingRun              @relation(fields: [runId], references: [id], onDelete: Restrict)
+  actor       User                      @relation("ReportingApprovalActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([runId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+enum AccountingPostingApprovalDecision {
+  PENDING
+  APPROVED
+  REJECTED
+  REVOKED
+}
+
+model AccountingPostingApproval {
+  id String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  legalEntityId String @db.Uuid
+  fiscalPeriodId String @db.Uuid
+  sourceKey String
+  preparedById String @db.Uuid
+  decidedById String? @db.Uuid
+  decision AccountingPostingApprovalDecision @default(PENDING)
+  evidence Json
+  expiresAt DateTime?
+  decidedAt DateTime?
+  consumedAt DateTime?
+  journalId String? @unique @db.Uuid
+  createdAt DateTime @default(now())
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity    LegalEntity                       @relation("AccountingApprovalEntity", fields: [legalEntityId], references: [id], onDelete: Restrict)
+  fiscalPeriod   FiscalPeriod                      @relation("AccountingApprovalPeriod", fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+  preparedBy User @relation("AccountingApprovalPreparer", fields: [preparedById], references: [id], onDelete: Restrict)
+  decidedBy User? @relation("AccountingApprovalDecider", fields: [decidedById], references: [id], onDelete: Restrict)
+  journal AccountingJournal? @relation("AccountingPostingApprovalJournal", fields: [journalId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, sourceKey])
+  @@index([organizationId, decision, expiresAt])
+}
+=======
+>>>>>>> origin/main

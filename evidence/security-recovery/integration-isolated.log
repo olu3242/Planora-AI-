@@ -1,0 +1,735 @@
+
+> planora@0.1.0 test:integration
+> tsx scripts/run-isolated-integration.ts
+
+
+Isolated integration fixture: accounting-database-certification.test.ts
+Resetting isolated test database 127.0.0.1/planora_convergence_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_convergence_test", schema "public" at "127.0.0.1:55439"
+
+Applying migration `20260831000100_phase1_foundation`
+Applying migration `20260831000200_login_throttle`
+Applying migration `20260831110936_phase2_financial_core`
+Applying migration `20260831113840_phase3_excel_intelligence`
+Applying migration `20260831114612_phase3_excel_source_type`
+Applying migration `20260831121058_forecast_mvp_workflow`
+Applying migration `20260831183000_agentic_runtime_os`
+Applying migration `20260831184500_fix_agentic_tenant_guard`
+Applying migration `20260831203000_dashboard_admin_closure`
+Applying migration `20261009011000_accounting_ledger_prerequisite`
+Applying migration `20261009012000_workflow_orchestration`
+Applying migration `20261009015500_bank_ap_ar_foundation`
+Applying migration `20261009023000_coa_reporting_metadata`
+Applying migration `20261009031500_reporting_governance`
+Applying migration `20261009040000_accounting_posting_approvals`
+Applying migration `20261009041000_accounting_immutability`
+Applying migration `20261009042000_accounting_approval_scope`
+Applying migration `20261009050000_reporting_evidence_guards`
+
+Database reset successful
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831000100_phase1_foundation/
+    └─ migration.sql
+  └─ 20260831000200_login_throttle/
+    └─ migration.sql
+  └─ 20260831110936_phase2_financial_core/
+    └─ migration.sql
+  └─ 20260831113840_phase3_excel_intelligence/
+    └─ migration.sql
+  └─ 20260831114612_phase3_excel_source_type/
+    └─ migration.sql
+  └─ 20260831121058_forecast_mvp_workflow/
+    └─ migration.sql
+  └─ 20260831183000_agentic_runtime_os/
+    └─ migration.sql
+  └─ 20260831184500_fix_agentic_tenant_guard/
+    └─ migration.sql
+  └─ 20260831203000_dashboard_admin_closure/
+    └─ migration.sql
+  └─ 20261009011000_accounting_ledger_prerequisite/
+    └─ migration.sql
+  └─ 20261009012000_workflow_orchestration/
+    └─ migration.sql
+  └─ 20261009015500_bank_ap_ar_foundation/
+    └─ migration.sql
+  └─ 20261009023000_coa_reporting_metadata/
+    └─ migration.sql
+  └─ 20261009031500_reporting_governance/
+    └─ migration.sql
+  └─ 20261009040000_accounting_posting_approvals/
+    └─ migration.sql
+  └─ 20261009041000_accounting_immutability/
+    └─ migration.sql
+  └─ 20261009042000_accounting_approval_scope/
+    └─ migration.sql
+  └─ 20261009050000_reporting_evidence_guards/
+    └─ migration.sql
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.19.1) to .\node_modules\@prisma\client in 313ms
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  13:32:55
+   Duration  581ms (transform 75ms, setup 30ms, import 167ms, tests 248ms, environment 0ms)
+
+
+Isolated integration fixture: agentic-runtime.test.ts
+Resetting isolated test database 127.0.0.1/planora_convergence_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_convergence_test", schema "public" at "127.0.0.1:55439"
+
+Applying migration `20260831000100_phase1_foundation`
+Applying migration `20260831000200_login_throttle`
+Applying migration `20260831110936_phase2_financial_core`
+Applying migration `20260831113840_phase3_excel_intelligence`
+Applying migration `20260831114612_phase3_excel_source_type`
+Applying migration `20260831121058_forecast_mvp_workflow`
+Applying migration `20260831183000_agentic_runtime_os`
+Applying migration `20260831184500_fix_agentic_tenant_guard`
+Applying migration `20260831203000_dashboard_admin_closure`
+Applying migration `20261009011000_accounting_ledger_prerequisite`
+Applying migration `20261009012000_workflow_orchestration`
+Applying migration `20261009015500_bank_ap_ar_foundation`
+Applying migration `20261009023000_coa_reporting_metadata`
+Applying migration `20261009031500_reporting_governance`
+Applying migration `20261009040000_accounting_posting_approvals`
+Applying migration `20261009041000_accounting_immutability`
+Applying migration `20261009042000_accounting_approval_scope`
+Applying migration `20261009050000_reporting_evidence_guards`
+
+Database reset successful
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831000100_phase1_foundation/
+    └─ migration.sql
+  └─ 20260831000200_login_throttle/
+    └─ migration.sql
+  └─ 20260831110936_phase2_financial_core/
+    └─ migration.sql
+  └─ 20260831113840_phase3_excel_intelligence/
+    └─ migration.sql
+  └─ 20260831114612_phase3_excel_source_type/
+    └─ migration.sql
+  └─ 20260831121058_forecast_mvp_workflow/
+    └─ migration.sql
+  └─ 20260831183000_agentic_runtime_os/
+    └─ migration.sql
+  └─ 20260831184500_fix_agentic_tenant_guard/
+    └─ migration.sql
+  └─ 20260831203000_dashboard_admin_closure/
+    └─ migration.sql
+  └─ 20261009011000_accounting_ledger_prerequisite/
+    └─ migration.sql
+  └─ 20261009012000_workflow_orchestration/
+    └─ migration.sql
+  └─ 20261009015500_bank_ap_ar_foundation/
+    └─ migration.sql
+  └─ 20261009023000_coa_reporting_metadata/
+    └─ migration.sql
+  └─ 20261009031500_reporting_governance/
+    └─ migration.sql
+  └─ 20261009040000_accounting_posting_approvals/
+    └─ migration.sql
+  └─ 20261009041000_accounting_immutability/
+    └─ migration.sql
+  └─ 20261009042000_accounting_approval_scope/
+    └─ migration.sql
+  └─ 20261009050000_reporting_evidence_guards/
+    └─ migration.sql
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.19.1) to .\node_modules\@prisma\client in 392ms
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  13:33:00
+   Duration  1.02s (transform 138ms, setup 33ms, import 228ms, tests 623ms, environment 0ms)
+
+
+Isolated integration fixture: excel-import.test.ts
+Resetting isolated test database 127.0.0.1/planora_convergence_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_convergence_test", schema "public" at "127.0.0.1:55439"
+
+Applying migration `20260831000100_phase1_foundation`
+Applying migration `20260831000200_login_throttle`
+Applying migration `20260831110936_phase2_financial_core`
+Applying migration `20260831113840_phase3_excel_intelligence`
+Applying migration `20260831114612_phase3_excel_source_type`
+Applying migration `20260831121058_forecast_mvp_workflow`
+Applying migration `20260831183000_agentic_runtime_os`
+Applying migration `20260831184500_fix_agentic_tenant_guard`
+Applying migration `20260831203000_dashboard_admin_closure`
+Applying migration `20261009011000_accounting_ledger_prerequisite`
+Applying migration `20261009012000_workflow_orchestration`
+Applying migration `20261009015500_bank_ap_ar_foundation`
+Applying migration `20261009023000_coa_reporting_metadata`
+Applying migration `20261009031500_reporting_governance`
+Applying migration `20261009040000_accounting_posting_approvals`
+Applying migration `20261009041000_accounting_immutability`
+Applying migration `20261009042000_accounting_approval_scope`
+Applying migration `20261009050000_reporting_evidence_guards`
+
+Database reset successful
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831000100_phase1_foundation/
+    └─ migration.sql
+  └─ 20260831000200_login_throttle/
+    └─ migration.sql
+  └─ 20260831110936_phase2_financial_core/
+    └─ migration.sql
+  └─ 20260831113840_phase3_excel_intelligence/
+    └─ migration.sql
+  └─ 20260831114612_phase3_excel_source_type/
+    └─ migration.sql
+  └─ 20260831121058_forecast_mvp_workflow/
+    └─ migration.sql
+  └─ 20260831183000_agentic_runtime_os/
+    └─ migration.sql
+  └─ 20260831184500_fix_agentic_tenant_guard/
+    └─ migration.sql
+  └─ 20260831203000_dashboard_admin_closure/
+    └─ migration.sql
+  └─ 20261009011000_accounting_ledger_prerequisite/
+    └─ migration.sql
+  └─ 20261009012000_workflow_orchestration/
+    └─ migration.sql
+  └─ 20261009015500_bank_ap_ar_foundation/
+    └─ migration.sql
+  └─ 20261009023000_coa_reporting_metadata/
+    └─ migration.sql
+  └─ 20261009031500_reporting_governance/
+    └─ migration.sql
+  └─ 20261009040000_accounting_posting_approvals/
+    └─ migration.sql
+  └─ 20261009041000_accounting_immutability/
+    └─ migration.sql
+  └─ 20261009042000_accounting_approval_scope/
+    └─ migration.sql
+  └─ 20261009050000_reporting_evidence_guards/
+    └─ migration.sql
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.19.1) to .\node_modules\@prisma\client in 365ms
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  13:33:05
+   Duration  1.62s (transform 167ms, setup 43ms, import 724ms, tests 684ms, environment 0ms)
+
+
+Isolated integration fixture: financial-core.test.ts
+Resetting isolated test database 127.0.0.1/planora_convergence_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_convergence_test", schema "public" at "127.0.0.1:55439"
+
+Applying migration `20260831000100_phase1_foundation`
+Applying migration `20260831000200_login_throttle`
+Applying migration `20260831110936_phase2_financial_core`
+Applying migration `20260831113840_phase3_excel_intelligence`
+Applying migration `20260831114612_phase3_excel_source_type`
+Applying migration `20260831121058_forecast_mvp_workflow`
+Applying migration `20260831183000_agentic_runtime_os`
+Applying migration `20260831184500_fix_agentic_tenant_guard`
+Applying migration `20260831203000_dashboard_admin_closure`
+Applying migration `20261009011000_accounting_ledger_prerequisite`
+Applying migration `20261009012000_workflow_orchestration`
+Applying migration `20261009015500_bank_ap_ar_foundation`
+Applying migration `20261009023000_coa_reporting_metadata`
+Applying migration `20261009031500_reporting_governance`
+Applying migration `20261009040000_accounting_posting_approvals`
+Applying migration `20261009041000_accounting_immutability`
+Applying migration `20261009042000_accounting_approval_scope`
+Applying migration `20261009050000_reporting_evidence_guards`
+
+Database reset successful
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831000100_phase1_foundation/
+    └─ migration.sql
+  └─ 20260831000200_login_throttle/
+    └─ migration.sql
+  └─ 20260831110936_phase2_financial_core/
+    └─ migration.sql
+  └─ 20260831113840_phase3_excel_intelligence/
+    └─ migration.sql
+  └─ 20260831114612_phase3_excel_source_type/
+    └─ migration.sql
+  └─ 20260831121058_forecast_mvp_workflow/
+    └─ migration.sql
+  └─ 20260831183000_agentic_runtime_os/
+    └─ migration.sql
+  └─ 20260831184500_fix_agentic_tenant_guard/
+    └─ migration.sql
+  └─ 20260831203000_dashboard_admin_closure/
+    └─ migration.sql
+  └─ 20261009011000_accounting_ledger_prerequisite/
+    └─ migration.sql
+  └─ 20261009012000_workflow_orchestration/
+    └─ migration.sql
+  └─ 20261009015500_bank_ap_ar_foundation/
+    └─ migration.sql
+  └─ 20261009023000_coa_reporting_metadata/
+    └─ migration.sql
+  └─ 20261009031500_reporting_governance/
+    └─ migration.sql
+  └─ 20261009040000_accounting_posting_approvals/
+    └─ migration.sql
+  └─ 20261009041000_accounting_immutability/
+    └─ migration.sql
+  └─ 20261009042000_accounting_approval_scope/
+    └─ migration.sql
+  └─ 20261009050000_reporting_evidence_guards/
+    └─ migration.sql
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.19.1) to .\node_modules\@prisma\client in 421ms
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  13:33:11
+   Duration  719ms (transform 104ms, setup 31ms, import 153ms, tests 383ms, environment 0ms)
+
+
+Isolated integration fixture: forecast-workflow.test.ts
+Resetting isolated test database 127.0.0.1/planora_convergence_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_convergence_test", schema "public" at "127.0.0.1:55439"
+
+Applying migration `20260831000100_phase1_foundation`
+Applying migration `20260831000200_login_throttle`
+Applying migration `20260831110936_phase2_financial_core`
+Applying migration `20260831113840_phase3_excel_intelligence`
+Applying migration `20260831114612_phase3_excel_source_type`
+Applying migration `20260831121058_forecast_mvp_workflow`
+Applying migration `20260831183000_agentic_runtime_os`
+Applying migration `20260831184500_fix_agentic_tenant_guard`
+Applying migration `20260831203000_dashboard_admin_closure`
+Applying migration `20261009011000_accounting_ledger_prerequisite`
+Applying migration `20261009012000_workflow_orchestration`
+Applying migration `20261009015500_bank_ap_ar_foundation`
+Applying migration `20261009023000_coa_reporting_metadata`
+Applying migration `20261009031500_reporting_governance`
+Applying migration `20261009040000_accounting_posting_approvals`
+Applying migration `20261009041000_accounting_immutability`
+Applying migration `20261009042000_accounting_approval_scope`
+Applying migration `20261009050000_reporting_evidence_guards`
+
+Database reset successful
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831000100_phase1_foundation/
+    └─ migration.sql
+  └─ 20260831000200_login_throttle/
+    └─ migration.sql
+  └─ 20260831110936_phase2_financial_core/
+    └─ migration.sql
+  └─ 20260831113840_phase3_excel_intelligence/
+    └─ migration.sql
+  └─ 20260831114612_phase3_excel_source_type/
+    └─ migration.sql
+  └─ 20260831121058_forecast_mvp_workflow/
+    └─ migration.sql
+  └─ 20260831183000_agentic_runtime_os/
+    └─ migration.sql
+  └─ 20260831184500_fix_agentic_tenant_guard/
+    └─ migration.sql
+  └─ 20260831203000_dashboard_admin_closure/
+    └─ migration.sql
+  └─ 20261009011000_accounting_ledger_prerequisite/
+    └─ migration.sql
+  └─ 20261009012000_workflow_orchestration/
+    └─ migration.sql
+  └─ 20261009015500_bank_ap_ar_foundation/
+    └─ migration.sql
+  └─ 20261009023000_coa_reporting_metadata/
+    └─ migration.sql
+  └─ 20261009031500_reporting_governance/
+    └─ migration.sql
+  └─ 20261009040000_accounting_posting_approvals/
+    └─ migration.sql
+  └─ 20261009041000_accounting_immutability/
+    └─ migration.sql
+  └─ 20261009042000_accounting_approval_scope/
+    └─ migration.sql
+  └─ 20261009050000_reporting_evidence_guards/
+    └─ migration.sql
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.19.1) to .\node_modules\@prisma\client in 374ms
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  13:33:17
+   Duration  1.21s (transform 190ms, setup 34ms, import 531ms, tests 475ms, environment 0ms)
+
+
+Isolated integration fixture: foundation.test.ts
+Resetting isolated test database 127.0.0.1/planora_convergence_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_convergence_test", schema "public" at "127.0.0.1:55439"
+
+Applying migration `20260831000100_phase1_foundation`
+Applying migration `20260831000200_login_throttle`
+Applying migration `20260831110936_phase2_financial_core`
+Applying migration `20260831113840_phase3_excel_intelligence`
+Applying migration `20260831114612_phase3_excel_source_type`
+Applying migration `20260831121058_forecast_mvp_workflow`
+Applying migration `20260831183000_agentic_runtime_os`
+Applying migration `20260831184500_fix_agentic_tenant_guard`
+Applying migration `20260831203000_dashboard_admin_closure`
+Applying migration `20261009011000_accounting_ledger_prerequisite`
+Applying migration `20261009012000_workflow_orchestration`
+Applying migration `20261009015500_bank_ap_ar_foundation`
+Applying migration `20261009023000_coa_reporting_metadata`
+Applying migration `20261009031500_reporting_governance`
+Applying migration `20261009040000_accounting_posting_approvals`
+Applying migration `20261009041000_accounting_immutability`
+Applying migration `20261009042000_accounting_approval_scope`
+Applying migration `20261009050000_reporting_evidence_guards`
+
+Database reset successful
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831000100_phase1_foundation/
+    └─ migration.sql
+  └─ 20260831000200_login_throttle/
+    └─ migration.sql
+  └─ 20260831110936_phase2_financial_core/
+    └─ migration.sql
+  └─ 20260831113840_phase3_excel_intelligence/
+    └─ migration.sql
+  └─ 20260831114612_phase3_excel_source_type/
+    └─ migration.sql
+  └─ 20260831121058_forecast_mvp_workflow/
+    └─ migration.sql
+  └─ 20260831183000_agentic_runtime_os/
+    └─ migration.sql
+  └─ 20260831184500_fix_agentic_tenant_guard/
+    └─ migration.sql
+  └─ 20260831203000_dashboard_admin_closure/
+    └─ migration.sql
+  └─ 20261009011000_accounting_ledger_prerequisite/
+    └─ migration.sql
+  └─ 20261009012000_workflow_orchestration/
+    └─ migration.sql
+  └─ 20261009015500_bank_ap_ar_foundation/
+    └─ migration.sql
+  └─ 20261009023000_coa_reporting_metadata/
+    └─ migration.sql
+  └─ 20261009031500_reporting_governance/
+    └─ migration.sql
+  └─ 20261009040000_accounting_posting_approvals/
+    └─ migration.sql
+  └─ 20261009041000_accounting_immutability/
+    └─ migration.sql
+  └─ 20261009042000_accounting_approval_scope/
+    └─ migration.sql
+  └─ 20261009050000_reporting_evidence_guards/
+    └─ migration.sql
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.19.1) to .\node_modules\@prisma\client in 487ms
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  13:33:22
+   Duration  412ms (transform 70ms, setup 34ms, import 107ms, tests 111ms, environment 0ms)
+
+
+Isolated integration fixture: login-throttle.test.ts
+Resetting isolated test database 127.0.0.1/planora_convergence_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_convergence_test", schema "public" at "127.0.0.1:55439"
+
+Applying migration `20260831000100_phase1_foundation`
+Applying migration `20260831000200_login_throttle`
+Applying migration `20260831110936_phase2_financial_core`
+Applying migration `20260831113840_phase3_excel_intelligence`
+Applying migration `20260831114612_phase3_excel_source_type`
+Applying migration `20260831121058_forecast_mvp_workflow`
+Applying migration `20260831183000_agentic_runtime_os`
+Applying migration `20260831184500_fix_agentic_tenant_guard`
+Applying migration `20260831203000_dashboard_admin_closure`
+Applying migration `20261009011000_accounting_ledger_prerequisite`
+Applying migration `20261009012000_workflow_orchestration`
+Applying migration `20261009015500_bank_ap_ar_foundation`
+Applying migration `20261009023000_coa_reporting_metadata`
+Applying migration `20261009031500_reporting_governance`
+Applying migration `20261009040000_accounting_posting_approvals`
+Applying migration `20261009041000_accounting_immutability`
+Applying migration `20261009042000_accounting_approval_scope`
+Applying migration `20261009050000_reporting_evidence_guards`
+
+Database reset successful
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831000100_phase1_foundation/
+    └─ migration.sql
+  └─ 20260831000200_login_throttle/
+    └─ migration.sql
+  └─ 20260831110936_phase2_financial_core/
+    └─ migration.sql
+  └─ 20260831113840_phase3_excel_intelligence/
+    └─ migration.sql
+  └─ 20260831114612_phase3_excel_source_type/
+    └─ migration.sql
+  └─ 20260831121058_forecast_mvp_workflow/
+    └─ migration.sql
+  └─ 20260831183000_agentic_runtime_os/
+    └─ migration.sql
+  └─ 20260831184500_fix_agentic_tenant_guard/
+    └─ migration.sql
+  └─ 20260831203000_dashboard_admin_closure/
+    └─ migration.sql
+  └─ 20261009011000_accounting_ledger_prerequisite/
+    └─ migration.sql
+  └─ 20261009012000_workflow_orchestration/
+    └─ migration.sql
+  └─ 20261009015500_bank_ap_ar_foundation/
+    └─ migration.sql
+  └─ 20261009023000_coa_reporting_metadata/
+    └─ migration.sql
+  └─ 20261009031500_reporting_governance/
+    └─ migration.sql
+  └─ 20261009040000_accounting_posting_approvals/
+    └─ migration.sql
+  └─ 20261009041000_accounting_immutability/
+    └─ migration.sql
+  └─ 20261009042000_accounting_approval_scope/
+    └─ migration.sql
+  └─ 20261009050000_reporting_evidence_guards/
+    └─ migration.sql
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.19.1) to .\node_modules\@prisma\client in 449ms
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  13:33:27
+   Duration  425ms (transform 66ms, setup 37ms, import 98ms, tests 92ms, environment 0ms)
+
+
+Isolated integration fixture: platform-admin.test.ts
+Resetting isolated test database 127.0.0.1/planora_convergence_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_convergence_test", schema "public" at "127.0.0.1:55439"
+
+Applying migration `20260831000100_phase1_foundation`
+Applying migration `20260831000200_login_throttle`
+Applying migration `20260831110936_phase2_financial_core`
+Applying migration `20260831113840_phase3_excel_intelligence`
+Applying migration `20260831114612_phase3_excel_source_type`
+Applying migration `20260831121058_forecast_mvp_workflow`
+Applying migration `20260831183000_agentic_runtime_os`
+Applying migration `20260831184500_fix_agentic_tenant_guard`
+Applying migration `20260831203000_dashboard_admin_closure`
+Applying migration `20261009011000_accounting_ledger_prerequisite`
+Applying migration `20261009012000_workflow_orchestration`
+Applying migration `20261009015500_bank_ap_ar_foundation`
+Applying migration `20261009023000_coa_reporting_metadata`
+Applying migration `20261009031500_reporting_governance`
+Applying migration `20261009040000_accounting_posting_approvals`
+Applying migration `20261009041000_accounting_immutability`
+Applying migration `20261009042000_accounting_approval_scope`
+Applying migration `20261009050000_reporting_evidence_guards`
+
+Database reset successful
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831000100_phase1_foundation/
+    └─ migration.sql
+  └─ 20260831000200_login_throttle/
+    └─ migration.sql
+  └─ 20260831110936_phase2_financial_core/
+    └─ migration.sql
+  └─ 20260831113840_phase3_excel_intelligence/
+    └─ migration.sql
+  └─ 20260831114612_phase3_excel_source_type/
+    └─ migration.sql
+  └─ 20260831121058_forecast_mvp_workflow/
+    └─ migration.sql
+  └─ 20260831183000_agentic_runtime_os/
+    └─ migration.sql
+  └─ 20260831184500_fix_agentic_tenant_guard/
+    └─ migration.sql
+  └─ 20260831203000_dashboard_admin_closure/
+    └─ migration.sql
+  └─ 20261009011000_accounting_ledger_prerequisite/
+    └─ migration.sql
+  └─ 20261009012000_workflow_orchestration/
+    └─ migration.sql
+  └─ 20261009015500_bank_ap_ar_foundation/
+    └─ migration.sql
+  └─ 20261009023000_coa_reporting_metadata/
+    └─ migration.sql
+  └─ 20261009031500_reporting_governance/
+    └─ migration.sql
+  └─ 20261009040000_accounting_posting_approvals/
+    └─ migration.sql
+  └─ 20261009041000_accounting_immutability/
+    └─ migration.sql
+  └─ 20261009042000_accounting_approval_scope/
+    └─ migration.sql
+  └─ 20261009050000_reporting_evidence_guards/
+    └─ migration.sql
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.19.1) to .\node_modules\@prisma\client in 453ms
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  13:33:32
+   Duration  815ms (transform 112ms, setup 42ms, import 227ms, tests 373ms, environment 0ms)
+
+
+Isolated integration fixture: reporting-governance.test.ts
+Resetting isolated test database 127.0.0.1/planora_convergence_test.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "planora_convergence_test", schema "public" at "127.0.0.1:55439"
+
+Applying migration `20260831000100_phase1_foundation`
+Applying migration `20260831000200_login_throttle`
+Applying migration `20260831110936_phase2_financial_core`
+Applying migration `20260831113840_phase3_excel_intelligence`
+Applying migration `20260831114612_phase3_excel_source_type`
+Applying migration `20260831121058_forecast_mvp_workflow`
+Applying migration `20260831183000_agentic_runtime_os`
+Applying migration `20260831184500_fix_agentic_tenant_guard`
+Applying migration `20260831203000_dashboard_admin_closure`
+Applying migration `20261009011000_accounting_ledger_prerequisite`
+Applying migration `20261009012000_workflow_orchestration`
+Applying migration `20261009015500_bank_ap_ar_foundation`
+Applying migration `20261009023000_coa_reporting_metadata`
+Applying migration `20261009031500_reporting_governance`
+Applying migration `20261009040000_accounting_posting_approvals`
+Applying migration `20261009041000_accounting_immutability`
+Applying migration `20261009042000_accounting_approval_scope`
+Applying migration `20261009050000_reporting_evidence_guards`
+
+Database reset successful
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831000100_phase1_foundation/
+    └─ migration.sql
+  └─ 20260831000200_login_throttle/
+    └─ migration.sql
+  └─ 20260831110936_phase2_financial_core/
+    └─ migration.sql
+  └─ 20260831113840_phase3_excel_intelligence/
+    └─ migration.sql
+  └─ 20260831114612_phase3_excel_source_type/
+    └─ migration.sql
+  └─ 20260831121058_forecast_mvp_workflow/
+    └─ migration.sql
+  └─ 20260831183000_agentic_runtime_os/
+    └─ migration.sql
+  └─ 20260831184500_fix_agentic_tenant_guard/
+    └─ migration.sql
+  └─ 20260831203000_dashboard_admin_closure/
+    └─ migration.sql
+  └─ 20261009011000_accounting_ledger_prerequisite/
+    └─ migration.sql
+  └─ 20261009012000_workflow_orchestration/
+    └─ migration.sql
+  └─ 20261009015500_bank_ap_ar_foundation/
+    └─ migration.sql
+  └─ 20261009023000_coa_reporting_metadata/
+    └─ migration.sql
+  └─ 20261009031500_reporting_governance/
+    └─ migration.sql
+  └─ 20261009040000_accounting_posting_approvals/
+    └─ migration.sql
+  └─ 20261009041000_accounting_immutability/
+    └─ migration.sql
+  └─ 20261009042000_accounting_approval_scope/
+    └─ migration.sql
+  └─ 20261009050000_reporting_evidence_guards/
+    └─ migration.sql
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.19.1) to .\node_modules\@prisma\client in 480ms
+
+
+ RUN  v4.1.11 C:/Cdev/Planora MVP
+
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  13:33:39
+   Duration  759ms (transform 116ms, setup 35ms, import 221ms, tests 316ms, environment 0ms)
+
+
+Integration files: 9 passed, 0 failed.

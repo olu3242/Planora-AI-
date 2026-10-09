@@ -1,0 +1,61 @@
+name: Accounting integrity
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/accounting-fpa-schema-harmonization
+    paths:
+      - "prisma/**"
+      - "src/application/accounting/**"
+      - "src/domain/accounting/**"
+      - "src/lib/accounting/**"
+      - "src/lib/orchestration/**"
+      - "tests/**"
+      - "database/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/accounting-integrity.yml"
+  pull_request:
+    paths:
+      - "prisma/**"
+      - "src/application/accounting/**"
+      - "src/domain/accounting/**"
+      - "src/lib/accounting/**"
+      - "src/lib/orchestration/**"
+      - "tests/**"
+      - "database/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/accounting-integrity.yml"
+jobs:
+  accounting-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql://planora_test:planora_ci_test_only@127.0.0.1:5432/planora_test?schema=public
+      TEST_DATABASE_URL: postgresql://planora_test:planora_ci_test_only@127.0.0.1:5432/planora_test?schema=public
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: planora_test
+          POSTGRES_USER: planora_test
+          POSTGRES_PASSWORD: planora_ci_test_only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U planora_test -d planora_test" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx prisma validate
+      - run: npm run db:migrate:test
+      - run: npm run db:seed:test
+      - run: npx vitest run tests/integration/accounting-database-certification.test.ts
+      - run: npx vitest run tests/unit/test-database-url.test.ts tests/unit/accounting-actuals-reconciliation.test.ts tests/unit/accounting-fpa-bridge.test.ts tests/unit/accounting-journal-validation.test.ts
+      - run: npm run typecheck
