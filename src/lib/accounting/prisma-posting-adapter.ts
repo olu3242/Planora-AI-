@@ -85,6 +85,11 @@ export function createPrismaJournalPostingRepository(
           where: { id: journal.id },
           data: { status: "POSTED", postedAt: new Date() },
         });
+        const consumption = await tx.accountingPostingApproval.updateMany({
+          where: { id: approval.id, decision: "APPROVED", consumedAt: null, journalId: null },
+          data: { consumedAt: new Date(), journalId: journal.id },
+        });
+        if (consumption.count !== 1) throw new Error("APPROVAL_ALREADY_CONSUMED");
         await tx.auditEvent.create({
           data: {
             organizationId: trustedOrganizationId,
