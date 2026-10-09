@@ -2,12 +2,17 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { assertPermission } from "@/permissions/permissions";
 import { getLedgerFinancialStatements } from "@/application/accounting/financial-statements-service";
-import type { RoleCode } from "@prisma/client";
+type Actor={id:string};
 
-type Actor={id:string;role:RoleCode};
+async function authorizeActor(organizationId:string,actorId:string,permission:Parameters<typeof assertPermission>[1]){
+ const membership=await prisma.organizationMembership.findUnique({where:{userId_organizationId:{userId:actorId,organizationId}}});
+ if(!membership?.active) throw new Error("REPORTING_ACTOR_NOT_ACTIVE_IN_TENANT");
+ assertPermission(membership.role,permission);
+ return membership;
+}
 
 export async function prepareReportingRun(input:{organizationId:string;legalEntityId:string;fiscalPeriodId:string;frameworkVersionId:string;actor:Actor}){
- assertPermission(input.actor.role,"reporting.prepare");
+ await authorizeActor(input.organizationId,input.actor.id,"reporting.prepare");
  const framework=await prisma.reportingFrameworkVersion.findFirst({where:{id:input.frameworkVersionId,organizationId:input.organizationId,active:true}});
  if(!framework) throw new Error("REPORTING_FRAMEWORK_NOT_ACTIVE_IN_TENANT");
  const statements=await getLedgerFinancialStatements(input.organizationId,{legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId});
@@ -21,14 +26,14 @@ export async function prepareReportingRun(input:{organizationId:string;legalEnti
 }
 
 export async function recordDisclosureEvidence(input:{organizationId:string;runId:string;requirementCode:string;evidence:Record<string,unknown>;actor:Actor}){
- assertPermission(input.actor.role,"reporting.prepare");
+ await authorizeActor(input.organizationId,input.actor.id,"reporting.prepare");
  const run=await prisma.reportingRun.findFirst({where:{id:input.runId,organizationId:input.organizationId,status:"DRAFT"}});
  if(!run||run.lockedAt) throw new Error("REPORTING_RUN_NOT_EDITABLE");
  return prisma.reportingDisclosureEvidence.update({where:{runId_requirementCode:{runId:run.id,requirementCode:input.requirementCode}},data:{satisfied:true,evidence:input.evidence as any}});
 }
 
 export async function reviewReportingRun(input:{organizationId:string;runId:string;actor:Actor;reason:string}){
- assertPermission(input.actor.role,"reporting.review"); if(!input.reason.trim()) throw new Error("REVIEW_REASON_REQUIRED");
+ await authorizeActor(input.organizationId,input.actor.id,"reporting.review"); if(!input.reason.trim()) throw new Error("REVIEW_REASON_REQUIRED");
  return prisma.$transaction(async tx=>{
   const run=await tx.reportingRun.findFirst({where:{id:input.runId,organizationId:input.organizationId,status:"DRAFT"},include:{disclosures:true}});
   if(!run||run.lockedAt) throw new Error("REPORTING_RUN_NOT_REVIEWABLE");
@@ -40,7 +45,7 @@ export async function reviewReportingRun(input:{organizationId:string;runId:stri
 }
 
 export async function approveReportingRun(input:{organizationId:string;runId:string;actor:Actor;reason:string}){
- assertPermission(input.actor.role,"reporting.approve"); if(!input.reason.trim()) throw new Error("APPROVAL_REASON_REQUIRED");
+ await authorizeActor(input.organizationId,input.actor.id,"reporting.approve"); if(!input.reason.trim()) throw new Error("APPROVAL_REASON_REQUIRED");
  return prisma.$transaction(async tx=>{
   const run=await tx.reportingRun.findFirst({where:{id:input.runId,organizationId:input.organizationId,status:"IN_REVIEW"},include:{approvals:true,disclosures:true}});
   if(!run||run.lockedAt) throw new Error("REPORTING_RUN_NOT_APPROVABLE");
@@ -53,7 +58,7 @@ export async function approveReportingRun(input:{organizationId:string;runId:str
 }
 
 export async function publishReportingRun(input:{organizationId:string;runId:string;actor:Actor}){
- assertPermission(input.actor.role,"reporting.publish");
+ await authorizeActor(input.organizationId,input.actor.id,"reporting.publish");
  const run=await prisma.reportingRun.findFirst({where:{id:input.runId,organizationId:input.organizationId,status:"APPROVED"}});
  if(!run?.lockedAt) throw new Error("REPORTING_APPROVAL_AND_LOCK_REQUIRED");
  return prisma.reportingRun.update({where:{id:run.id},data:{status:"PUBLISHED",publishedAt:new Date()}});
