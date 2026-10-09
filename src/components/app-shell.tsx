@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { BarChart3, Database, FileSpreadsheet, Gauge, GitCompareArrows, Landmark, ShieldCheck, Settings, SquareChartGantt, Users, WandSparkles } from "lucide-react";
+import { BarChart3, BookOpen, Database, FileSpreadsheet, Gauge, GitCompareArrows, Landmark, ShieldCheck, Settings, SquareChartGantt, Users, WandSparkles } from "lucide-react";
 import type { getSession } from "@/auth/session";
 
 type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;
 
 const baseNav = [
-  ["Command Center", "/command-center", Gauge, true], ["Actuals", "/actuals", Database, true],
+  ["Command Center", "/command-center", Gauge, true], ["Actuals", "/actuals", Database, true], ["Accounting", "/accounting", BookOpen, true],
   ["Planning", "/planning", SquareChartGantt, false], ["Forecasts", "/forecasts", WandSparkles, true],
   ["Excel", "/excel", FileSpreadsheet, true], ["Reconciliation", "/reconciliation", GitCompareArrows, false],
   ["Governance", "/governance", Landmark, false],
@@ -15,6 +15,7 @@ const managementNav = [
   ["Command Center", "/command-center", Gauge, true],
   ["Executive Dashboard", "/dashboard", BarChart3, true],
   ["Actuals", "/actuals", Database, true],
+  ["Accounting", "/accounting", BookOpen, true],
   ["Excel", "/excel", FileSpreadsheet, true],
   ["Forecasts", "/forecasts", WandSparkles, true],
 ] as const;
