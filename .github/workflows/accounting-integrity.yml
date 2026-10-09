@@ -6,6 +6,7 @@ on:
       - fix/accounting-fpa-schema-harmonization
     paths:
       - "src/domain/accounting/**"
+      - "prisma/migrations/**"
       - "src/application/accounting/**"
       - "src/lib/accounting/**"
       - "src/lib/orchestration/**"
@@ -15,6 +16,7 @@ on:
   pull_request:
     paths:
       - "src/domain/accounting/**"
+      - "prisma/migrations/**"
       - "src/application/accounting/**"
       - "src/lib/accounting/**"
       - "src/lib/orchestration/**"
