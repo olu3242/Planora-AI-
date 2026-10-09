@@ -38,9 +38,9 @@ export async function postJournal(command: PostJournalCommand) {
     const uniqueAccounts = [...new Set(command.lines.map((line) => line.accountId))];
     const accounts = await tx.account.findMany({
       where: { id: { in: uniqueAccounts }, organizationId, active: true },
-      select: { id: true, parentId: true, effectiveFrom: true, effectiveTo: true },
+      select: { id: true, effectiveFrom: true, effectiveTo: true, children: { where: { active: true }, select: { id: true }, take: 1 } },
     });
-    if (accounts.length !== uniqueAccounts.length || accounts.some((a) => a.parentId !== null ||
+    if (accounts.length !== uniqueAccounts.length || accounts.some((a) => a.children.length > 0 ||
       a.effectiveFrom > fiscal.endDate || (a.effectiveTo && a.effectiveTo < fiscal.startDate))) {
       throw new Error("INVALID_POSTING_ACCOUNT");
     }
