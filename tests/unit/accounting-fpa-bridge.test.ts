@@ -13,6 +13,16 @@ describe("ledger to FP&A candidates", () => {
     expect(rows[0].sourceKey).toBe("ledger:org:entity:p1:USD:cash");
     expect(projectActualCandidates([], scope)).toEqual([]);
   });
+  it("keeps separate currency and entity lineage stable for repeated projections", () => {
+    const lines = [{ accountId: "cash", debitMinor: 100n, creditMinor: 0n, normalBalance: "DEBIT" as const }];
+    const first = projectActualCandidates(lines, scope);
+    const replay = projectActualCandidates(lines, scope);
+    const otherEntity = projectActualCandidates(lines, { ...scope, legalEntityId: "entity-2" });
+    const otherCurrency = projectActualCandidates(lines, { ...scope, currency: "EUR" });
+    expect(replay).toEqual(first);
+    expect(otherEntity[0].sourceKey).not.toBe(first[0].sourceKey);
+    expect(otherCurrency[0].sourceKey).not.toBe(first[0].sourceKey);
+  });
   it("rejects invalid lines and scope", () => {
     expect(() => projectActualCandidates([], { ...scope, currency: "usd" })).toThrow("INVALID_ACTUAL_SCOPE");
     expect(() => projectActualCandidates([
