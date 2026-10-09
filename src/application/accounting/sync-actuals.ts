@@ -13,6 +13,12 @@ export async function syncLedgerActuals(input:Readonly<{
   const entity=await tx.legalEntity.findFirst({where:{id:input.legalEntityId,organizationId:input.organizationId,active:true},select:{id:true}});
   if(!entity) throw new Error("ENTITY_NOT_IN_TENANT");
   const journals=await tx.accountingJournal.findMany({where:{organizationId:input.organizationId,legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId,status:"POSTED"},select:{currencyCode:true,lines:{select:{accountId:true,debitMinor:true,creditMinor:true,account:{select:{normalBalance:true}}}}}});
+  // Reject ledger lines pointing to accounts outside the current tenant.
+  const accountIds=[...new Set(journals.flatMap(j=>j.lines.map(l=>l.accountId)))];
+  if(accountIds.length){
+   const ownedAccounts=await tx.account.count({where:{id:{in:accountIds},organizationId:input.organizationId}});
+   if(ownedAccounts!==accountIds.length) throw new Error("LEDGER_ACCOUNT_NOT_IN_TENANT");
+  }
   const currencies=[...new Set(journals.map(j=>j.currencyCode))];
   let count=0;
   for(const currency of currencies){
