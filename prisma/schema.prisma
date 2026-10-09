@@ -564,6 +564,7 @@ model FiscalPeriod {
   forecastLines ForecastLine[]
 
   accountingJournals AccountingJournal[]
+  accountingCloseState AccountingPeriodState @default(OPEN)
 
   @@unique([fiscalYearId, code])
   @@unique([fiscalYearId, ordinal])
@@ -963,6 +964,12 @@ model RuntimeExecution {
   @@unique([organizationId, command, idempotencyKey])
   @@index([organizationId, startedAt])
   @@index([correlationId])
+}
+
+enum AccountingPeriodState {
+  OPEN
+  SOFT_CLOSED
+  HARD_CLOSED
 }
 
 enum AccountingJournalStatus {
