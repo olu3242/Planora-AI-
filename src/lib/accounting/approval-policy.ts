@@ -7,7 +7,7 @@ export type AccountingApprovalEvidence = Readonly<{
   sourceKey: string;
   preparedById: string;
   approvedById: string;
-  decision: "APPROVED" | "REJECTED" | "REVOKED";
+  decision: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
   expiresAt: Date;
   consumedAt: Date | null;
 }>;
