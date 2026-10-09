@@ -234,6 +234,8 @@ model User {
   recommendationDecisions AgentRecommendation[]    @relation("RecommendationDecisionMaker")
   agentFeedback           AgentFeedback[]
   runtimeExecutions       RuntimeExecution[]
+  accountingApprovalsPrepared AccountingPostingApproval[] @relation("AccountingApprovalPreparer")
+  accountingApprovalsDecided AccountingPostingApproval[] @relation("AccountingApprovalDecider")
   postedAccountingJournals AccountingJournal[]
   workflowRuns            WorkflowRunRecord[] @relation("WorkflowRunActor")
   preparedReportingRuns   ReportingRun[] @relation("ReportingRunPreparer")
@@ -272,6 +274,7 @@ model Organization {
   agentFeedback        AgentFeedback[]
   runtimeExecutions    RuntimeExecution[]
   accountingJournals   AccountingJournal[]
+  accountingPostingApprovals AccountingPostingApproval[]
   workflowRuns         WorkflowRunRecord[]
   vendors              Vendor[]
   bankAccounts         BankAccount[]
@@ -1061,6 +1064,7 @@ model AccountingJournal {
   reversalOf      AccountingJournal? @relation("JournalReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
   reversedBy      AccountingJournal? @relation("JournalReversal")
   lines           AccountingJournalLine[]
+  postingApproval AccountingPostingApproval? @relation("AccountingPostingApprovalJournal")
   matchedBankTransactions BankTransaction[]
 
   @@unique([organizationId, sourceKey])
@@ -1331,4 +1335,35 @@ model ReportingApproval {
 
   @@index([runId, createdAt])
   @@index([actorId, createdAt])
+}
+
+enum AccountingPostingApprovalDecision {
+  PENDING
+  APPROVED
+  REJECTED
+  REVOKED
+}
+
+model AccountingPostingApproval {
+  id String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  legalEntityId String @db.Uuid
+  fiscalPeriodId String @db.Uuid
+  sourceKey String
+  preparedById String @db.Uuid
+  decidedById String? @db.Uuid
+  decision AccountingPostingApprovalDecision @default(PENDING)
+  evidence Json
+  expiresAt DateTime?
+  decidedAt DateTime?
+  consumedAt DateTime?
+  journalId String? @unique @db.Uuid
+  createdAt DateTime @default(now())
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  preparedBy User @relation("AccountingApprovalPreparer", fields: [preparedById], references: [id], onDelete: Restrict)
+  decidedBy User? @relation("AccountingApprovalDecider", fields: [decidedById], references: [id], onDelete: Restrict)
+  journal AccountingJournal? @relation("AccountingPostingApprovalJournal", fields: [journalId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, sourceKey])
+  @@index([organizationId, decision, expiresAt])
 }
