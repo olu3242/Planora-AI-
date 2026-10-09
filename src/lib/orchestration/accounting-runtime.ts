@@ -5,6 +5,7 @@ import { RuntimeRegistry, type StepHandler } from "./runtime";
 import { validateBankCloseReadiness, validateApCloseReadiness, validateArCloseReadiness } from "@/application/accounting/close-readiness";
 import { closeAccountingPeriod } from "@/application/accounting/close-period";
 import { syncLedgerActuals } from "@/application/accounting/sync-actuals";
+import { runCloseAgent } from "@/application/agents/close-agent";
 
 function evidence(stepId:string,runId:string){return `workflow:${runId}:${stepId}`;}
 const unavailable=(capability:string):StepHandler=>async()=>{throw new Error(`RUNTIME_CAPABILITY_PENDING:${capability}`);};
@@ -38,7 +39,11 @@ export function accountingRuntimeRegistry():RuntimeRegistry{
   assertTrialBalance(rows);
   return {evidenceId:evidence("trial-balance",run.id)};
  });
- registry.register("close-analysis",unavailable("close-agent"));
+ registry.register("close-analysis",async(run)=>{
+  const s=scope(run);
+  const result=await runCloseAgent({...s,actorId:run.context.actorId,correlationId:run.context.correlationId});
+  return {evidenceId:`agent-recommendation:${result.recommendationId}`};
+ });
  registry.register("period-close",async(run)=>{
   const s=scope(run);
   await closeAccountingPeriod({organizationId:s.organizationId,fiscalPeriodId:s.fiscalPeriodId,actorId:run.context.actorId,correlationId:run.context.correlationId});
