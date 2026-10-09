@@ -89,7 +89,7 @@ export function assertPostingGate(gate: PostingGate): void {
     [gate.idempotencyKeyPresent, "IDEMPOTENCY_KEY_REQUIRED"],
     [gate.policyEffective, "ACCOUNTING_POLICY_NOT_EFFECTIVE"],
     [!gate.requiresHumanApproval || gate.humanApproved, "HUMAN_APPROVAL_REQUIRED"],
-    [!gate.isAgentInitiated || gate.agentKillSwitchEnabled, "AGENT_DISABLED"],
+    [!gate.isAgentInitiated, "AGENT_POSTING_NOT_SUPPORTED"],
   ];
   for (const [ok, error] of checks) if (!ok) throw new Error(error);
 }
