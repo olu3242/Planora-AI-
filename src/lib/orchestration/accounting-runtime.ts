@@ -8,6 +8,7 @@ import { syncLedgerActuals } from "@/application/accounting/sync-actuals";
 import { runCloseAgent } from "@/application/agents/close-agent";
 import { runForecastAgent } from "@/application/agents/forecast-agent";
 import { runInsightAgent } from "@/application/agents/insight-agent";
+import { runStatementAgent } from "@/application/agents/statement-agent";
 
 function evidence(stepId:string,runId:string){return `workflow:${runId}:${stepId}`;}
 const unavailable=(capability:string):StepHandler=>async()=>{throw new Error(`RUNTIME_CAPABILITY_PENDING:${capability}`);};
@@ -40,6 +41,11 @@ export function accountingRuntimeRegistry():RuntimeRegistry{
   const rows=calculateTrialBalance(journals.flatMap(j=>j.lines));
   assertTrialBalance(rows);
   return {evidenceId:evidence("trial-balance",run.id)};
+ });
+ registry.register("statement-review",async(run)=>{
+  const s=scope(run); const result=await runStatementAgent({...s,actorId:run.context.actorId,correlationId:run.context.correlationId});
+  if(!result.controls.trialBalanceBalanced||!result.controls.balanceSheetBalanced||!result.controls.cashFlowClassified) throw new Error("FINANCIAL_STATEMENT_CONTROL_BLOCKED");
+  return {evidenceId:`agent-recommendation:${result.recommendationId}`};
  });
  registry.register("close-analysis",async(run)=>{
   const s=scope(run);
