@@ -18,6 +18,7 @@ export interface WorkflowContext {
   fiscalPeriodId?: string;
   actorId: string;
   correlationId: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface WorkflowStepDefinition {
