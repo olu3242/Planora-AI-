@@ -46,6 +46,7 @@ export function createPrismaJournalPostingRepository(
           where: { id: { in: accountIds }, organizationId: trustedOrganizationId, active: true },
         });
         if (accounts.length !== accountIds.length) throw new Error("INVALID_ACCOUNTS");
+        if (accounts.some((account) => account.effectiveFrom > period.startDate || (account.effectiveTo && account.effectiveTo < period.endDate))) throw new Error("ACCOUNT_NOT_EFFECTIVE");
         const existing = await tx.accountingJournal.findUnique({
           where: { organizationId_sourceKey: { organizationId: trustedOrganizationId, sourceKey: input.sourceKey } },
         });
@@ -63,7 +64,6 @@ export function createPrismaJournalPostingRepository(
             line.creditMinor !== input.lines[i].creditMinor)) throw new Error("IDEMPOTENCY_CONFLICT");
           return { journalId: existing.id, created: false };
         }
-        if (accounts.some((account) => account.effectiveFrom > period.startDate || (account.effectiveTo && account.effectiveTo < period.endDate))) throw new Error("ACCOUNT_NOT_EFFECTIVE");
         const journal = await tx.accountingJournal.create({
           data: {
             organizationId: trustedOrganizationId, legalEntityId: input.legalEntityId,
