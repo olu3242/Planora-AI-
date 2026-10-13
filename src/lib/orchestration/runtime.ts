@@ -58,7 +58,7 @@ export class RuntimeRegistry {
 export function classifyRuntimeError(error: unknown): "RETRYABLE" | "TERMINAL" {
   const message = error instanceof Error ? error.message : "Unknown runtime failure";
   const terminalPrefixes = [
-    "RUNTIME_CAPABILITY_PENDING:", "WORKFLOW_SCOPE_", "PERIOD_", "TRIAL_BALANCE_",
+    "RUNTIME_CAPABILITY_PENDING:", "WORKFLOW_SCOPE_", "PERIOD_", "TRIAL_BALANCE_", "BANK_RECONCILIATION_", "AP_VALIDATION_", "AR_VALIDATION_",
     "INVALID_", "FORBIDDEN", "TENANT_", "ENTITY_", "AUTHENTICATION_",
   ];
   return terminalPrefixes.some((prefix) => message.startsWith(prefix)) ? "TERMINAL" : "RETRYABLE";
