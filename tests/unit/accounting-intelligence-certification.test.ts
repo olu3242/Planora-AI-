@@ -1,0 +1,14 @@
+import{describe,expect,it}from"vitest";import{approveIntelligenceProposal,assertAiCannotPost,assessAccountingIntelligence}from"../../src/domain/accounting/accounting-intelligence";
+const p={id:"p1",organizationId:"org",sourceReference:"bill-1",proposedAccountId:"expense",rationale:"Vendor history",evidenceReferences:["bill-1","history-1"],confidenceBasisPoints:9500};const deps={C_WAVE:"PASS" as const,D_WAVE:"PASS" as const,E_WAVE:"PASS" as const,F_WAVE:"PASS" as const,G_WAVE:"PASS" as const,H_WAVE:"PASS" as const};const base={proposal:p,dependencies:deps,sourceAmountMinor:100n,historicalMedianMinor:100n,materialityMinor:1000n};
+describe("I1-I10 Accounting Intelligence",()=>{
+ it("I1 validates evidence-bound proposals",()=>expect(assessAccountingIntelligence(base).status).toBe("ELIGIBLE_FOR_REVIEW"));
+ it("I2 classifies high-confidence immaterial proposals as low risk",()=>expect(assessAccountingIntelligence(base).risk).toBe("LOW"));
+ it("I3 requires human review below confidence threshold",()=>expect(assessAccountingIntelligence({...base,proposal:{...p,confidenceBasisPoints:8999}}).requiresHumanReview).toBe(true));
+ it("I4 requires human review for material amounts",()=>expect(assessAccountingIntelligence({...base,sourceAmountMinor:1000n}).risk).toBe("HIGH"));
+ it("I5 detects material historical deviations",()=>expect(assessAccountingIntelligence({...base,sourceAmountMinor:1201n,historicalMedianMinor:100n,materialityMinor:1000n}).anomalies).toContain("MATERIAL_AMOUNT_DEVIATION"));
+ it("I6 inherits accounting certification blockers",()=>expect(assessAccountingIntelligence({...base,dependencies:{...deps,C_WAVE:"DEFERRED"}}).blockers).toContain("C_WAVE_NOT_CERTIFIED"));
+ it("I7 validates reviewer identity and reason",()=>{const a=assessAccountingIntelligence(base);expect(()=>approveIntelligenceProposal(p,{proposalId:"p1",organizationId:"org",reviewerId:"",action:"APPROVE",reason:"ok"},a)).toThrow("REVIEWER_REASON_REQUIRED")});
+ it("I8 blocks decisions when dependencies are blocked",()=>{const a=assessAccountingIntelligence({...base,dependencies:{...deps,H_WAVE:"BLOCKED"}});expect(()=>approveIntelligenceProposal(p,{proposalId:"p1",organizationId:"org",reviewerId:"controller",action:"APPROVE",reason:"reviewed"},a)).toThrow("INTELLIGENCE_DEPENDENCIES_BLOCKED")});
+ it("I9 approval never grants posting authority",()=>{const a=assessAccountingIntelligence(base);const r=approveIntelligenceProposal(p,{proposalId:"p1",organizationId:"org",reviewerId:"controller",action:"APPROVE",reason:"reviewed"},a);expect(r.postingAuthorized).toBe(false);expect(()=>assertAiCannotPost(r)).not.toThrow()});
+ it("I10 rejects any attempt to elevate AI into posting authority",()=>expect(()=>assertAiCannotPost({postingAuthorized:true})).toThrow("AI_POSTING_AUTHORITY_FORBIDDEN"));
+});
