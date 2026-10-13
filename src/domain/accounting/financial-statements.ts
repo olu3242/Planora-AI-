@@ -26,6 +26,6 @@ export function buildFinancialStatements(accounts:readonly StatementAccount[]):F
  const assets=balanceSheet.filter(a=>a.type==="ASSET").reduce((n,a)=>n+net(a),0n);
  const liabilitiesEquity=balanceSheet.filter(a=>a.type==="LIABILITY"||a.type==="EQUITY").reduce((n,a)=>n+net(a),0n);
  let operatingMinor=0n,investingMinor=0n,financingMinor=0n,unclassifiedMinor=0n;
- for(const a of accounts){const amount=net(a);switch(classifyCashFlow(a.code,a.name,a.type)){case"OPERATING":operatingMinor+=amount;break;case"INVESTING":investingMinor+=amount;break;case"FINANCING":financingMinor+=amount;break;default:unclassifiedMinor+=amount;}}
+ for(const a of accounts){const amount=net(a);const classification=classifyCashFlow(a.code,a.name,a.type);if(classification==="UNCLASSIFIED"&&/CASH|BANK/.test((a.code+" "+a.name).toUpperCase()))continue;switch(classification){case"OPERATING":operatingMinor+=amount;break;case"INVESTING":investingMinor+=amount;break;case"FINANCING":financingMinor+=amount;break;default:unclassifiedMinor+=amount;}}
  return {profitAndLoss,balanceSheet,cashFlow:{operatingMinor,investingMinor,financingMinor,netChangeMinor:operatingMinor+investingMinor+financingMinor,unclassifiedMinor},controls:{trialBalanceBalanced:debit===credit,balanceSheetBalanced:assets===liabilitiesEquity,cashFlowClassified:unclassifiedMinor===0n}};
 }
