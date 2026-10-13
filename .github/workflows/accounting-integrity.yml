@@ -39,5 +39,5 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npx prisma validate
-      - run: npx vitest run tests/unit/accounting-actuals-reconciliation.test.ts tests/unit/accounting-fpa-bridge.test.ts tests/unit/accounting-journal-validation.test.ts
+      - run: npx vitest run tests/unit/accounting-*.test.ts
       - run: npm run typecheck
