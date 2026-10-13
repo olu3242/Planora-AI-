@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/accounting-fpa-schema-harmonization
+      - work/accounting-e2e-certification-20261012
     paths:
       - "src/domain/accounting/**"
       - "prisma/migrations/**"
