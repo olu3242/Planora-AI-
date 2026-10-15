@@ -18,7 +18,7 @@ export function findDuplicateCandidates(
   const candidates: DuplicateCandidate[] = [];
   for (const t of transactions) {
     if (t.organizationId !== scope.organizationId || t.legalEntityId !== scope.legalEntityId) throw new Error("CLEANBOOKS_CROSS_SCOPE");
-    if (!Number.isSafeInteger(t.amountMinor) || !/^\d{4}-\d{2}-\d{2}$/.test(t.bookedAt) || Number.isNaN(Date.parse(t.bookedAt)) || new Date(t.bookedAt).toISOString().slice(0,10)!==t.bookedAt) continue;
+    if (!Number.isSafeInteger(t.amountMinor) || typeof t.bookedAt !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(t.bookedAt) || Number.isNaN(Date.parse(t.bookedAt)) || new Date(t.bookedAt).toISOString().slice(0,10)!==t.bookedAt) continue;
     const prefix = JSON.stringify([t.organizationId,t.legalEntityId,t.currency,t.sourceAccountId ?? t.accountId ?? "UNASSIGNED"]);
     const reference = t.sourceReference?.trim();
     const refKey = reference ? JSON.stringify([prefix,reference]) : null;
