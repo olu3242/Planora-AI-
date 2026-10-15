@@ -25,7 +25,7 @@ export async function runCleanBooksScan(input: Readonly<{
  });
  const transactions = accounts.flatMap(a=>a.transactions.map(t=>({
    id:t.id,organizationId:input.organizationId,legalEntityId:input.legalEntityId,
-   currency:a.currencyCode,amountMinor: normalizeBankAmount(t.amountMinor),bookedAt:normalizeBankDate(t.postedDate),
+   currency:a.currencyCode,amountMinor:normalizeBankAmount(t.amountMinor),bookedAt:normalizeBankDate(t.postedDate),
    description:t.reference ?? "",sourceReference:t.externalId,sourceAccountId:a.id,accountId:null
  })));
  const coverage = pageCoverage(accounts.map(a=>({accountId:a.id,count:a.transactions.length,limit:500,hasMore:a.transactions.length===500})));
