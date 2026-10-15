@@ -37,7 +37,7 @@ export function profileTransactions(
       continue;
     }
     if (!Number.isSafeInteger(t.amountMinor)) exceptions.push({ transactionId: t.id, code: "INVALID_AMOUNT", severity: "ERROR", evidence: "Amount must be a safe integer in minor units" });
-    const dateShapeValid = /^\d{4}-\d{2}-\d{2}$/.test(t.bookedAt);
+    const dateShapeValid = typeof t.bookedAt === "string" && /^\d{4}-\d{2}-\d{2}$/.test(t.bookedAt);
     const parsedDate = dateShapeValid ? new Date(t.bookedAt) : null;
     const dateValid = parsedDate !== null && !Number.isNaN(parsedDate.getTime()) &&
       parsedDate.toISOString().slice(0, 10) === t.bookedAt;
