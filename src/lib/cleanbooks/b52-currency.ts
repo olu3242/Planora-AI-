@@ -1,0 +1,1 @@
+export function requireSameCurrency(left:string,right:string){if(!/^[A-Z]{3}$/.test(left)||left!==right)throw Error("CURRENCY_MISMATCH");return left}
