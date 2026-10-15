@@ -1,0 +1,1 @@
+export function reviewPolicy(input:{actorId:string;requesterId:string;reviewerAuthorized:boolean;findingOpen:boolean}){if(!input.actorId||!input.requesterId||input.actorId===input.requesterId||!input.reviewerAuthorized||!input.findingOpen)throw Error("CLEANBOOKS_REVIEW_DENIED");return {mayReview:true as const,mayPost:false as const}}
