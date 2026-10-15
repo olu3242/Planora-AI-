@@ -1,0 +1,20 @@
+name: Merge Conflict Preflight
+on:
+  pull_request:
+  push:
+    branches:
+      - work/bookkeeping-harmonization-b1-20261015
+  workflow_dispatch:
+jobs:
+  conflict-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Detect unresolved merge conflicts
+        run: node scripts/check-merge-conflicts.mjs
+      - name: Test conflict gate behavior
+        if: always()
+        run: node --test tests/preflight/merge-conflicts.test.mjs
