@@ -27,7 +27,8 @@ export async function runCleanBooksScan(input: Readonly<{
  if (accounts.some(a=>a.transactions.some(t=>t.amountMinor > BigInt(Number.MAX_SAFE_INTEGER) || t.amountMinor < BigInt(Number.MIN_SAFE_INTEGER)))) throw new Error("CLEANBOOKS_AMOUNT_OUT_OF_RANGE");
  const duplicates = findDuplicateCandidates(transactions,{organizationId:input.organizationId,legalEntityId:input.legalEntityId});
  const result = profileTransactions(transactions,{organizationId:input.organizationId,legalEntityId:input.legalEntityId});
+ const truncatedAccountIds = accounts.filter(a=>a.transactions.length===500).map(a=>a.id);
  return {...result,duplicates,source:"BANK_TRANSACTIONS",correlationId:input.correlationId,
-   coverage:{bankAccounts:accounts.length,transactionsFetched:transactions.length,perAccountLimit:500,complete:false},
+   coverage:{bankAccounts:accounts.length,transactionsFetched:transactions.length,perAccountLimit:500,complete:truncatedAccountIds.length===0,truncatedAccountIds},
    decision:"REVIEW_REQUIRED" as const};
 }
