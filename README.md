@@ -158,6 +158,36 @@ Planora/
 └── evidence/
 ```
 
-## Current implementation status
+## Current implementation status — 2026-10-15
 
-See `docs/FINAL-MVP-CERTIFICATION.md` for the exact-SHA engineering record and `docs/PILOT-VALIDATION-PLAN.md` for the controlled FP&A test. The frozen forecast cycle is locally, in CI, and on its exact isolated Git Preview certified at `fdb419ee28fba0025a4f081b295e011393cc920f`. Engineering status is `READY_FOR_CONTROLLED_USER_VALIDATION`. Product status remains `MVP_PARTIALLY_VALIDATED`, real financial workbooks are prohibited, and Production promotion is unauthorized.
+**Bookkeeping harmonization branch:** `work/bookkeeping-harmonization-b1-20261015`. **Review:** [Draft PR #7](https://github.com/olu3242/Planora-AI-/pull/7). **Release decision: NO-GO / NOT CERTIFIED.**
+
+Planora contains accounting and FP&A services, tenant-scoped API handling, journal posting and approval controls, forecasting, Excel ingestion, and financial reporting. These are existing source capabilities, **not proof of end-to-end certification**. The bookkeeping harmonization work has added exact-minor-unit journal validation, fail-closed posting input checks, approval consumption scope/expiry checks, and regression fixtures. The canonical posting adapter remains the sole posting path; AI proposals do not independently post ledger entries.
+
+**Current blockers:** GitHub Actions CI, Accounting integrity, and Merge Conflict Preflight failed on the latest inspected run. Outstanding merge conflicts remain in application pages, documentation, E2E tests, and `package-lock.json`. The invalid lockfile prevents `npm ci`; therefore unit, integration, security, and PostgreSQL E2E certification cannot be claimed. Source-level fixes and committed tests are not equivalent to passing tests.
+
+**Certification and implementation evidence:** `docs/certification/GAP-IMPLEMENTATION-G101-G110-EXECUTION.md` through the subsequent gap registers, and [GitHub Actions](https://github.com/olu3242/Planora-AI-/actions). Historical controlled FP&A certification at `fdb419ee28fba0025a4f081b295e011393cc920f` is scoped to that frozen revision and does not certify this harmonization branch.
+
+### Next release gates
+
+1. Resolve remaining merge conflicts semantically, preserving tenant isolation and financial controls.
+2. Regenerate `package-lock.json` from the checked-in `package.json` in a clean, isolated environment; verify `npm ci`.
+3. Pass conflict preflight, typecheck, Prisma validation, unit/integration/security suites, and `npm run certify` at the exact commit.
+4. Certify isolated PostgreSQL RLS, journal idempotency, approval races, rollback, audit integrity, and financial statement lineage.
+5. Obtain explicit release approval before any hosted migration, real-customer financial data processing, merge, or production deployment.
+
+### Safe local certification
+
+```bash
+npm ci
+npm run db:validate
+npm run typecheck
+npm run test:unit
+npm run test:integration
+npm run test:security
+npm run certify
+```
+
+Use only an isolated test PostgreSQL database for destructive test scripts; do not point reset or migration commands at hosted/production data.
+
+For detailed implementation contracts, see `CLAUDE.md`, `docs/AI-NATIVE-ACCOUNTING-EXECUTION-CONTRACT.md`, and `docs/ACCOUNTING.md`.
