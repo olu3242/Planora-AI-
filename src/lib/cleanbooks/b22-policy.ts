@@ -1,0 +1,1 @@
+export function cleanBooksPolicy(input:{activeMember:boolean;activeEntity:boolean;canReview:boolean;killSwitchEnabled:boolean}){if(!input.activeMember||!input.activeEntity)throw Error("CLEANBOOKS_FORBIDDEN");if(!input.killSwitchEnabled)throw Error("CLEANBOOKS_DISABLED");return {canScan:true,canReview:input.canReview,canPost:false as const}}
