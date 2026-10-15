@@ -1,0 +1,1 @@
+import {certifyCleanBooks} from "./b29-certification";export function certificationEvidence(input:Parameters<typeof certifyCleanBooks>[0],runId:string){if(!runId.trim())throw Error("RUN_ID_REQUIRED");return {runId,checkedAtRequired:true,assessment:certifyCleanBooks(input),evidenceVerified:false as const}}
