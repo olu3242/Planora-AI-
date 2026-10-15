@@ -1,0 +1,1 @@
+export function cleanupIdempotencyKey(input:{organizationId:string;legalEntityId:string;sourceId:string;ruleVersion:string}){const parts=[input.organizationId,input.legalEntityId,input.sourceId,input.ruleVersion];if(parts.some(v=>!v?.trim()))throw Error("INVALID_IDEMPOTENCY_CONTEXT");return JSON.stringify(parts)}
