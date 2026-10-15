@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { findDuplicateCandidates } from "@/lib/cleanbooks/duplicate-candidates";
 import { profileTransactions } from "@/lib/cleanbooks/profile-transactions";
 
 /** Governed, read-only CleanBooks scan. Requires upstream authenticated actor authorization. */
@@ -24,8 +25,9 @@ export async function runCleanBooksScan(input: Readonly<{
    description:t.reference ?? "",sourceReference:t.externalId,accountId:null
  })));
  if (accounts.some(a=>a.transactions.some(t=>t.amountMinor > BigInt(Number.MAX_SAFE_INTEGER) || t.amountMinor < BigInt(Number.MIN_SAFE_INTEGER)))) throw new Error("CLEANBOOKS_AMOUNT_OUT_OF_RANGE");
+ const duplicates = findDuplicateCandidates(transactions,{organizationId:input.organizationId,legalEntityId:input.legalEntityId});
  const result = profileTransactions(transactions,{organizationId:input.organizationId,legalEntityId:input.legalEntityId});
- return {...result,source:"BANK_TRANSACTIONS",correlationId:input.correlationId,
+ return {...result,duplicates,source:"BANK_TRANSACTIONS",correlationId:input.correlationId,
    coverage:{bankAccounts:accounts.length,transactionsFetched:transactions.length,perAccountLimit:500,complete:false},
    decision:"REVIEW_REQUIRED" as const};
 }
