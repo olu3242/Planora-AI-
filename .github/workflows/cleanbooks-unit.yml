@@ -31,6 +31,6 @@ jobs:
         env:
           DATABASE_URL: postgresql://planora_test:planora_test@127.0.0.1:5432/planora_test?schema=public
       - name: Run CleanBooks unit and acceptance tests
-        run: npx vitest run tests/unit/cleanbooks-*.test.ts
+        run: npx vitest run tests/unit/cleanbooks
       - name: TypeScript check
         run: npm run typecheck
