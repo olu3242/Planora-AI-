@@ -17,7 +17,7 @@ export async function runCleanBooksScan(input: Readonly<{
  requireIndependentSnapshotTransaction();
  return prisma.$transaction(async (tx) => {
  const membership = await tx.organizationMembership.findFirst({
-   where:{organizationId:input.organizationId,userId:input.actorId,active:true},
+   where:{organizationId:input.organizationId,userId:input.actorId,active:true,role:{in:["CFO","FPA_DIRECTOR"]}},
    select:{id:true}
  });
  if (!membership) throw new Error("CLEANBOOKS_FORBIDDEN");
