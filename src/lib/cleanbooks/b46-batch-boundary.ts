@@ -1,0 +1,1 @@
+export function requireBatchLimit(input:{requested:number;maximum:number}){if(!Number.isSafeInteger(input.requested)||!Number.isSafeInteger(input.maximum)||input.maximum<1||input.requested<1||input.requested>input.maximum)throw Error("SCAN_LIMIT_EXCEEDED");return input.requested}
