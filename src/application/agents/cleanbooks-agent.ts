@@ -22,7 +22,7 @@ export async function runCleanBooksScan(input: Readonly<{
  const transactions = accounts.flatMap(a=>a.transactions.map(t=>({
    id:t.id,organizationId:input.organizationId,legalEntityId:input.legalEntityId,
    currency:a.currencyCode,amountMinor: Number(t.amountMinor),bookedAt:t.postedDate.toISOString().slice(0,10),
-   description:t.reference ?? "",sourceReference:t.externalId,accountId:null
+   description:t.reference ?? "",sourceReference:t.externalId,sourceAccountId:a.id,accountId:null
  })));
  if (accounts.some(a=>a.transactions.some(t=>t.amountMinor > BigInt(Number.MAX_SAFE_INTEGER) || t.amountMinor < BigInt(Number.MIN_SAFE_INTEGER)))) throw new Error("CLEANBOOKS_AMOUNT_OUT_OF_RANGE");
  const duplicates = findDuplicateCandidates(transactions,{organizationId:input.organizationId,legalEntityId:input.legalEntityId});
