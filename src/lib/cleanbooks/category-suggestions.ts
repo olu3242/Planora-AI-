@@ -21,7 +21,7 @@ export function suggestCategories(
  if ([...transactions,...rules].some(item=>item.organizationId!==scope.organizationId || item.legalEntityId!==scope.legalEntityId)) throw new Error("CLEANBOOKS_CROSS_SCOPE");
  const results:CategorizationSuggestion[]=[];
  for(const t of transactions){
-   const description=t.description.trim().toLowerCase();
+   const description=(t.description ?? "").trim().toLowerCase();
    if (!description) continue;
    const matches=rules.filter(r=>r.active && r.accountId.trim() && r.keyword.trim() &&
      (!r.currency || r.currency===t.currency) && description.includes(r.keyword.trim().toLowerCase()));
