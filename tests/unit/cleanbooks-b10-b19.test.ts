@@ -1,0 +1,24 @@
+import {describe,it,expect} from "vitest";
+import {assertScoped} from "../../src/lib/cleanbooks/b10-scope";
+import {validateEvidence} from "../../src/lib/cleanbooks/b11-evidence";
+import {reviewQueue} from "../../src/lib/cleanbooks/b12-review-queue";
+import {requireIndependentApproval} from "../../src/lib/cleanbooks/b13-approval";
+import {verifyPeriod} from "../../src/lib/cleanbooks/b14-periods";
+import {assessCleanupRisk} from "../../src/lib/cleanbooks/b15-risk";
+import {cleanupIdempotencyKey} from "../../src/lib/cleanbooks/b16-idempotency";
+import {recoveryDisposition} from "../../src/lib/cleanbooks/b17-recovery";
+import {exportReviewRows} from "../../src/lib/cleanbooks/b18-export";
+import {cleanBooksReleaseGate} from "../../src/lib/cleanbooks/b19-release-gate";
+describe("CleanBooks B10-B19 governance controls",()=>{
+ const scope={organizationId:"o",legalEntityId:"e"};
+ it("rejects cross-tenant evidence",()=>expect(()=>assertScoped([{...scope,organizationId:"x"}],scope)).toThrow("CLEANBOOKS_CROSS_SCOPE"));
+ it("requires traceable evidence",()=>expect(()=>validateEvidence({source:"bank",sourceId:"1",observedAt:"bad",correlationId:"c",ruleVersion:"1"})).toThrow("INVALID_EVIDENCE"));
+ it("never auto-resolves review findings",()=>expect(reviewQueue([{id:"f",severity:"ERROR",status:"OPEN",reason:"duplicate"}])[0].canAutoResolve).toBe(false));
+ it("enforces segregation of duties",()=>expect(()=>requireIndependentApproval({requesterId:"a",reviewerId:"a",reviewerAuthorized:true,periodLocked:false,evidenceCount:1})).toThrow("SEGREGATION_OF_DUTIES"));
+ it("blocks locked periods",()=>expect(()=>verifyPeriod({postingDate:"2026-10-15",start:"2026-10-01",end:"2026-10-31",locked:true})).toThrow("PERIOD_LOCKED"));
+ it("escalates material exposure",()=>expect(assessCleanupRisk({materialityMinor:100,exposureMinor:100,crossEntity:false,periodLocked:false}).risk).toBe("HIGH"));
+ it("creates stable scoped keys",()=>expect(cleanupIdempotencyKey({...scope,sourceId:"x",ruleVersion:"1"})).toBe(cleanupIdempotencyKey({...scope,sourceId:"x",ruleVersion:"1"})));
+ it("escalates exhausted retries",()=>expect(recoveryDisposition({attempts:3,maxAttempts:3,transient:true})).toBe("MANUAL_REVIEW_REQUIRED"));
+ it("exports review-only findings",()=>expect(exportReviewRows([{id:"1",code:"DUP",reason:"match"}])[0].decision).toBe("REVIEW_REQUIRED"));
+ it("blocks release without hosted proof",()=>expect(cleanBooksReleaseGate({baselineValid:true,unitPassed:true,integrationPassed:true,browserPassed:true,securityPassed:true,coverageComplete:true,hostedPassed:false}).decision).toBe("NO_GO"));
+});

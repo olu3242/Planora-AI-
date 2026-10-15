@@ -1,0 +1,1 @@
+import {certifyCleanBooks} from "./b29-certification";export function acceptanceDecision(input:Parameters<typeof certifyCleanBooks>[0]){const evaluation=certifyCleanBooks(input);return {...evaluation,canMerge:evaluation.decision==="GO_CANDIDATE",canDeploy:false as const}}

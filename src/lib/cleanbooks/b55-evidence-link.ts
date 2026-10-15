@@ -1,0 +1,1 @@
+export function evidenceLink(input:{findingId:string;sourceType:string;sourceId:string;correlationId:string}){if(Object.values(input).some(v=>!v?.trim()))throw Error("EVIDENCE_LINK_REQUIRED");return {...input,canAutoApprove:false as const}}

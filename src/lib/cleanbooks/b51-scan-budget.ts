@@ -1,0 +1,1 @@
+export function enforceScanBudget(input:{accounts:number;rows:number;maxAccounts:number;maxRows:number}){if(Object.values(input).some(v=>!Number.isSafeInteger(v)||v<0)||input.maxAccounts===0||input.maxRows===0)throw Error("INVALID_SCAN_BUDGET");if(input.accounts>input.maxAccounts||input.rows>input.maxRows)throw Error("SCAN_BUDGET_EXCEEDED");return {withinBudget:true as const}}

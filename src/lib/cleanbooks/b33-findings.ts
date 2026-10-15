@@ -1,0 +1,1 @@
+export function mergeFindings(groups:readonly (readonly {id:string;code:string;reason:string}[])[]){const seen=new Set<string>();return groups.flatMap(g=>g.filter(f=>{if(!f.id||!f.code)throw Error("INVALID_FINDING");const key=JSON.stringify([f.id,f.code]);if(seen.has(key))return false;seen.add(key);return true})).map(f=>({...f,decision:"REVIEW_REQUIRED" as const}))}

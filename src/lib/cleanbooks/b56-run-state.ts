@@ -1,0 +1,1 @@
+export type ScanState="PENDING"|"RUNNING"|"COMPLETED"|"FAILED";export function transitionScanState(state:ScanState,event:"START"|"COMPLETE"|"FAIL"){if(state==="PENDING"&&event==="START")return "RUNNING" as const;if(state==="RUNNING"&&event==="COMPLETE")return "COMPLETED" as const;if(state==="RUNNING"&&event==="FAIL")return "FAILED" as const;throw Error("INVALID_SCAN_TRANSITION")}

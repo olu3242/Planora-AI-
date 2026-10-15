@@ -1,0 +1,1 @@
+import {verifyPeriod} from "./b14-periods";export function periodReview(input:Parameters<typeof verifyPeriod>[0]){verifyPeriod(input);return {eligibleForReview:true as const,canPost:false as const}}

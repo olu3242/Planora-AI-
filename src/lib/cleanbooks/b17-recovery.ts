@@ -1,0 +1,1 @@
+export function recoveryDisposition(input:{attempts:number;transient:boolean;maxAttempts:number}){if(!Number.isSafeInteger(input.attempts)||input.attempts<0||!Number.isSafeInteger(input.maxAttempts)||input.maxAttempts<1)throw Error("INVALID_RETRY_POLICY");return input.transient&&input.attempts<input.maxAttempts?"RETRY_REVIEW":"MANUAL_REVIEW_REQUIRED"}

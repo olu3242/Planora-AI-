@@ -1,0 +1,1 @@
+export function matchAmbiguity(candidates:readonly {bankId:string;journalId:string}[]){const counts=new Map<string,number>();for(const c of candidates)counts.set(c.bankId,(counts.get(c.bankId)??0)+1);return {ambiguousBankIds:[...counts].filter(([,n])=>n>1).map(([id])=>id),uniqueCandidates:candidates.filter(c=>counts.get(c.bankId)===1)}}

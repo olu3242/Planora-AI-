@@ -1,0 +1,1 @@
+export function verifyReviewEvidence(rows:readonly {findingId:string;sourceId:string;correlationId:string}[]){if(rows.some(r=>!r.findingId||!r.sourceId||!r.correlationId))throw Error("MISSING_EVIDENCE");return {evidenceCount:rows.length,complete:rows.length>0}}

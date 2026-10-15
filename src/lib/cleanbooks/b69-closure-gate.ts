@@ -1,0 +1,1 @@
+export function cleanupClosureGate(input:{coverageComplete:boolean;allFindingsReviewed:boolean;independentApproval:boolean;ledgerBalanced:boolean;hostedCertified:boolean}){const failed=Object.entries(input).filter(([,v])=>v!==true).map(([k])=>k);return {decision:failed.length?"BLOCKED" as const:"CONTROLLER_SIGNOFF_REQUIRED" as const,failed,canClose:false as const}}

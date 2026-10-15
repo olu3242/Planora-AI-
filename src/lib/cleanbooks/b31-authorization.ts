@@ -1,0 +1,1 @@
+import {cleanBooksPolicy} from "./b22-policy";export function authorizeScan(input:{activeMember:boolean;activeEntity:boolean;killSwitchEnabled:boolean;actorId:string;organizationId:string;legalEntityId:string}){if(!input.actorId||!input.organizationId||!input.legalEntityId)throw Error("CLEANBOOKS_SCOPE_REQUIRED");return cleanBooksPolicy({...input,canReview:false})}

@@ -1,0 +1,1 @@
+export function scanDiagnostics(accounts:number, transactions:number, exceptions:number){if([accounts,transactions,exceptions].some(n=>!Number.isSafeInteger(n)||n<0))throw Error('INVALID_DIAGNOSTICS');return {accounts,transactions,exceptions,requiresReview:exceptions>0,canPost:false as const};}

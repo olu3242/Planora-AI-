@@ -1,0 +1,1 @@
+export function prioritizeExceptions(items:readonly {id:string;severity:"ERROR"|"WARNING";material:boolean;locked:boolean}[]){return items.map(i=>({...i,priority:i.locked||i.material?"CRITICAL":i.severity==="ERROR"?"HIGH":"NORMAL"})).sort((a,b)=>({CRITICAL:0,HIGH:1,NORMAL:2}[a.priority]-{CRITICAL:0,HIGH:1,NORMAL:2}[b.priority]))}

@@ -1,0 +1,1 @@
+export function evidenceManifest(entries:readonly {id:string;correlationId:string;source:string}[]){const ids=new Set<string>();for(const e of entries){if(!e.id||!e.correlationId||!e.source||ids.has(e.id))throw Error("INVALID_EVIDENCE_MANIFEST");ids.add(e.id)}return {count:entries.length,entries:entries.map(e=>({...e})),immutableSource:true as const}}

@@ -1,0 +1,1 @@
+export function journalReference(input:{organizationId:string;legalEntityId:string;journalId:string;sourceTransactionId:string}){if(Object.values(input).some(v=>!v.trim()))throw Error("JOURNAL_REFERENCE_REQUIRED");return {...input,decision:"REVIEW_REQUIRED" as const}}

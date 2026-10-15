@@ -1,0 +1,1 @@
+export function uniqueCandidates<T extends {firstId:string;secondId:string}>(items:readonly T[]){const seen=new Set<string>();return items.filter(i=>{if(!i.firstId||!i.secondId||i.firstId===i.secondId)throw Error("INVALID_CANDIDATE");const key=JSON.stringify([i.firstId,i.secondId]);if(seen.has(key))return false;seen.add(key);return true})}

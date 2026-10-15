@@ -1,0 +1,1 @@
+export function exportReviewRows(rows:readonly {id:string;code:string;reason:string}[]){return rows.map(r=>{if(!r.id||!r.code)throw Error("INVALID_EXPORT_ROW");return {id:r.id,code:r.code,reason:r.reason,decision:"REVIEW_REQUIRED" as const}})}
