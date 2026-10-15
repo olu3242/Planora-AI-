@@ -11,6 +11,9 @@ const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 export const authenticationPrisma = globalForPrisma.prisma ?? new PrismaClient();
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = authenticationPrisma;
 const tenantTransaction = new AsyncLocalStorage<Prisma.TransactionClient>();
+export function requireIndependentSnapshotTransaction() {
+  if (tenantTransaction.getStore()) throw new Error("CLEANBOOKS_NESTED_SNAPSHOT_UNSUPPORTED");
+}
 export function inTenantTransaction<T>(tx: Prisma.TransactionClient, work: () => Promise<T>) {
   return tenantTransaction.run(tx, work);
 }
