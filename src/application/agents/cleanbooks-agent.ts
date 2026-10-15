@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { scanReadiness } from "@/lib/cleanbooks/b101-scan-readiness";
 import { assembleCleanBooksScan } from "@/lib/cleanbooks/scan-pipeline";
 import { pageCoverage } from "@/lib/cleanbooks/b20-pagination";
 import { enforceScanBudget } from "@/lib/cleanbooks/b51-scan-budget";
@@ -59,8 +60,9 @@ export async function runCleanBooksScan(input: Readonly<{
  }
  const coverage = pageCoverage(pages);
  const scan = assembleCleanBooksScan(transactions,{organizationId:input.organizationId,legalEntityId:input.legalEntityId},coverage.complete);
+ const readiness = scanReadiness({coverageComplete:coverage.complete,accountCount:accounts.length,transactionCount:transactions.length});
  return {...scan.profile,duplicates:scan.duplicates,dashboard:scan.dashboard,source:"BANK_TRANSACTIONS",correlationId:input.correlationId,
-   coverage:{bankAccounts:accounts.length,transactionsFetched:transactions.length,maxAccounts:100,maxTransactions:20000,complete:coverage.complete,truncatedAccountIds:coverage.truncatedAccountIds},
+   readiness,coverage:{bankAccounts:accounts.length,transactionsFetched:transactions.length,maxAccounts:100,maxTransactions:20000,complete:coverage.complete,truncatedAccountIds:coverage.truncatedAccountIds},
    decision:"REVIEW_REQUIRED" as const};
  }, {isolationLevel:Prisma.TransactionIsolationLevel.RepeatableRead,timeout:120000,maxWait:10000});
 }
