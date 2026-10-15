@@ -14,15 +14,15 @@ export async function runCleanBooksScan(input: Readonly<{
  organizationId:string; legalEntityId:string; actorId:string; correlationId:string;
 }>) {
  validateScanInput(input);
- const membership = await prisma.organizationMembership.findFirst({
+ return prisma.$transaction(async (tx) => {
+ const membership = await tx.organizationMembership.findFirst({
    where:{organizationId:input.organizationId,userId:input.actorId,active:true},
    select:{id:true}
  });
  if (!membership) throw new Error("CLEANBOOKS_FORBIDDEN");
- const entity = await prisma.legalEntity.findFirst({where:{id:input.legalEntityId,organizationId:input.organizationId,active:true},select:{id:true}});
+ const entity = await tx.legalEntity.findFirst({where:{id:input.legalEntityId,organizationId:input.organizationId,active:true},select:{id:true}});
  if (!entity) throw new Error("CLEANBOOKS_ENTITY_NOT_FOUND");
  cleanBooksPolicy({activeMember:true,activeEntity:true,canReview:false,killSwitchEnabled:true});
- return prisma.$transaction(async (tx) => {
  const accounts = await tx.bankAccount.findMany({
    where:{organizationId:input.organizationId,legalEntityId:input.legalEntityId,active:true},
    select:{id:true,currencyCode:true},orderBy:{id:"asc"},take:101
