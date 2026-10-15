@@ -12,6 +12,7 @@ export type CleanupTransaction = {
   description: string;
   sourceReference?: string | null;
   accountId?: string | null;
+  sourceAccountId?: string | null;
 };
 
 export type CleanupException = {
