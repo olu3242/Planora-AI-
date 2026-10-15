@@ -1,0 +1,1 @@
+export function classificationQuality(input:{suggested:number;ambiguous:number;unmatched:number}){if(Object.values(input).some(v=>!Number.isSafeInteger(v)||v<0))throw Error("INVALID_COUNTS");const total=input.suggested+input.ambiguous+input.unmatched;return {total,coverage:total?input.suggested/total:0,requiresReview:true as const}}
