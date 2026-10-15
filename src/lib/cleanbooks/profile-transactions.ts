@@ -44,10 +44,10 @@ export function profileTransactions(
     if (!dateValid) {
       exceptions.push({ transactionId: t.id, code: "INVALID_DATE", severity: "ERROR", evidence: "Invalid ISO posting date" });
     }
-    if (!t.description.trim()) exceptions.push({ transactionId: t.id, code: "MISSING_DESCRIPTION", severity: "WARNING", evidence: "Blank description" });
+    if (!t.description?.trim()) exceptions.push({ transactionId: t.id, code: "MISSING_DESCRIPTION", severity: "WARNING", evidence: "Blank description" });
     if (!t.accountId) exceptions.push({ transactionId: t.id, code: "MISSING_ACCOUNT", severity: "WARNING", evidence: "No account assigned" });
     if (Number.isSafeInteger(t.amountMinor) && dateValid && t.currency) {
-      const key = JSON.stringify([t.sourceAccountId ?? t.accountId ?? "UNASSIGNED", t.currency, t.amountMinor, t.bookedAt, t.description.trim().toLowerCase(), t.sourceReference?.trim() ?? ""]);
+      const key = JSON.stringify([t.sourceAccountId ?? t.accountId ?? "UNASSIGNED", t.currency, t.amountMinor, t.bookedAt, (t.description ?? "").trim().toLowerCase(), t.sourceReference?.trim() ?? ""]);
       const prior = seen.get(key);
       if (prior) exceptions.push({ transactionId: t.id, code: "POSSIBLE_DUPLICATE", severity: "WARNING", evidence: "Exact normalized transaction fingerprint", relatedTransactionId: prior });
       else seen.set(key, t.id);
