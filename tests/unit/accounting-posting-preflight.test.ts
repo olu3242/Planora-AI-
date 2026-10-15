@@ -17,6 +17,18 @@ const base = {
 
 describe('posting adapter rejects malformed requests before database access', () => {
   const db = { $transaction: vi.fn(() => { throw new Error('DB_SHOULD_NOT_BE_CALLED'); }) };
+  it('rejects null posting request before database access', async () => {
+    await expect(createPrismaJournalPostingRepository(db as never,'actor-a','org-a').postAtomically(null as never)).rejects.toThrow('POSTING_CONTEXT_REQUIRED');
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+  it('rejects primitive posting request before database access', async () => {
+    await expect(createPrismaJournalPostingRepository(db as never,'actor-a','org-a').postAtomically('bad' as never)).rejects.toThrow('POSTING_CONTEXT_REQUIRED');
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+  it('rejects array posting request before database access', async () => {
+    await expect(createPrismaJournalPostingRepository(db as never,'actor-a','org-a').postAtomically([] as never)).rejects.toThrow('POSTING_CONTEXT_REQUIRED');
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
   it('rejects an untrusted tenant', async () => {
     await expect(createPrismaJournalPostingRepository(db as never,'actor-a','org-a').postAtomically({...base,organizationId:'org-b'} as never)).rejects.toThrow('UNTRUSTED_POSTING_CONTEXT');
     expect(db.$transaction).not.toHaveBeenCalled();
