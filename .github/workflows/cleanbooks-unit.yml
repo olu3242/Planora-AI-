@@ -1,0 +1,36 @@
+name: CleanBooks unit certification
+on:
+  pull_request:
+    paths:
+      - 'src/lib/cleanbooks/**'
+      - 'src/application/agents/cleanbooks-agent.ts'
+      - 'tests/unit/cleanbooks-*.test.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'prisma/schema.prisma'
+      - '.github/workflows/cleanbooks-unit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Validate Prisma schema
+        run: npx prisma validate
+        env:
+          DATABASE_URL: postgresql://planora_test:planora_test@127.0.0.1:5432/planora_test?schema=public
+      - name: Run CleanBooks unit and acceptance tests
+        run: npx vitest run tests/unit/cleanbooks-*.test.ts
+      - name: TypeScript check
+        run: npm run typecheck
