@@ -1,0 +1,1 @@
+import {summarizeCleanBooks} from "./dashboard";export function controllerReport(input:Parameters<typeof summarizeCleanBooks>[0],correlationId:string){if(!correlationId.trim())throw Error("CORRELATION_REQUIRED");return {correlationId,summary:summarizeCleanBooks(input),generatedFor:"CONTROLLER_REVIEW" as const}}
