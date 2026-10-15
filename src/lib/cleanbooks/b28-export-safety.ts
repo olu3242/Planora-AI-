@@ -1,0 +1,1 @@
+export function safeExportCell(value:string){const v=value.replace(/[\r\n]/g," ").trimStart();return /^[=+@\-\t]/.test(v)?"'"+v:v}export function safeExportRows(rows:readonly Record<string,string>[]){return rows.map(row=>Object.fromEntries(Object.entries(row).map(([k,v])=>[k,safeExportCell(v)])))}
