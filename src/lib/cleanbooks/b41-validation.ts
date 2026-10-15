@@ -1,0 +1,1 @@
+export function validateScanInput(input:{organizationId:string;legalEntityId:string;actorId:string;correlationId:string}){if(Object.values(input).some(v=>typeof v!=="string"||!v.trim()))throw Error("CLEANBOOKS_INVALID_CONTEXT");return {...input}}
