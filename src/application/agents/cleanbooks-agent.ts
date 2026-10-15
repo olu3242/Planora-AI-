@@ -21,14 +21,14 @@ export async function runCleanBooksScan(input: Readonly<{
  cleanBooksPolicy({activeMember:true,activeEntity:true,canReview:false,killSwitchEnabled:true});
  const accounts = await prisma.bankAccount.findMany({
    where:{organizationId:input.organizationId,legalEntityId:input.legalEntityId,active:true},
-   select:{id:true,currencyCode:true,transactions:{take:500,orderBy:{postedDate:"desc"},select:{id:true,postedDate:true,amountMinor:true,reference:true,externalId:true}}}
+   select:{id:true,currencyCode:true,transactions:{take:501,orderBy:[{postedDate:"desc"},{id:"desc"}],select:{id:true,postedDate:true,amountMinor:true,reference:true,externalId:true}}}
  });
- const transactions = accounts.flatMap(a=>a.transactions.map(t=>({
+ const transactions = accounts.flatMap(a=>a.transactions.slice(0,500).map(t=>({
    id:t.id,organizationId:input.organizationId,legalEntityId:input.legalEntityId,
    currency:a.currencyCode,amountMinor:normalizeBankAmount(t.amountMinor),bookedAt:normalizeBankDate(t.postedDate),
    description:t.reference ?? "",sourceReference:t.externalId,sourceAccountId:a.id,accountId:null
  })));
- const coverage = pageCoverage(accounts.map(a=>({accountId:a.id,count:a.transactions.length,limit:500,hasMore:a.transactions.length===500})));
+ const coverage = pageCoverage(accounts.map(a=>({accountId:a.id,count:Math.min(a.transactions.length,500),limit:500,hasMore:a.transactions.length>500})));
  const scan = assembleCleanBooksScan(transactions,{organizationId:input.organizationId,legalEntityId:input.legalEntityId},coverage.complete);
  return {...scan.profile,duplicates:scan.duplicates,dashboard:scan.dashboard,source:"BANK_TRANSACTIONS",correlationId:input.correlationId,
    coverage:{bankAccounts:accounts.length,transactionsFetched:transactions.length,perAccountLimit:500,complete:coverage.complete,truncatedAccountIds:coverage.truncatedAccountIds},
