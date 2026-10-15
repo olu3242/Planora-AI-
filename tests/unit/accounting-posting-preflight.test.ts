@@ -33,6 +33,18 @@ describe('posting adapter rejects malformed requests before database access', ()
     await expect(createPrismaJournalPostingRepository(db as never,'actor-a','org-a').postAtomically({...base,currencyCode:'usd'} as never)).rejects.toThrow('CURRENCY_CODE_INVALID');
     expect(db.$transaction).not.toHaveBeenCalled();
   });
+  it('rejects a null legal entity before database access', async () => {
+    await expect(createPrismaJournalPostingRepository(db as never,'actor-a','org-a').postAtomically({...base,legalEntityId:null} as never)).rejects.toThrow('POSTING_CONTEXT_REQUIRED');
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+  it('rejects a non-string fiscal period before database access', async () => {
+    await expect(createPrismaJournalPostingRepository(db as never,'actor-a','org-a').postAtomically({...base,fiscalPeriodId:123} as never)).rejects.toThrow('POSTING_CONTEXT_REQUIRED');
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+  it('rejects null currency before database access', async () => {
+    await expect(createPrismaJournalPostingRepository(db as never,'actor-a','org-a').postAtomically({...base,currencyCode:null} as never)).rejects.toThrow('CURRENCY_CODE_INVALID');
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
   it('rejects malformed monetary types', async () => {
     await expect(createPrismaJournalPostingRepository(db as never,'actor-a','org-a').postAtomically({...base,lines:[{...lines[0],debitMinor:100.5},lines[1]]} as never)).rejects.toThrow('INVALID_MINOR_UNIT_TYPE');
     expect(db.$transaction).not.toHaveBeenCalled();
