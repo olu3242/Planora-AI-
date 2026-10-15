@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { assembleCleanBooksScan } from "@/lib/cleanbooks/scan-pipeline";
 import { pageCoverage } from "@/lib/cleanbooks/b20-pagination";
 import { enforceScanBudget } from "@/lib/cleanbooks/b51-scan-budget";
@@ -20,7 +21,8 @@ export async function runCleanBooksScan(input: Readonly<{
  const entity = await prisma.legalEntity.findFirst({where:{id:input.legalEntityId,organizationId:input.organizationId,active:true},select:{id:true}});
  if (!entity) throw new Error("CLEANBOOKS_ENTITY_NOT_FOUND");
  cleanBooksPolicy({activeMember:true,activeEntity:true,canReview:false,killSwitchEnabled:true});
- const accounts = await prisma.bankAccount.findMany({
+ return prisma.$transaction(async (tx) => {
+ const accounts = await tx.bankAccount.findMany({
    where:{organizationId:input.organizationId,legalEntityId:input.legalEntityId,active:true},
    select:{id:true,currencyCode:true},orderBy:{id:"asc"},take:101
  });
@@ -35,7 +37,7 @@ export async function runCleanBooksScan(input: Readonly<{
      const remaining = 20000 - transactions.length;
      if (remaining <= 0) { hasMore = true; break; }
      const limit = Math.min(500,remaining);
-     const batch = await prisma.bankTransaction.findMany({
+     const batch = await tx.bankTransaction.findMany({
        where:{bankAccountId:account.id},
        orderBy:{id:"asc"},
        take:limit+1,
@@ -60,4 +62,5 @@ export async function runCleanBooksScan(input: Readonly<{
  return {...scan.profile,duplicates:scan.duplicates,dashboard:scan.dashboard,source:"BANK_TRANSACTIONS",correlationId:input.correlationId,
    coverage:{bankAccounts:accounts.length,transactionsFetched:transactions.length,maxAccounts:100,maxTransactions:20000,complete:coverage.complete,truncatedAccountIds:coverage.truncatedAccountIds},
    decision:"REVIEW_REQUIRED" as const};
+ }, {isolationLevel:Prisma.TransactionIsolationLevel.RepeatableRead,timeout:120000,maxWait:10000});
 }
