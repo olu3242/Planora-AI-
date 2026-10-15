@@ -8,7 +8,7 @@ export async function runCleanBooksScan(input: Readonly<{
 }>) {
  if (!input.organizationId || !input.legalEntityId || !input.actorId || !input.correlationId) throw new Error("CLEANBOOKS_SCOPE_REQUIRED");
  const membership = await prisma.organizationMembership.findFirst({
-   where:{organizationId:input.organizationId,userId:input.actorId},
+   where:{organizationId:input.organizationId,userId:input.actorId,active:true},
    select:{id:true}
  });
  if (!membership) throw new Error("CLEANBOOKS_FORBIDDEN");
@@ -20,9 +20,10 @@ export async function runCleanBooksScan(input: Readonly<{
  });
  const transactions = accounts.flatMap(a=>a.transactions.map(t=>({
    id:t.id,organizationId:input.organizationId,legalEntityId:input.legalEntityId,
-   currency:a.currencyCode,amountMinor:t.amountMinor,bookedAt:t.postedDate.toISOString().slice(0,10),
-   description:t.reference ?? "",sourceReference:t.externalId,accountId:a.id
+   currency:a.currencyCode,amountMinor: Number(t.amountMinor),bookedAt:t.postedDate.toISOString().slice(0,10),
+   description:t.reference ?? "",sourceReference:t.externalId,accountId:null
  })));
+ if (accounts.some(a=>a.transactions.some(t=>t.amountMinor > BigInt(Number.MAX_SAFE_INTEGER) || t.amountMinor < BigInt(Number.MIN_SAFE_INTEGER)))) throw new Error("CLEANBOOKS_AMOUNT_OUT_OF_RANGE");
  const result = profileTransactions(transactions,{organizationId:input.organizationId,legalEntityId:input.legalEntityId});
  return {...result,source:"BANK_TRANSACTIONS",correlationId:input.correlationId,
    coverage:{bankAccounts:accounts.length,transactionsFetched:transactions.length,perAccountLimit:500,complete:false},
