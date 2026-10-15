@@ -17,6 +17,9 @@ export function createPrismaJournalPostingRepository(
     async postAtomically(input) {
       if (typeof trustedActorId !== "string" || typeof trustedOrganizationId !== "string" ||
           !trustedActorId.trim() || !trustedOrganizationId.trim()) throw new Error("TRUSTED_CONTEXT_REQUIRED");
+      if (input === null || typeof input !== "object" || Array.isArray(input)) {
+        throw new Error("POSTING_CONTEXT_REQUIRED");
+      }
       if (input.actorId !== trustedActorId || input.organizationId !== trustedOrganizationId) {
         throw new Error("UNTRUSTED_POSTING_CONTEXT");
       }
