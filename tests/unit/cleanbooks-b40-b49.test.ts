@@ -1,0 +1,21 @@
+import {describe,it,expect} from "vitest";
+import {validateScanInput} from "../../src/lib/cleanbooks/b41-validation";
+import {transactionQuality} from "../../src/lib/cleanbooks/b42-transaction-quality";
+import {matchAmbiguity} from "../../src/lib/cleanbooks/b43-match-ambiguity";
+import {verifyReviewEvidence} from "../../src/lib/cleanbooks/b44-evidence-check";
+import {controllerDecision} from "../../src/lib/cleanbooks/b45-controller-decision";
+import {requireBatchLimit} from "../../src/lib/cleanbooks/b46-batch-boundary";
+import {approvalAudit} from "../../src/lib/cleanbooks/b47-approval-audit";
+import {scanDiagnostics} from "../../src/lib/cleanbooks/b48-diagnostics";
+import {acceptanceDecision} from "../../src/lib/cleanbooks/b49-acceptance";
+describe("CleanBooks B40-B49 contracts",()=>{
+ it("rejects blank context",()=>expect(()=>validateScanInput({organizationId:"",legalEntityId:"e",actorId:"a",correlationId:"c"})).toThrow());
+ it("reports missing descriptions",()=>expect(transactionQuality([{id:"x",organizationId:"o",legalEntityId:"e",currency:"USD",amountMinor:1,bookedAt:"2026-10-15",description:" "}]).missingDescription).toBe(1));
+ it("blocks ambiguous journal candidates",()=>expect(matchAmbiguity([{bankId:"b",journalId:"j1"},{bankId:"b",journalId:"j2"}]).ambiguousBankIds).toEqual(["b"]));
+ it("requires source evidence",()=>expect(()=>verifyReviewEvidence([{findingId:"f",sourceId:"",correlationId:"c"}])).toThrow());
+ it("blocks incomplete controller review",()=>expect(controllerDecision({coverageComplete:false,unresolvedErrors:0,approvalEvidenceComplete:true}).status).toBe("BLOCKED"));
+ it("enforces batch limits",()=>expect(()=>requireBatchLimit({requested:501,maximum:500})).toThrow());
+ it("prevents self-review",()=>expect(()=>approvalAudit({requesterId:"a",reviewerId:"a",correlationId:"c",findingIds:["f"]})).toThrow());
+ it("never authorizes posting",()=>expect(scanDiagnostics(1,2,0).canPost).toBe(false));
+ it("does not authorize deployment",()=>expect(acceptanceDecision({baselineValid:false,unitPassed:false,integrationPassed:false,browserPassed:false,securityPassed:false,coverageComplete:false,hostedPassed:false,approvalControlsPassed:false,accountingIntegrityPassed:false}).canDeploy).toBe(false));
+});
