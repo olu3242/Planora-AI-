@@ -10,10 +10,10 @@ const input = {
     {accountId:'revenue',debitMinor:0n,creditMinor:100n},
   ],
 };
-function fixture(consumptionCount:number) {
+function fixture(consumptionCount:number, options: { reviewerRole?: string; decision?: string; expired?: boolean; reviewerId?: string } = {}) {
   const approval={id:'approval-a',decidedById:'reviewer-a'};
   const tx={
-    organizationMembership:{findFirst:vi.fn(async()=>({role:'CFO',active:true}))},
+    organizationMembership:{findFirst:vi.fn(async(args: {where:{userId:string}})=>({role:args.where.userId===actor?'CFO':(options.reviewerRole??'CFO'),active:true}))},
     legalEntity:{findFirst:vi.fn(async()=>({id:'entity-a'}))},
     fiscalPeriod:{findFirst:vi.fn(async()=>({accountingCloseState:'OPEN',startDate:new Date('2026-01-01'),endDate:new Date('2026-12-31')}))},
     currency:{findUnique:vi.fn(async()=>({code:'USD'}))},
@@ -24,8 +24,8 @@ function fixture(consumptionCount:number) {
     accountingJournal:{findUnique:vi.fn(async()=>null),create:vi.fn(async()=>({id:'journal-a'})),update:vi.fn(async()=>({}))},
     accountingPostingApproval:{findUnique:vi.fn(async()=>({
       id:approval.id,organizationId:organization,legalEntityId:'entity-a',fiscalPeriodId:'period-a',
-      sourceKey:'source-a',preparedById:actor,decidedById:'reviewer-a',decision:'APPROVED',
-      expiresAt:new Date(Date.now()+60000),consumedAt:null,
+      sourceKey:'source-a',preparedById:actor,decidedById:options.reviewerId??'reviewer-a',decision:options.decision??'APPROVED',
+      expiresAt:new Date(Date.now()+(options.expired?-60000:60000)),consumedAt:null,
     })),updateMany:vi.fn(async()=>({count:consumptionCount}))},
     accountingJournalLine:{findMany:vi.fn(async()=>[])},
     auditEvent:{create:vi.fn(async()=>({id:'audit-a'}))},
@@ -47,6 +47,24 @@ describe('approval consumption is scoped and atomic',()=>{
       data:expect.objectContaining({journalId:'journal-a',consumedAt:expect.any(Date)}),
     });
     expect(tx.auditEvent.create).toHaveBeenCalledTimes(1);
+  });
+  it('rejects a reviewer without an authorized approval role',async()=>{
+    const {tx,db}=fixture(1,{reviewerRole:'VIEWER'});
+    await expect(createPrismaJournalPostingRepository(db as never,actor,organization).postAtomically(input as never))
+      .rejects.toThrow('APPROVER_ROLE_DENIED');
+    expect(tx.accountingJournal.create).not.toHaveBeenCalled();
+  });
+  it('rejects expired approvals before creating a journal',async()=>{
+    const {tx,db}=fixture(1,{expired:true});
+    await expect(createPrismaJournalPostingRepository(db as never,actor,organization).postAtomically(input as never))
+      .rejects.toThrow();
+    expect(tx.accountingJournal.create).not.toHaveBeenCalled();
+  });
+  it('rejects pending approval decisions before creating a journal',async()=>{
+    const {tx,db}=fixture(1,{decision:'PENDING'});
+    await expect(createPrismaJournalPostingRepository(db as never,actor,organization).postAtomically(input as never))
+      .rejects.toThrow();
+    expect(tx.accountingJournal.create).not.toHaveBeenCalled();
   });
   it('rejects consumption races without creating audit evidence',async()=>{
     const {tx,db}=fixture(0);
