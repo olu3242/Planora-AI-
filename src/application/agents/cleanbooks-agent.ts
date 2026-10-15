@@ -16,7 +16,7 @@ export async function runCleanBooksScan(input: Readonly<{
    select:{id:true}
  });
  if (!membership) throw new Error("CLEANBOOKS_FORBIDDEN");
- const entity = await prisma.legalEntity.findFirst({where:{id:input.legalEntityId,organizationId:input.organizationId},select:{id:true}});
+ const entity = await prisma.legalEntity.findFirst({where:{id:input.legalEntityId,organizationId:input.organizationId,active:true},select:{id:true}});
  if (!entity) throw new Error("CLEANBOOKS_ENTITY_NOT_FOUND");
  cleanBooksPolicy({activeMember:true,activeEntity:true,canReview:false,killSwitchEnabled:true});
  const accounts = await prisma.bankAccount.findMany({
