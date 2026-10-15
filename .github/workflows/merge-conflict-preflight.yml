@@ -17,6 +17,9 @@ jobs:
         run: node scripts/check-merge-conflicts.mjs
       - name: Validate manifest and schema structure
         run: node scripts/check-structural-preflight.mjs
+      - name: Test structural gate behavior
+        if: always()
+        run: node --test tests/preflight/structural-preflight.test.mjs
       - name: Test conflict gate behavior
         if: always()
         run: node --test tests/preflight/merge-conflicts.test.mjs
