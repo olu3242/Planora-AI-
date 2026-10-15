@@ -1,0 +1,1 @@
+import {certifyCleanBooks} from "./b29-certification";export function releaseEvidence(input:Parameters<typeof certifyCleanBooks>[0],reference:string){if(!reference.trim())throw Error("RELEASE_REFERENCE_REQUIRED");return {reference,assessment:certifyCleanBooks(input),deploymentApproved:false as const}}
