@@ -64,7 +64,8 @@ export function validateJournalLines(lines: readonly JournalLineInput[]): Journa
   let debitMinor = 0n;
   let creditMinor = 0n;
   for (const line of lines) {
-    if (!line.accountId.trim()) throw new Error("ACCOUNT_REQUIRED");
+    if (typeof line.accountId !== "string" || !line.accountId.trim()) throw new Error("ACCOUNT_REQUIRED");
+    if (typeof line.debitMinor !== "bigint" || typeof line.creditMinor !== "bigint") throw new Error("INVALID_MINOR_UNIT_TYPE");
     if (line.debitMinor < 0n || line.creditMinor < 0n) throw new Error("NEGATIVE_POSTING");
     if ((line.debitMinor > 0n) === (line.creditMinor > 0n)) throw new Error("INVALID_LINE_SIDE");
     debitMinor += line.debitMinor;
