@@ -31,7 +31,6 @@ enum NormalBalance {
   CREDIT
 }
 
-<<<<<<< HEAD
 enum FinancialStatementClass {
   PROFIT_AND_LOSS
   BALANCE_SHEET
@@ -56,8 +55,6 @@ enum SystemAccountPurpose {
 }
 
 
-=======
->>>>>>> origin/main
 enum FinancialScenario {
   ACTUAL
   BUDGET
@@ -206,7 +203,6 @@ enum RuntimeErrorCategory {
   UNKNOWN
 }
 
-<<<<<<< HEAD
 enum ReportingRunStatus {
   DRAFT
   IN_REVIEW
@@ -221,8 +217,6 @@ enum ReportingApprovalDecision {
   REJECTED
 }
 
-=======
->>>>>>> origin/main
 model User {
   id                      String                   @id @default(uuid()) @db.Uuid
   email                   String                   @unique
@@ -240,7 +234,6 @@ model User {
   recommendationDecisions AgentRecommendation[]    @relation("RecommendationDecisionMaker")
   agentFeedback           AgentFeedback[]
   runtimeExecutions       RuntimeExecution[]
-<<<<<<< HEAD
   accountingApprovalsPrepared AccountingPostingApproval[] @relation("AccountingApprovalPreparer")
   accountingApprovalsDecided AccountingPostingApproval[] @relation("AccountingApprovalDecider")
   postedAccountingJournals AccountingJournal[]
@@ -248,8 +241,6 @@ model User {
   preparedReportingRuns   ReportingRun[] @relation("ReportingRunPreparer")
   reportingApprovals      ReportingApproval[] @relation("ReportingApprovalActor")
 
-=======
->>>>>>> origin/main
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
 }
@@ -282,7 +273,6 @@ model Organization {
   agentRecommendations AgentRecommendation[]
   agentFeedback        AgentFeedback[]
   runtimeExecutions    RuntimeExecution[]
-<<<<<<< HEAD
   accountingJournals   AccountingJournal[]
   accountingPostingApprovals AccountingPostingApproval[]
   workflowRuns         WorkflowRunRecord[]
@@ -294,8 +284,6 @@ model Organization {
   arReceipts           ArReceipt[]
   reportingFrameworks  ReportingFrameworkVersion[]
   reportingRuns        ReportingRun[]
-=======
->>>>>>> origin/main
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
 }
@@ -468,7 +456,6 @@ model LegalEntity {
   children       LegalEntity[]   @relation("LegalEntityHierarchy")
   facts          FinancialFact[]
 
-<<<<<<< HEAD
   accountingJournals AccountingJournal[]
   accountingApprovals AccountingPostingApproval[] @relation("AccountingApprovalEntity")
   bankAccounts       BankAccount[]
@@ -478,8 +465,6 @@ model LegalEntity {
   arReceipts         ArReceipt[]
   reportingRuns      ReportingRun[]
 
-=======
->>>>>>> origin/main
   @@unique([organizationId, code])
   @@index([organizationId, parentId])
 }
@@ -548,10 +533,7 @@ model Customer {
   effectiveTo    DateTime?
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   facts          FinancialFact[]
-<<<<<<< HEAD
   arInvoices     ArInvoice[]
-=======
->>>>>>> origin/main
 
   @@unique([organizationId, code])
 }
@@ -582,15 +564,12 @@ model Account {
   name           String
   type           AccountType
   normalBalance  NormalBalance
-<<<<<<< HEAD
   statementClass FinancialStatementClass?
   statementSection String?
   reportingCode String?
   cashFlowClass CashFlowClass?
   systemPurpose SystemAccountPurpose @default(NONE)
   suspenseAllowed Boolean @default(false)
-=======
->>>>>>> origin/main
   parentId       String?         @db.Uuid
   active         Boolean         @default(true)
   effectiveFrom  DateTime
@@ -601,11 +580,8 @@ model Account {
   facts          FinancialFact[]
   forecastLines  ForecastLine[]
 
-<<<<<<< HEAD
   accountingLines AccountingJournalLine[]
 
-=======
->>>>>>> origin/main
   @@unique([organizationId, code])
   @@index([organizationId, type])
 }
@@ -654,14 +630,11 @@ model FiscalPeriod {
   metricValues  MetricValue[]
   forecastLines ForecastLine[]
 
-<<<<<<< HEAD
   accountingJournals AccountingJournal[]
   accountingApprovals  AccountingPostingApproval[] @relation("AccountingApprovalPeriod")
   accountingCloseState AccountingPeriodState @default(OPEN)
   reportingRuns ReportingRun[]
 
-=======
->>>>>>> origin/main
   @@unique([fiscalYearId, code])
   @@unique([fiscalYearId, ordinal])
 }
@@ -1061,7 +1034,6 @@ model RuntimeExecution {
   @@index([organizationId, startedAt])
   @@index([correlationId])
 }
-<<<<<<< HEAD
 
 enum AccountingPeriodState {
   OPEN
@@ -1399,5 +1371,3 @@ model AccountingPostingApproval {
   @@unique([organizationId, sourceKey])
   @@index([organizationId, decision, expiresAt])
 }
-=======
->>>>>>> origin/main
