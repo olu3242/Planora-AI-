@@ -22,4 +22,20 @@ describe('canonical journal validation rejects malformed runtime inputs', () => 
   it('rejects a null amount', () => {
     expect(() => validateJournalLines([{ ...base[0], creditMinor: null }, base[1]] as never)).toThrow('INVALID_MINOR_UNIT_TYPE');
   });
+  it('rejects null journal collections', () => {
+    expect(() => validateJournalLines(null as never)).toThrow('JOURNAL_REQUIRES_TWO_LINES');
+  });
+  it('rejects object journal collections', () => {
+    expect(() => validateJournalLines({length:2} as never)).toThrow('JOURNAL_REQUIRES_TWO_LINES');
+  });
+  it('rejects null journal lines', () => {
+    expect(() => validateJournalLines([null, base[1]] as never)).toThrow('INVALID_JOURNAL_LINE');
+  });
+  it('rejects primitive journal lines', () => {
+    expect(() => validateJournalLines(['invalid', base[1]] as never)).toThrow('INVALID_JOURNAL_LINE');
+  });
+  it('rejects nested array journal lines', () => {
+    expect(() => validateJournalLines([[], base[1]] as never)).toThrow('INVALID_JOURNAL_LINE');
+  });
+
 });
