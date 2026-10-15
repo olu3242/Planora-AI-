@@ -1,0 +1,1 @@
+export function enforceReadOnly(action:string){const allowed=new Set(["SCAN","PROFILE","SUGGEST","REVIEW","EXPORT"]);if(!allowed.has(action))throw Error("CLEANBOOKS_WRITE_FORBIDDEN");return {action,canPost:false as const}}
