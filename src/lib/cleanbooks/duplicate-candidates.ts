@@ -22,7 +22,7 @@ export function findDuplicateCandidates(
     const prefix = JSON.stringify([t.organizationId,t.legalEntityId,t.currency,t.sourceAccountId ?? t.accountId ?? "UNASSIGNED"]);
     const reference = t.sourceReference?.trim();
     const refKey = reference ? JSON.stringify([prefix,reference]) : null;
-    const contentKey = JSON.stringify([prefix,t.bookedAt,t.amountMinor,t.description.trim().toLowerCase()]);
+    const contentKey = JSON.stringify([prefix,t.bookedAt,t.amountMinor,(t.description ?? "").trim().toLowerCase()]);
     const priorRef = refKey ? byReference.get(refKey) : undefined;
     const priorContent = byContent.get(contentKey);
     if (priorRef && priorRef !== t.id) candidates.push({firstId:priorRef,secondId:t.id,reason:"SAME_SOURCE_REFERENCE",decision:"REVIEW_REQUIRED"});
