@@ -1,0 +1,1 @@
+export function unmatchedAging(items:readonly {id:string;daysOld:number}[]){if(items.some(i=>!i.id||!Number.isSafeInteger(i.daysOld)||i.daysOld<0))throw Error("INVALID_AGING");return {current:items.filter(i=>i.daysOld<=30).length,over30:items.filter(i=>i.daysOld>30).length,over90:items.filter(i=>i.daysOld>90).length}}
