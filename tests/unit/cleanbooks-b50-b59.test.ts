@@ -1,0 +1,23 @@
+import {describe,it,expect} from "vitest";
+import {profileTransactions} from "../../src/lib/cleanbooks/profile-transactions";
+import {enforceScanBudget} from "../../src/lib/cleanbooks/b51-scan-budget";
+import {requireSameCurrency} from "../../src/lib/cleanbooks/b52-currency";
+import {uniqueCandidates} from "../../src/lib/cleanbooks/b53-candidate-dedup";
+import {periodReview} from "../../src/lib/cleanbooks/b54-period-review";
+import {evidenceLink} from "../../src/lib/cleanbooks/b55-evidence-link";
+import {transitionScanState} from "../../src/lib/cleanbooks/b56-run-state";
+import {aggregateRisk} from "../../src/lib/cleanbooks/b57-risk-aggregation";
+import {closeReadiness} from "../../src/lib/cleanbooks/b58-close-check";
+import {releaseEvidence} from "../../src/lib/cleanbooks/b59-release-evidence";
+describe("CleanBooks B50-B59 contracts",()=>{
+ it("does not mark separate bank accounts duplicate",()=>{const t={id:"a",organizationId:"o",legalEntityId:"e",currency:"USD",amountMinor:100,bookedAt:"2026-10-15",description:"Bill",sourceReference:"ref",sourceAccountId:"bank1",accountId:null};expect(profileTransactions([t,{...t,id:"b",sourceAccountId:"bank2"}],{organizationId:"o",legalEntityId:"e"}).exceptions.some(x=>x.code==="POSSIBLE_DUPLICATE")).toBe(false)});
+ it("enforces scan limits",()=>expect(()=>enforceScanBudget({accounts:2,rows:501,maxAccounts:2,maxRows:500})).toThrow());
+ it("rejects currency mismatch",()=>expect(()=>requireSameCurrency("USD","EUR")).toThrow());
+ it("deduplicates candidates",()=>expect(uniqueCandidates([{firstId:"a",secondId:"b"},{firstId:"a",secondId:"b"}])).toHaveLength(1));
+ it("rejects locked fiscal period",()=>expect(()=>periodReview({postingDate:"2026-10-15",start:"2026-10-01",end:"2026-10-31",locked:true})).toThrow());
+ it("requires evidence linkage",()=>expect(()=>evidenceLink({findingId:"f",sourceType:"bank",sourceId:"",correlationId:"c"})).toThrow());
+ it("prevents invalid run transitions",()=>expect(()=>transitionScanState("COMPLETED","START")).toThrow());
+ it("escalates material findings",()=>expect(aggregateRisk([{severity:"WARNING",material:true}]).risk).toBe("HIGH"));
+ it("never closes books",()=>expect(closeReadiness({coverageComplete:true,openFindings:0,approvalsComplete:true,trialBalanceBalanced:true}).canClose).toBe(false));
+ it("does not approve deployment",()=>expect(releaseEvidence({baselineValid:false,unitPassed:false,integrationPassed:false,browserPassed:false,securityPassed:false,coverageComplete:false,hostedPassed:false,approvalControlsPassed:false,accountingIntegrityPassed:false},"run").deploymentApproved).toBe(false));
+});
