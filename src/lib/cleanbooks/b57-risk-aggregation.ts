@@ -1,0 +1,1 @@
+export function aggregateRisk(items:readonly {severity:"ERROR"|"WARNING";material:boolean}[]){const critical=items.filter(i=>i.material).length;const errors=items.filter(i=>i.severity==="ERROR").length;return {critical,errors,risk:critical?"HIGH":errors?"ELEVATED":"STANDARD",decision:"REVIEW_REQUIRED" as const}}
