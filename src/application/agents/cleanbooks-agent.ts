@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { findDuplicateCandidates } from "@/lib/cleanbooks/duplicate-candidates";
+import { summarizeCleanBooks } from "@/lib/cleanbooks/dashboard";
 import { profileTransactions } from "@/lib/cleanbooks/profile-transactions";
 
 /** Governed, read-only CleanBooks scan. Requires upstream authenticated actor authorization. */
@@ -28,7 +29,17 @@ export async function runCleanBooksScan(input: Readonly<{
  const duplicates = findDuplicateCandidates(transactions,{organizationId:input.organizationId,legalEntityId:input.legalEntityId});
  const result = profileTransactions(transactions,{organizationId:input.organizationId,legalEntityId:input.legalEntityId});
  const truncatedAccountIds = accounts.filter(a=>a.transactions.length===500).map(a=>a.id);
- return {...result,duplicates,source:"BANK_TRANSACTIONS",correlationId:input.correlationId,
+ const dashboard = summarizeCleanBooks({
+   scanned:result.scanned,
+   profileExceptions:result.exceptions.length,
+   duplicateCandidates:duplicates.length,
+   suspenseItems:0,
+   reconciliationUnmatched:0,
+   overdueItems:0,
+   integrityExceptions:0,
+   coverageComplete:truncatedAccountIds.length===0
+ });
+ return {...result,duplicates,dashboard,source:"BANK_TRANSACTIONS",correlationId:input.correlationId,
    coverage:{bankAccounts:accounts.length,transactionsFetched:transactions.length,perAccountLimit:500,complete:truncatedAccountIds.length===0,truncatedAccountIds},
    decision:"REVIEW_REQUIRED" as const};
 }
