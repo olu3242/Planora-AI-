@@ -1,0 +1,23 @@
+import {describe,it,expect} from "vitest";
+import {pageCoverage} from "../../src/lib/cleanbooks/b20-pagination";
+import {transactionFingerprint} from "../../src/lib/cleanbooks/b21-fingerprint";
+import {cleanBooksPolicy} from "../../src/lib/cleanbooks/b22-policy";
+import {classificationQuality} from "../../src/lib/cleanbooks/b23-classification-quality";
+import {reconciliationQuality} from "../../src/lib/cleanbooks/b24-reconciliation-quality";
+import {transitionApproval} from "../../src/lib/cleanbooks/b25-approval-lifecycle";
+import {evidenceManifest} from "../../src/lib/cleanbooks/b26-evidence-manifest";
+import {prioritizeExceptions} from "../../src/lib/cleanbooks/b27-exception-priority";
+import {safeExportCell} from "../../src/lib/cleanbooks/b28-export-safety";
+import {certifyCleanBooks} from "../../src/lib/cleanbooks/b29-certification";
+describe("CleanBooks B20-B29 contracts",()=>{
+ it("flags truncated retrieval",()=>expect(pageCoverage([{accountId:"a",count:500,limit:500,hasMore:true}]).complete).toBe(false));
+ it("fingerprints source bank accounts independently",()=>{const t={id:"1",organizationId:"o",legalEntityId:"e",currency:"USD",amountMinor:1,bookedAt:"2026-10-15",description:"x",sourceAccountId:"a"};expect(transactionFingerprint(t)).not.toBe(transactionFingerprint({...t,sourceAccountId:"b"}))});
+ it("denies inactive member",()=>expect(()=>cleanBooksPolicy({activeMember:false,activeEntity:true,canReview:true,killSwitchEnabled:true})).toThrow("CLEANBOOKS_FORBIDDEN"));
+ it("reports classification coverage",()=>expect(classificationQuality({suggested:2,ambiguous:1,unmatched:1}).coverage).toBe(.5));
+ it("rejects impossible matching counts",()=>expect(()=>reconciliationQuality({bankCount:1,matchedCount:2,ambiguousCount:0})).toThrow("INVALID_COUNTS"));
+ it("blocks unapproved transition",()=>expect(()=>transitionApproval("DRAFT","APPROVE",true)).toThrow("INVALID_APPROVAL_TRANSITION"));
+ it("rejects duplicate evidence IDs",()=>expect(()=>evidenceManifest([{id:"1",source:"x",correlationId:"c"},{id:"1",source:"x",correlationId:"c"}])).toThrow("INVALID_EVIDENCE_MANIFEST"));
+ it("prioritizes locked findings",()=>expect(prioritizeExceptions([{id:"1",severity:"WARNING",material:false,locked:true}])[0].priority).toBe("CRITICAL"));
+ it("escapes formula injection",()=>expect(safeExportCell("=SUM(1,1)")).toBe("'=SUM(1,1)"));
+ it("fails closed without approval proof",()=>expect(certifyCleanBooks({baselineValid:true,unitPassed:true,integrationPassed:true,browserPassed:true,securityPassed:true,coverageComplete:true,hostedPassed:true,approvalControlsPassed:false,accountingIntegrityPassed:true}).decision).toBe("NO_GO"));
+});
