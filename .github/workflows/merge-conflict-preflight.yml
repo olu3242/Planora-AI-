@@ -15,6 +15,8 @@ jobs:
           node-version: '24'
       - name: Detect unresolved merge conflicts
         run: node scripts/check-merge-conflicts.mjs
+      - name: Validate manifest and schema structure
+        run: node scripts/check-structural-preflight.mjs
       - name: Test conflict gate behavior
         if: always()
         run: node --test tests/preflight/merge-conflicts.test.mjs
