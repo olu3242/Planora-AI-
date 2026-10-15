@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
+import { prisma, requireIndependentSnapshotTransaction } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { scanReadiness } from "@/lib/cleanbooks/b101-scan-readiness";
 import { assembleCleanBooksScan } from "@/lib/cleanbooks/scan-pipeline";
@@ -14,6 +14,7 @@ export async function runCleanBooksScan(input: Readonly<{
  organizationId:string; legalEntityId:string; actorId:string; correlationId:string;
 }>) {
  validateScanInput(input);
+ requireIndependentSnapshotTransaction();
  return prisma.$transaction(async (tx) => {
  const membership = await tx.organizationMembership.findFirst({
    where:{organizationId:input.organizationId,userId:input.actorId,active:true},
