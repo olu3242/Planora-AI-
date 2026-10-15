@@ -1,0 +1,21 @@
+import {describe,it,expect} from "vitest";
+import {authorizeScan} from "../../src/lib/cleanbooks/b31-authorization";
+import {normalizeBankAmount} from "../../src/lib/cleanbooks/b32-normalization";
+import {mergeFindings} from "../../src/lib/cleanbooks/b33-findings";
+import {assertScanCoverage} from "../../src/lib/cleanbooks/b34-coverage";
+import {reviewTransition} from "../../src/lib/cleanbooks/b35-guarded-review";
+import {trialBalanceCheck} from "../../src/lib/cleanbooks/b36-trial-balance";
+import {controllerReport} from "../../src/lib/cleanbooks/b37-report";
+import {certificationEvidence} from "../../src/lib/cleanbooks/b38-certification-evidence";
+import {enforceReadOnly} from "../../src/lib/cleanbooks/b39-no-posting";
+describe("CleanBooks B30-B39 controls",()=>{
+ it("blocks inactive membership",()=>expect(()=>authorizeScan({activeMember:false,activeEntity:true,killSwitchEnabled:true,actorId:"a",organizationId:"o",legalEntityId:"e"})).toThrow("CLEANBOOKS_FORBIDDEN"));
+ it("rejects unsafe BigInt",()=>expect(()=>normalizeBankAmount(BigInt(Number.MAX_SAFE_INTEGER)+1n)).toThrow("CLEANBOOKS_AMOUNT_OUT_OF_RANGE"));
+ it("deduplicates review findings",()=>expect(mergeFindings([[{id:"1",code:"DUP",reason:"a"}],[{id:"1",code:"DUP",reason:"a"}]])).toHaveLength(1));
+ it("fails coverage when truncated",()=>expect(assertScanCoverage({accountCount:1,retrievedAccountCount:1,truncatedAccountIds:["a"]}).canCertify).toBe(false));
+ it("blocks self approval",()=>expect(()=>reviewTransition({state:"SUBMITTED",action:"APPROVE",requesterId:"a",reviewerId:"a",reviewerAuthorized:true,periodLocked:false,evidenceCount:1})).toThrow("SEGREGATION_OF_DUTIES"));
+ it("checks trial balance",()=>expect(trialBalanceCheck([{debitMinor:100,creditMinor:0},{debitMinor:0,creditMinor:100}]).balanced).toBe(true));
+ it("returns controller report",()=>expect(controllerReport({scanned:0,profileExceptions:0,duplicateCandidates:0,suspenseItems:0,reconciliationUnmatched:0,overdueItems:0,integrityExceptions:0,coverageComplete:false},"c").summary.readiness).toBe("INCOMPLETE"));
+ it("never claims evidence verified",()=>expect(certificationEvidence({baselineValid:false,unitPassed:false,integrationPassed:false,browserPassed:false,securityPassed:false,coverageComplete:false,hostedPassed:false,approvalControlsPassed:false,accountingIntegrityPassed:false},"r").evidenceVerified).toBe(false));
+ it("forbids posting",()=>expect(()=>enforceReadOnly("POST")).toThrow("CLEANBOOKS_WRITE_FORBIDDEN"));
+});
