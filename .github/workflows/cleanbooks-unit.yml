@@ -1,5 +1,8 @@
 name: CleanBooks unit certification
 on:
+  push:
+    branches:
+      - feat/cleanbooks-agent-b1
   pull_request:
     paths:
       - 'src/lib/cleanbooks/**'
@@ -26,11 +29,13 @@ jobs:
         run: npm ci
       - name: Generate Prisma client
         run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://planora_test:planora_test@127.0.0.1:5432/planora_test?schema=public
       - name: Validate Prisma schema
         run: npx prisma validate
         env:
           DATABASE_URL: postgresql://planora_test:planora_test@127.0.0.1:5432/planora_test?schema=public
       - name: Run CleanBooks unit and acceptance tests
-        run: npx vitest run tests/unit/cleanbooks
+        run: npx vitest run cleanbooks-
       - name: TypeScript check
         run: npm run typecheck
