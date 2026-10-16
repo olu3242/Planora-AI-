@@ -31,7 +31,10 @@ export async function runForecastAgent(input:Readonly<{organizationId:string;leg
     });
     return issue?[issue]:[];
   });
-  if(coverageExceptions.length>0) throw new Error('FORECAST_ACTUAL_COVERAGE_INCOMPLETE');
+  if(coverageExceptions.length>0) {
+    await prisma.agentRun.update({where:{id:run.id},data:{evidence:{coverageComplete:false,coverageExceptionCount:coverageExceptions.length,coverageExceptions:coverageExceptions.slice(0,50)}}});
+    throw new Error('FORECAST_ACTUAL_COVERAGE_INCOMPLETE');
+  }
   const ranked=[...variances].sort((a,b)=>new Decimal(b.variance).abs().comparedTo(new Decimal(a.variance).abs()));
   const observedFacts={actualFactCount:actuals.length,forecastLineCount:forecastLines.length,varianceCount:variances.length,coverageExceptionCount:coverageExceptions.length,coverageExceptions:coverageExceptions.slice(0,50),largestVariances:ranked.slice(0,10),memoryPolicy:"accepted-latest-by-scope",memoryRecommendationIds:memory.map(m=>m.id)};
   const recommendation=await prisma.agentRecommendation.create({data:{runId:run.id,organizationId:input.organizationId,actorId:input.actorId,type:"FORECAST_REFRESH_REVIEW",summary:"Closed-period actuals were compared with editable forecast lines. Human FP&A review is required before any forecast change or publication.",observedFacts,evidence:{correlationId:input.correlationId,fiscalPeriodId:input.fiscalPeriodId,legalEntityId:input.legalEntityId},unsupportedClaim:false,status:"PENDING"}});
