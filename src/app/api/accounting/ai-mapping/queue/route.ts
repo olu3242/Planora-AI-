@@ -1,24 +1,28 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { requireMappingPrincipal } from "@/lib/accounting/ai-mapping-session";
-import { createMappingApplication } from "@/lib/accounting/ai-mapping-application";
-import { PrismaAiMappingRepository, type MappingPrismaClient } from "@/lib/accounting/ai-mapping-prisma-repository";
+import { withMappingTenant } from "@/lib/accounting/ai-mapping-tenant-transaction";
 import { NextResponse } from "next/server";
 
-/**
- * Read-only queue. Session-derived tenant and role; never accepts tenant from query/body.
- * FORCE RLS denies access until a certified tenant-scoped database role/policy is installed.
- */
+/** Read-only tenant queue. All SQL runs inside one transaction-local RLS context. */
 export async function GET() {
   try {
     const principal = await requireMappingPrincipal("read");
-    const app = createMappingApplication({
-      repository: new PrismaAiMappingRepository(prisma as unknown as MappingPrismaClient),
-      loadProposal: async () => { throw new Error("MAPPING_REVIEW_ADAPTER_NOT_CERTIFIED"); },
-      loadEligibleAccounts: async () => { throw new Error("MAPPING_ACCOUNT_ADAPTER_NOT_CERTIFIED"); },
-      hasReview: async () => { throw new Error("MAPPING_REVIEW_ADAPTER_NOT_CERTIFIED"); },
+    const allowedRoles = principal.roles.filter(r => r !== "PLATFORM_ADMIN");
+    const items = await withMappingTenant(prisma, principal.organizationId, async tx => {
+      // The tenant-scoped query executes on the same transaction connection
+      // after set_config, so pooled connections cannot leak tenant context.
+      const db = tx as typeof prisma;
+      return db.aiTransactionMappingWorkItem.findMany({
+        where: { organizationId: principal.organizationId, assignedRole: { in: allowedRoles } },
+        select: {
+          id: true, assignedRole: true, state: true, priority: true, reason: true,
+          proposal: { select: { idempotencyKey: true, transactionId: true } },
+        },
+        orderBy: { createdAt: "asc" },
+        take: 100,
+      });
     });
-    const items = await app.queue(principal);
     return NextResponse.json({ items }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
