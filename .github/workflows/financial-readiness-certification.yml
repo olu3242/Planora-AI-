@@ -56,7 +56,7 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
       - name: Run readiness regression suite
-        run: npx vitest run tests/unit/financial-readiness.test.ts tests/unit/financial-readiness-repository.test.ts tests/unit/financial-readiness-source-adapters.test.ts tests/unit/financial-readiness-read-model.test.ts tests/unit/financial-readiness-diagnostics.test.ts tests/unit/financial-readiness-migration.test.ts
+        run: npx vitest run tests/unit/financial-readiness.test.ts tests/unit/financial-readiness-repository.test.ts tests/unit/financial-readiness-source-adapters.test.ts tests/unit/financial-readiness-read-model.test.ts tests/unit/financial-readiness-diagnostics.test.ts tests/unit/financial-readiness-migration.test.ts tests/unit/financial-readiness-scope.test.ts
       - name: Verify migration in disposable PostgreSQL
         run: npx prisma migrate deploy
       - name: Verify readiness table RLS enabled
