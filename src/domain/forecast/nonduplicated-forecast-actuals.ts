@@ -1,8 +1,9 @@
-import { forecastActualOrigin } from './forecast-actual-origin';
+import { assertForecastActualProvenance } from './forecast-actual-provenance';
 export type ForecastSourceFact = Readonly<{
  accountId:string;currencyCode:string;costCenterId:string|null;sourceMetadata:unknown;
 }>;
+/** Never discard ledger rows based solely on the presence of derived facts. */
 export function selectNonDuplicatedActuals<T extends ForecastSourceFact>(facts:readonly T[]):T[] {
- const allocated=new Set(facts.filter(f=>forecastActualOrigin(f.sourceMetadata)==='APPROVED_ALLOCATION').map(f=>JSON.stringify([f.accountId,f.currencyCode])));
- return facts.filter(f=>!(f.costCenterId===null && forecastActualOrigin(f.sourceMetadata)==='POSTED_LEDGER' && allocated.has(JSON.stringify([f.accountId,f.currencyCode]))));
+ assertForecastActualProvenance(facts);
+ return [...facts];
 }
