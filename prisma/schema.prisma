@@ -235,7 +235,9 @@ model User {
   agentFeedback           AgentFeedback[]
   runtimeExecutions       RuntimeExecution[]
   accountingApprovalsPrepared AccountingPostingApproval[] @relation("AccountingApprovalPreparer")
-  accountingApprovalsDecided AccountingPostingApproval[] @relation("AccountingApprovalDecider")
+  accountingApprovalsDecided AccountingPostingApproval[]
+  bankCashMappingsPrepared BankCashMapping[] @relation("BankMappingPreparer")
+  bankCashMappingsApproved BankCashMapping[] @relation("BankMappingApprover") @relation("AccountingApprovalDecider")
   postedAccountingJournals AccountingJournal[]
   workflowRuns            WorkflowRunRecord[] @relation("WorkflowRunActor")
   preparedReportingRuns   ReportingRun[] @relation("ReportingRunPreparer")
@@ -278,6 +280,7 @@ model Organization {
   workflowRuns         WorkflowRunRecord[]
   vendors              Vendor[]
   bankAccounts         BankAccount[]
+  bankCashMappings    BankCashMapping[]
   apBills              ApBill[]
   apPayments           ApPayment[]
   arInvoices           ArInvoice[]
@@ -584,6 +587,7 @@ model Account {
 
   @@unique([organizationId, code])
   @@index([organizationId, type])
+  bankCashMappings BankCashMapping[] @relation("BankMappingCashAccount")
 }
 
 model Currency {
@@ -1157,6 +1161,7 @@ model BankAccount {
   organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   legalEntity    LegalEntity       @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
   transactions   BankTransaction[]
+  cashMappings   BankCashMapping[]
   @@index([organizationId, legalEntityId])
 }
 
@@ -1370,4 +1375,25 @@ model AccountingPostingApproval {
 
   @@unique([organizationId, sourceKey])
   @@index([organizationId, decision, expiresAt])
+}
+
+model BankCashMapping {
+  id String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  bankAccountId String @db.Uuid
+  cashAccountId String @db.Uuid
+  preparedById String @db.Uuid
+  approvedById String? @db.Uuid
+  approvedAt DateTime?
+  effectiveFrom DateTime @db.Date
+  effectiveTo DateTime? @db.Date
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  bankAccount BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Restrict)
+  cashAccount Account @relation("BankMappingCashAccount", fields: [cashAccountId], references: [id], onDelete: Restrict)
+  preparedBy User @relation("BankMappingPreparer", fields: [preparedById], references: [id], onDelete: Restrict)
+  approvedBy User? @relation("BankMappingApprover", fields: [approvedById], references: [id], onDelete: Restrict)
+  @@index([organizationId, bankAccountId, effectiveFrom])
+  @@index([cashAccountId])
 }
