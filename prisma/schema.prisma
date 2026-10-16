@@ -1367,3 +1367,56 @@ model AccountingPostingApproval {
   @@unique([organizationId, sourceKey])
   @@index([organizationId, decision, expiresAt])
 }
+
+
+// Governed AI transaction mappings; distinct from workbook MappingDecision.
+model AiTransactionMappingProposal {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  transactionId  String
+  sourceHash     String
+  idempotencyKey String
+  accountId      String?
+  confidence     Float
+  explanation    String
+  agent          String
+  route          String
+  status         String   @default("PROPOSED")
+  modelVersion   String
+  policyVersion  String
+  evidenceIds    Json
+  createdAt      DateTime @default(now())
+  workItem       AiTransactionMappingWorkItem?
+  review         AiTransactionMappingReview?
+
+  @@unique([organizationId, idempotencyKey])
+  @@unique([id, organizationId])
+}
+
+model AiTransactionMappingWorkItem {
+  id             String   @id @default(uuid()) @db.Uuid
+  proposalId     String   @unique @db.Uuid
+  organizationId String   @db.Uuid
+  assignedRole   String
+  state          String
+  priority       String
+  reason         String
+  createdAt      DateTime @default(now())
+  proposal       AiTransactionMappingProposal @relation(fields: [proposalId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@index([organizationId, assignedRole, createdAt], map: "AiTransactionMappingWorkItem_queue_idx")
+}
+
+model AiTransactionMappingReview {
+  id                String   @id @default(uuid()) @db.Uuid
+  proposalId        String   @unique @db.Uuid
+  organizationId    String   @db.Uuid
+  reviewerId        String   @db.Uuid
+  action            String
+  selectedAccountId String?
+  reason            String
+  createdAt         DateTime @default(now())
+  proposal          AiTransactionMappingProposal @relation(fields: [proposalId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@index([organizationId, createdAt], map: "AiTransactionMappingReview_tenant_idx")
+}
