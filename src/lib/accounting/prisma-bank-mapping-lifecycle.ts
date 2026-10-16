@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { withBankMappingTenant } from './bank-mapping-tenant-context';
 
 export type BankMappingActor = Readonly<{ organizationId: string; actorId: string }>;
