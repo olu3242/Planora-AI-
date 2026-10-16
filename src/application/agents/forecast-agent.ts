@@ -7,6 +7,7 @@ import { resolveForecastActualCurrency } from "@/domain/forecast/forecast-actual
 import { assertForecastDimensionCompatibility } from "@/domain/forecast/forecast-dimension-compatibility";
 import { inspectForecastCoverage } from "@/domain/forecast/inspect-forecast-coverage";
 import { assertForecastActualProvenance } from "@/domain/forecast/forecast-actual-provenance";
+import { assertForecastAllocationCertification } from "@/domain/forecast/assert-forecast-allocation-certification";
 import { acceptedDecisionMemory } from "@/application/agents/decision-context";
 
 export async function runForecastAgent(input:Readonly<{organizationId:string;legalEntityId:string;fiscalPeriodId:string;actorId:string;correlationId:string}>){
@@ -20,6 +21,7 @@ export async function runForecastAgent(input:Readonly<{organizationId:string;leg
    acceptedDecisionMemory(input.organizationId,["FORECAST_REFRESH_REVIEW","MANAGEMENT_INSIGHT_REVIEW"],{legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId})
   ]);
   assertForecastActualProvenance(actuals);
+  assertForecastAllocationCertification(actuals);
   const coverageExceptions=inspectForecastCoverage(forecastLines,actuals);
   if(coverageExceptions.length>0) {
     await prisma.agentRun.update({where:{id:run.id},data:{evidence:{coverageComplete:false,coverageExceptionCount:coverageExceptions.length,coverageExceptions:coverageExceptions.slice(0,50)}}});
