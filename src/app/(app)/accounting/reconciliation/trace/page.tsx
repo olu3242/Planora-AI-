@@ -4,6 +4,7 @@ import { hasPermission } from '@/permissions/permissions';
 import { getReconciliationJournalTrace } from '@/application/accounting/reconciliation-journal-trace';
 import { canPreviewBankReconciliation } from '@/domain/accounting/reconciliation-preview-access';
 import Link from 'next/link';
+import { reconciliationEvidencePath } from '@/domain/accounting/reconciliation-lineage';
 
 async function ReconciliationTracePage({ searchParams }: { searchParams: Promise<{ bankTransactionId?: string }> }) {
   const session = await requirePageSession();
@@ -12,7 +13,8 @@ async function ReconciliationTracePage({ searchParams }: { searchParams: Promise
     return <section role="alert">Reconciliation evidence unavailable</section>;
   }
   const id = (await searchParams).bankTransactionId;
-  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return <section role="alert">Select a valid bank transaction.</section>;
+  if (!id) return <section role="alert">Select a valid bank transaction.</section>;
+  try { reconciliationEvidencePath(id); } catch { return <section role="alert">Select a valid bank transaction.</section>; }
   const trace = await getReconciliationJournalTrace(session.organization.id, id);
   if (!trace) return <section role="status">No finalized reconciliation evidence found.</section>;
   return <main>
