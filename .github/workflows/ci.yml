@@ -5,6 +5,30 @@ on:
   push:
     branches: [main, work/bookkeeping-harmonization-b1-20261015]
 jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - name: Enforce moderate-or-higher vulnerability gate
+        run: npm audit --audit-level=moderate
+      - name: Record dependency audit diagnostics
+        if: always()
+        run: |
+          mkdir -p dist/security-audit
+          npm audit --json > dist/security-audit/npm-audit.json || true
+          npm ls braces micromatch fast-glob @next/eslint-plugin-next eslint-config-next --all > dist/security-audit/dependency-tree.txt || true
+          printf 'source_sha=%s\n' "$GITHUB_SHA" > dist/security-audit/provenance.txt
+      - name: Upload security audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-security-audit-${{ github.sha }}
+          path: dist/security-audit/
+          if-no-files-found: warn
+          retention-days: 14
   certify:
     runs-on: ubuntu-latest
     services:
@@ -38,7 +62,6 @@ jobs:
       - name: Run dependency-free preflight fixtures
         run: node --test tests/preflight/*.test.mjs
       - run: npm ci
-      - run: npm audit --audit-level=moderate
       - run: npx playwright install --with-deps chromium
       - name: Run accounting posting regression suite
         run: npx vitest run tests/unit/accounting-canonical-line-types.test.ts tests/unit/accounting-posting-preflight.test.ts tests/unit/accounting-approval-consumption.test.ts tests/unit/posting-approval-guard.test.ts tests/unit/proposed-journal-validation.test.ts
