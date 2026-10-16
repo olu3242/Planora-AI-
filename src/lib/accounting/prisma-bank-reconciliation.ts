@@ -1,5 +1,6 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
 import { reconciliationEligible } from '@/domain/accounting/reconciliation-eligibility';
+import { withBankMappingTenant } from './bank-mapping-tenant-context';
 
 /** Use only with a trusted actor/tenant context and tenant-scoped database access. */
 export async function reconcileBankTransaction(
@@ -11,7 +12,7 @@ export async function reconcileBankTransaction(
     .every(value => typeof value === 'string' && value.trim().length > 0)) {
     throw new Error('RECONCILIATION_CONTEXT_REQUIRED');
   }
-  return db.$transaction(async tx => {
+  return withBankMappingTenant(db, trusted, async tx => {
     const membership = await tx.organizationMembership.findFirst({
       where: { userId: trusted.actorId, organizationId: trusted.organizationId, active: true },
     });
@@ -77,5 +78,5 @@ export async function reconcileBankTransaction(
       },
     });
     return { created: true, bankTransactionId: bank.id, journalId: journal.id };
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }
