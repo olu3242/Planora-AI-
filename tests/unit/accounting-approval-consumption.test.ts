@@ -72,4 +72,28 @@ describe('approval consumption is scoped and atomic',()=>{
       .rejects.toThrow('APPROVAL_ALREADY_CONSUMED');
     expect(tx.auditEvent.create).not.toHaveBeenCalled();
   });
+  it('rejects self approval before creating a journal', async () => {
+    const { tx, db } = fixture(1, { reviewerId: actor });
+    await expect(createPrismaJournalPostingRepository(db as never, actor, organization).postAtomically(input as never)).rejects.toThrow();
+    expect(tx.accountingJournal.create).not.toHaveBeenCalled();
+  });
+  it('rejects mismatched organization before transaction entry', async () => {
+    const { db } = fixture(1);
+    const forged = { ...input, organizationId: 'other-org' };
+    await expect(createPrismaJournalPostingRepository(db as never, actor, organization).postAtomically(forged as never)).rejects.toThrow('UNTRUSTED_POSTING_CONTEXT');
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+  it('rejects mismatched actor before transaction entry', async () => {
+    const { db } = fixture(1);
+    const forged = { ...input, actorId: 'other-actor' };
+    await expect(createPrismaJournalPostingRepository(db as never, actor, organization).postAtomically(forged as never)).rejects.toThrow('UNTRUSTED_POSTING_CONTEXT');
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+  it('rejects blank source key before transaction entry', async () => {
+    const { db } = fixture(1);
+    const invalid = { ...input, sourceKey: ' ' };
+    await expect(createPrismaJournalPostingRepository(db as never, actor, organization).postAtomically(invalid as never)).rejects.toThrow('IDEMPOTENCY_KEY_REQUIRED');
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
 });
