@@ -7,7 +7,7 @@ describe("readiness migration static security contract", () => {
     expect(sql).toMatch(/"legalEntityId" UUID NOT NULL REFERENCES "LegalEntity"\("id"\)/);
   });
   it("references the existing FiscalPeriod UUID", () => {
-    expect(sql).toMatch(/"periodId" UUID NOT NULL REFERENCES "FiscalPeriod"\\("id"\\)/);
+    expect(sql).toContain('"periodId" UUID NOT NULL REFERENCES "FiscalPeriod"("id")');
   });
   it("forces RLS on both readiness tables", () => {
     for (const table of ["FinancialReadinessAssessment", "FinancialReadinessEvidence"]) {
