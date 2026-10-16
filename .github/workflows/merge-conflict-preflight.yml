@@ -25,13 +25,15 @@ jobs:
         run: node --test tests/preflight/merge-conflicts.test.mjs
 
   lockfile-recovery:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/work/bookkeeping-harmonization-b1-20261015'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/work/bookkeeping-harmonization-b1-20261015') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'work/bookkeeping-harmonization-b1-20261015')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: work/bookkeeping-harmonization-b1-20261015
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -62,7 +64,7 @@ jobs:
       - name: Commit verified lockfile on same branch and exact source SHA
         if: success()
         env:
-          SOURCE_SHA: ${{ github.sha }}
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
           test "$(git ls-remote origin refs/heads/work/bookkeeping-harmonization-b1-20261015 | cut -f1)" = "$SOURCE_SHA"
@@ -72,7 +74,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Lockfile already matches"; exit 0
           fi
-          git commit -m "fix(deps): regenerate validated lockfile from manifest [skip ci]"
+          git commit -m "fix(deps): regenerate validated lockfile from manifest"
           git push origin HEAD:refs/heads/work/bookkeeping-harmonization-b1-20261015
       - name: Upload reviewed lockfile candidate
         if: always()
