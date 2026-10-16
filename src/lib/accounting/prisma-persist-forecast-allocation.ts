@@ -11,7 +11,7 @@ export async function persistVerifiedForecastAllocation(db:PrismaClient,actor:Re
   if(!membership||!['CFO','FPA_DIRECTOR'].includes(membership.role))throw new Error('ALLOCATION_PERSIST_ROLE_DENIED');
   const rule=await tx.forecastAllocationRule.findFirst({where:{id:ruleId,organizationId:actor.organizationId,status:'APPROVED'}});
   if(!rule)throw new Error('ALLOCATION_RULE_NOT_APPROVED');
-  const sources=await tx.financialFact.findMany({where:{organizationId:actor.organizationId,legalEntityId:rule.legalEntityId,fiscalPeriodId:rule.fiscalPeriodId,accountId:rule.accountId,currencyCode:rule.currencyCode,sourceIdentifier:rule.sourceIdentifier,scenario:'ACTUAL',costCenterId:null},select:{organizationId:true,legalEntityId:true,fiscalPeriodId:true,accountId:true,currencyCode:true,sourceIdentifier:true,costCenterId:true,amount:true,sourceMetadata:true}});
+  const sources=await tx.financialFact.findMany({where:{organizationId:actor.organizationId,legalEntityId:rule.legalEntityId,fiscalPeriodId:rule.fiscalPeriodId,accountId:rule.accountId,currencyCode:rule.currencyCode,sourceIdentifier:rule.sourceIdentifier,scenario:'ACTUAL'},select:{organizationId:true,legalEntityId:true,fiscalPeriodId:true,accountId:true,currencyCode:true,sourceIdentifier:true,costCenterId:true,amount:true,sourceMetadata:true}});
   if(sources.length!==1)throw new Error('ALLOCATION_LEDGER_SOURCE_CARDINALITY');
   const currency=await tx.currency.findUnique({where:{code:rule.currencyCode},select:{minorUnits:true}});
   if(!currency)throw new Error('ALLOCATION_CURRENCY_MISSING');
