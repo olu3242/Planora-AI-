@@ -1,10 +1,12 @@
 import { withTenantPage } from '@/lib/tenant-request';
 import { requirePageSession } from '@/auth/session';
+import { hasPermission } from '@/permissions/permissions';
 import { prisma } from '@/lib/prisma';
 import { previewReconciliationForTrustedActor } from '@/application/accounting/trusted-reconciliation-preview';
 
 async function ReconciliationPage({ searchParams }: { searchParams: Promise<{ bankAccountId?: string }> }) {
   const session = await requirePageSession();
+  if (!hasPermission(session.membership.role, 'financial.read')) return <section role="alert">Accounting unavailable</section>;
   const accounts = await prisma.bankAccount.findMany({
     where: { organizationId: session.organization.id, active: true },
     select: { id: true, name: true },
