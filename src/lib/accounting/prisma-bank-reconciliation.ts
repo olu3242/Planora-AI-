@@ -23,9 +23,6 @@ export async function reconcileBankTransaction(
       include: { bankAccount: true },
     });
     if (!bank) throw new Error('BANK_TRANSACTION_NOT_FOUND');
-    if (bank.status === 'MATCHED' && bank.matchedJournalId === request.journalId) {
-      return { created: false, bankTransactionId: bank.id, journalId: request.journalId };
-    }
     const mapping = await tx.bankCashMapping.findMany({
       where: {
         organizationId: trusted.organizationId, bankAccountId: bank.bankAccountId,
