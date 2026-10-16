@@ -69,7 +69,7 @@ export async function syncLedgerActuals(input:Readonly<{
     const amount=currencyRow.minorUnits===0?`${sign}${whole}`:`${sign}${whole}.${fraction}`;
     const dimensionKey=`ledger:${input.legalEntityId}:${candidate.accountId}`;
     const grainKey=`${candidate.sourceKey}:ACTUAL`;
-    await tx.financialFact.upsert({where:{organizationId_grainKey:{organizationId:input.organizationId,grainKey}},create:{organizationId:input.organizationId,accountId:candidate.accountId,fiscalPeriodId:input.fiscalPeriodId,legalEntityId:input.legalEntityId,scenario:FinancialScenario.ACTUAL,currencyCode:currency,amount,sourceType:FinancialSourceType.SYSTEM_CALCULATION,sourceIdentifier:candidate.sourceKey,sourceMetadata:{correlationId:input.correlationId},dimensionKey,grainKey},update:{amount,sourceMetadata:{correlationId:input.correlationId}}});
+    await tx.financialFact.upsert({where:{organizationId_grainKey:{organizationId:input.organizationId,grainKey}},create:{organizationId:input.organizationId,accountId:candidate.accountId,fiscalPeriodId:input.fiscalPeriodId,legalEntityId:input.legalEntityId,scenario:FinancialScenario.ACTUAL,currencyCode:currency,amount,sourceType:FinancialSourceType.SYSTEM_CALCULATION,sourceIdentifier:candidate.sourceKey,sourceMetadata:{correlationId:input.correlationId,origin:'POSTED_LEDGER',legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId},dimensionKey,grainKey},update:{amount,sourceMetadata:{correlationId:input.correlationId}}});
     count++;
    }
   }
