@@ -56,4 +56,17 @@ describe('posting approval guard', () => {
   it('rejects invalid request time', () => {
     expect(checkPostingApproval(approval,{...request,now:new Date('invalid')})).toEqual({ok:false,code:'INVALID_TIMESTAMP'});
   });
+  it('rejects cross-period approval', () => {
+    expect(checkPostingApproval({...approval,fiscalPeriodId:'period-b'},request)).toEqual({ok:false,code:'INVALID_SCOPE'});
+  });
+  it('rejects a missing approver identity', () => {
+    expect(checkPostingApproval({...approval,decidedById:null},request)).toEqual({ok:false,code:'APPROVAL_NOT_APPROVED'});
+  });
+  it('rejects an invalid approval expiry timestamp', () => {
+    expect(checkPostingApproval({...approval,expiresAt:new Date('invalid')},request)).toEqual({ok:false,code:'INVALID_TIMESTAMP'});
+  });
+  it('rejects blank actor identity', () => {
+    expect(checkPostingApproval(approval,{...request,actorId:'  '})).toEqual({ok:false,code:'INVALID_SCOPE'});
+  });
+
 });
