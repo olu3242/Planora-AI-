@@ -8,6 +8,7 @@ export async function previewReconciliationForTrustedActor(
   trusted: { organizationId: string; actorId: string },
   bankAccountId: string,
 ) {
+  if (!bankAccountId?.trim()) throw new Error('BANK_ACCOUNT_ID_REQUIRED');
   return withBankMappingTenant(authenticationPrisma, trusted, async tx => {
     const member = await tx.organizationMembership.findFirst({
       where: { organizationId: trusted.organizationId, userId: trusted.actorId, active: true },
