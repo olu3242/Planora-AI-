@@ -32,11 +32,12 @@ export async function postGovernedJournal(
   repository: JournalPostingRepository,
   input: AuthorizedPosting,
 ): Promise<{ journalId: string; created: boolean }> {
-  if (!input.organizationId || !input.legalEntityId || !input.fiscalPeriodId || !input.actorId) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("POSTING_CONTEXT_REQUIRED");
+  if (![input.organizationId, input.legalEntityId, input.fiscalPeriodId, input.actorId].every(value => typeof value === "string" && value.trim())) {
     throw new Error("POSTING_CONTEXT_REQUIRED");
   }
-  if (!input.sourceKey.trim()) throw new Error("IDEMPOTENCY_KEY_REQUIRED");
-  if (!/^[A-Z]{3}$/.test(input.currencyCode)) throw new Error("CURRENCY_CODE_INVALID");
+  if (typeof input.sourceKey !== "string" || !input.sourceKey.trim()) throw new Error("IDEMPOTENCY_KEY_REQUIRED");
+  if (typeof input.currencyCode !== "string" || !/^[A-Z]{3}$/.test(input.currencyCode)) throw new Error("CURRENCY_CODE_INVALID");
   validateJournalLines(input.lines);
   assertPostingGate(input.gate);
   return repository.postAtomically({
