@@ -1,6 +1,5 @@
 import 'server-only';
-import { authenticationPrisma } from '@/lib/prisma';
-import { withBankMappingTenant } from '@/lib/accounting/bank-mapping-tenant-context';
+import { prisma } from '@/lib/prisma';
 import { canPreviewBankReconciliation } from '@/domain/accounting/reconciliation-preview-access';
 import { previewReconciliation } from './reconciliation-service';
 
@@ -9,7 +8,8 @@ export async function previewReconciliationForTrustedActor(
   bankAccountId: string,
 ) {
   if (!bankAccountId?.trim()) throw new Error('BANK_ACCOUNT_ID_REQUIRED');
-  return withBankMappingTenant(authenticationPrisma, trusted, async tx => {
+  const tx = prisma; 
+  {
     const member = await tx.organizationMembership.findFirst({
       where: { organizationId: trusted.organizationId, userId: trusted.actorId, active: true },
       select: { role: true, active: true },
@@ -18,5 +18,5 @@ export async function previewReconciliationForTrustedActor(
       throw new Error('RECONCILIATION_PREVIEW_DENIED');
     }
     return previewReconciliation(trusted.organizationId, bankAccountId);
-  });
+  }
 }
