@@ -5,6 +5,7 @@ import { withMappingTenant } from "./ai-mapping-tenant-transaction";
 import { assessReadinessSources, type SourceControl } from "./financial-readiness-source-adapters";
 import type { ReadinessScope } from "./financial-readiness";
 import { journalPreflight, bankPreflight } from "./financial-readiness-diagnostics";
+import { assertReadinessScopeOwnership } from "./financial-readiness-scope";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const control = (id: string, status: SourceControl["status"], evidenceIds: string[], asOf: string): SourceControl => ({
@@ -23,9 +24,10 @@ export async function previewLiveReadiness(legalEntityId: string, fiscalPeriodId
   const scope: ReadinessScope = { organizationId, legalEntityId, periodId: fiscalPeriodId, asOf: new Date().toISOString() };
   return withMappingTenant(prisma, organizationId, async transaction => {
     const db = transaction as typeof prisma;
-    const entity = await db.legalEntity.findFirst({ where: { id: legalEntityId, organizationId, active: true }, select: { id: true } });
+    const entity = await db.legalEntity.findFirst({ where: { id: legalEntityId, organizationId, active: true }, select: { id: true, organizationId: true, active: true } });
     if (!entity) throw new Error("READINESS_SCOPE_NOT_FOUND");
-    const period = await db.fiscalPeriod.findUnique({ where: { id: fiscalPeriodId }, select: { id: true, accountingCloseState: true, startDate: true, endDate: true } });
+    const period = await db.fiscalPeriod.findUnique({ where: { id: fiscalPeriodId }, select: { id: true, accountingCloseState: true, startDate: true, endDate: true, year: { select: { calendar: { select: { organizationId: true } } } } } });
+    assertReadinessScopeOwnership({ organizationId, legalEntity: entity, fiscalPeriod: period });
     if (!period) throw new Error("READINESS_SCOPE_NOT_FOUND");
     const [journals, bankAccounts, reportingRuns] = await Promise.all([
       db.accountingJournal.findMany({
