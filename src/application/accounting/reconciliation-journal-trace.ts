@@ -35,6 +35,7 @@ export async function getReconciliationJournalTrace(
     }
   }
   const eligible = [...cash.entries()].filter(([, amount]) => amount === movement.amountMinor);
+  // A unique matching cash line is required; an ambiguous journal cannot be traced safely.
   if (eligible.length !== 1) throw new Error('RECONCILIATION_TRACE_CASH_AMBIGUOUS');
   const [cashAccountId] = eligible[0];
   const result = validateReconciliationTrace({
