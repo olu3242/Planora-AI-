@@ -8,8 +8,7 @@ export async function previewReconciliationForTrustedActor(
   bankAccountId: string,
 ) {
   if (!bankAccountId?.trim()) throw new Error('BANK_ACCOUNT_ID_REQUIRED');
-  const tx = prisma; 
-  {
+  const tx = prisma;
     const member = await tx.organizationMembership.findFirst({
       where: { organizationId: trusted.organizationId, userId: trusted.actorId, active: true },
       select: { role: true, active: true },
@@ -17,6 +16,5 @@ export async function previewReconciliationForTrustedActor(
     if (!member || !canPreviewBankReconciliation(member.role, member.active)) {
       throw new Error('RECONCILIATION_PREVIEW_DENIED');
     }
-    return previewReconciliation(trusted.organizationId, bankAccountId);
-  }
+  return previewReconciliation(trusted.organizationId, bankAccountId);
 }
