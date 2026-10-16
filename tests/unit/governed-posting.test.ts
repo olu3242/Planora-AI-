@@ -37,4 +37,44 @@ describe("governed posting", () => {
     })).rejects.toThrow("UNBALANCED_JOURNAL");
     expect(postAtomically).not.toHaveBeenCalled();
   });
+  it("rejects null request before persistence", async () => {
+    const postAtomically = vi.fn();
+    await expect(postGovernedJournal({ postAtomically }, null as never)).rejects.toThrow("POSTING_CONTEXT_REQUIRED");
+    expect(postAtomically).not.toHaveBeenCalled();
+  });
+  it("rejects array request before persistence", async () => {
+    const postAtomically = vi.fn();
+    await expect(postGovernedJournal({ postAtomically }, [] as never)).rejects.toThrow("POSTING_CONTEXT_REQUIRED");
+    expect(postAtomically).not.toHaveBeenCalled();
+  });
+  it("rejects blank organization before persistence", async () => {
+    const postAtomically = vi.fn();
+    await expect(postGovernedJournal({ postAtomically }, { ...valid, organizationId: ' ' } as never)).rejects.toThrow("POSTING_CONTEXT_REQUIRED");
+    expect(postAtomically).not.toHaveBeenCalled();
+  });
+  it("rejects missing actor before persistence", async () => {
+    const postAtomically = vi.fn();
+    await expect(postGovernedJournal({ postAtomically }, { ...valid, actorId: null } as never)).rejects.toThrow("POSTING_CONTEXT_REQUIRED");
+    expect(postAtomically).not.toHaveBeenCalled();
+  });
+  it("rejects non-string source key before persistence", async () => {
+    const postAtomically = vi.fn();
+    await expect(postGovernedJournal({ postAtomically }, { ...valid, sourceKey: 42 } as never)).rejects.toThrow("IDEMPOTENCY_KEY_REQUIRED");
+    expect(postAtomically).not.toHaveBeenCalled();
+  });
+  it("rejects blank source key before persistence", async () => {
+    const postAtomically = vi.fn();
+    await expect(postGovernedJournal({ postAtomically }, { ...valid, sourceKey: ' ' } as never)).rejects.toThrow("IDEMPOTENCY_KEY_REQUIRED");
+    expect(postAtomically).not.toHaveBeenCalled();
+  });
+  it("rejects non-string currency before persistence", async () => {
+    const postAtomically = vi.fn();
+    await expect(postGovernedJournal({ postAtomically }, { ...valid, currencyCode: null } as never)).rejects.toThrow("CURRENCY_CODE_INVALID");
+    expect(postAtomically).not.toHaveBeenCalled();
+  });
+  it("rejects lowercase currency before persistence", async () => {
+    const postAtomically = vi.fn();
+    await expect(postGovernedJournal({ postAtomically }, { ...valid, currencyCode: 'usd' } as never)).rejects.toThrow("CURRENCY_CODE_INVALID");
+    expect(postAtomically).not.toHaveBeenCalled();
+  });
 });
