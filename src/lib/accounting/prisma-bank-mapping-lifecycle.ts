@@ -70,6 +70,10 @@ export async function approveBankCashMapping(db: PrismaClient, actor: BankMappin
         mapping.bankAccount.organizationId !== actor.organizationId ||
         mapping.cashAccount.organizationId !== actor.organizationId ||
         mapping.cashAccount.systemPurpose !== 'CASH') throw new Error('BANK_MAPPING_ACCOUNT_INVALID');
+    if (mapping.cashAccount.effectiveFrom > mapping.effectiveFrom ||
+        (mapping.cashAccount.effectiveTo && (!mapping.effectiveTo || mapping.cashAccount.effectiveTo < mapping.effectiveTo))) {
+      throw new Error('BANK_MAPPING_ACCOUNT_NOT_EFFECTIVE');
+    }
     const overlaps = await tx.bankCashMapping.count({
       where: {
         organizationId: actor.organizationId, bankAccountId: mapping.bankAccountId,
