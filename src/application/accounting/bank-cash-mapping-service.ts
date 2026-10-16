@@ -1,6 +1,5 @@
 import 'server-only';
 import { prisma } from '@/lib/prisma';
-import { isApprovedBankMapping } from '@/domain/accounting/bank-mapping-policy';
 
 /**
  * Read-only mapping resolver. Must be called in an authenticated tenant context.
@@ -41,13 +40,7 @@ export async function resolveApprovedCashMapping(
     mapping.approvedById !== mapping.preparedById &&
     mapping.cashAccount.systemPurpose === 'CASH' &&
     mapping.cashAccount.active &&
-    isApprovedBankMapping({
-      organizationId,
-      bankOrganizationId: bank.organizationId,
-      cashOrganizationId: mapping.cashAccount.organizationId,
-      approved: true, revoked: false,
-      currency: bank.currencyCode, cashCurrency: bank.currencyCode,
-    }),
+    mapping.cashAccount.organizationId === organizationId,
   );
   // Never silently select between overlapping approved mappings.
   if (eligible.length > 1) throw new Error('BANK_LEDGER_MAPPING_AMBIGUOUS');
