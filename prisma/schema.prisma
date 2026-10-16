@@ -466,6 +466,7 @@ model LegalEntity {
   arInvoices         ArInvoice[]
   arReceipts         ArReceipt[]
   reportingRuns      ReportingRun[]
+  financialReadinessAssessments FinancialReadinessAssessment[]
 
   @@unique([organizationId, code])
   @@index([organizationId, parentId])
@@ -635,6 +636,7 @@ model FiscalPeriod {
   accountingJournals AccountingJournal[]
   accountingCloseState AccountingPeriodState @default(OPEN)
   reportingRuns ReportingRun[]
+  financialReadinessAssessments FinancialReadinessAssessment[]
 
   @@unique([fiscalYearId, code])
   @@unique([fiscalYearId, ordinal])
@@ -1430,7 +1432,7 @@ model FinancialReadinessAssessment {
   id                String   @id @default(uuid()) @db.Uuid
   organizationId    String   @db.Uuid
   legalEntityId     String   @db.Uuid
-  periodId          String
+  periodId          String   @db.Uuid
   asOf              DateTime
   score             Int?
   status            String
@@ -1441,6 +1443,8 @@ model FinancialReadinessAssessment {
   sourceFingerprint String
   createdAt         DateTime @default(now())
   organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity       LegalEntity @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  fiscalPeriod      FiscalPeriod @relation(fields: [periodId], references: [id], onDelete: Restrict)
   evidence          FinancialReadinessEvidence[]
 
   @@unique([organizationId, legalEntityId, periodId, policyVersion, sourceFingerprint])
