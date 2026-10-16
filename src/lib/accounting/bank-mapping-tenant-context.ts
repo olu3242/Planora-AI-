@@ -1,4 +1,5 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
+import { inTenantTransaction } from '@/lib/prisma';
 
 /** Execute tenant operations with transaction-local, validated identity. */
 export async function withBankMappingTenant<T>(
@@ -13,6 +14,6 @@ export async function withBankMappingTenant<T>(
   return db.$transaction(async tx => {
     await tx.$queryRaw`SELECT set_config('app.organization_id', ${trusted.organizationId}, true)`;
     await tx.$queryRaw`SELECT set_config('app.actor_id', ${trusted.actorId}, true)`;
-    return work(tx);
+    return inTenantTransaction(tx, () => work(tx));
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
