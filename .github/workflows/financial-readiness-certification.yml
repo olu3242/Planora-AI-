@@ -7,11 +7,13 @@ on:
     paths:
       - 'src/lib/accounting/financial-readiness*'
       - 'src/lib/accounting/bookkeeping-cleanup*'
+      - 'src/lib/accounting/bookkeeping-reconciliation*'
       - 'src/app/api/accounting/readiness/**'
       - 'src/app/api/accounting/bookkeeping/**'
       - 'src/app/finance/readiness/**'
       - 'tests/unit/financial-readiness*'
       - 'tests/unit/bookkeeping-cleanup*'
+      - 'tests/unit/bookkeeping-reconciliation*'
       - 'prisma/schema.prisma'
       - 'prisma/migrations/*financial_readiness*/**'
       - 'prisma/migrations/*bookkeeping_cleanup*/**'
@@ -19,9 +21,15 @@ on:
   pull_request:
     paths:
       - 'src/lib/accounting/financial-readiness*'
+      - 'src/lib/accounting/bookkeeping-cleanup*'
+      - 'src/lib/accounting/bookkeeping-reconciliation*'
+      - 'src/app/api/accounting/bookkeeping/**'
       - 'tests/unit/financial-readiness*'
+      - 'tests/unit/bookkeeping-cleanup*'
+      - 'tests/unit/bookkeeping-reconciliation*'
       - 'prisma/schema.prisma'
       - 'prisma/migrations/*financial_readiness*/**'
+      - 'prisma/migrations/*bookkeeping_cleanup*/**'
 permissions:
   contents: read
 jobs:
@@ -69,9 +77,9 @@ jobs:
           import { PrismaClient } from '@prisma/client';
           const db = new PrismaClient();
           try {
-            const rows = await db.$queryRaw`SELECT relname, relrowsecurity, relforcerowsecurity FROM pg_class WHERE relname IN ('FinancialReadinessAssessment', 'FinancialReadinessEvidence')`;
-            if (rows.length !== 2 || rows.some(r => !r.relrowsecurity || !r.relforcerowsecurity)) {
-              throw new Error('Readiness RLS not enabled and forced on both tables');
+            const rows = await db.$queryRaw`SELECT relname, relrowsecurity, relforcerowsecurity FROM pg_class WHERE relname IN ('FinancialReadinessAssessment', 'FinancialReadinessEvidence', 'BookkeepingCleanupCase', 'BookkeepingCleanupJob', 'BookkeepingCleanupOutbox')`;
+            if (rows.length !== 5 || rows.some(r => !r.relrowsecurity || !r.relforcerowsecurity)) {
+              throw new Error('Readiness and bookkeeping RLS not enabled and forced on all five tables');
             }
             console.log('RLS flags present (runtime-role cross-tenant proof still required)');
           } finally {
