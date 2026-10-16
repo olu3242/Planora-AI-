@@ -289,6 +289,7 @@ model Organization {
   reportingRuns        ReportingRun[]
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
+  bookkeepingCleanupCases BookkeepingCleanupCase[]
 }
 
 model ExcelWorkbook {
@@ -470,6 +471,7 @@ model LegalEntity {
 
   @@unique([organizationId, code])
   @@index([organizationId, parentId])
+  bookkeepingCleanupCases BookkeepingCleanupCase[]
 }
 
 model BusinessUnit {
@@ -640,6 +642,7 @@ model FiscalPeriod {
 
   @@unique([fiscalYearId, code])
   @@unique([fiscalYearId, ordinal])
+  bookkeepingCleanupCases BookkeepingCleanupCase[]
 }
 
 model FinancialFact {
@@ -1470,3 +1473,30 @@ model FinancialReadinessEvidence {
 
   @@unique([assessmentId, dimension, checkId])
 }
+
+model BookkeepingCleanupCase {
+  id             String   @id
+  organizationId String   @db.Uuid
+  legalEntityId  String   @db.Uuid
+  fiscalPeriodId String   @db.Uuid
+  issueKey       String
+  issue          Json
+  state          String
+  revision       Int      @default(0)
+  assignedRole   String
+  proposal       String?
+  proposedBy     String?
+  approvedBy     String?
+  evidenceIds    Json
+  history        Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity    LegalEntity @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  fiscalPeriod   FiscalPeriod @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, legalEntityId, fiscalPeriodId, issueKey])
+  @@unique([id, organizationId])
+  @@index([organizationId, state, updatedAt], map: "BookkeepingCleanupCase_queue_idx")
+}
+
