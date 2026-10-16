@@ -15,8 +15,7 @@ export function journalPreflight(journals: readonly JournalProbe[], truncated: b
   ));
   return {
     drafts, unbalanced,
-    status: truncated || !journals.length ? "UNKNOWN" as const :
-      drafts.length || unbalanced.length ? "FAIL" as const : "UNKNOWN" as const,
+    status: drafts.length || unbalanced.length ? "FAIL" as const : "UNKNOWN" as const,
   };
 }
 export function bankPreflight(transactions: readonly BankProbe[], truncated: boolean) {
@@ -25,7 +24,6 @@ export function bankPreflight(transactions: readonly BankProbe[], truncated: boo
   );
   return {
     unmatched,
-    status: truncated || !transactions.length ? "UNKNOWN" as const :
-      unmatched.length ? "FAIL" as const : "UNKNOWN" as const,
+    status: unmatched.length ? "FAIL" as const : "UNKNOWN" as const,
   };
 }
