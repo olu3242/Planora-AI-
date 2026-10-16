@@ -23,3 +23,43 @@ jobs:
       - name: Test conflict gate behavior
         if: always()
         run: node --test tests/preflight/merge-conflicts.test.mjs
+
+  lockfile-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - name: Record source provenance
+        run: |
+          mkdir -p dist/lockfile-recovery
+          printf 'source_sha=%s\n' "$GITHUB_SHA" > dist/lockfile-recovery/provenance.txt
+          node --version >> dist/lockfile-recovery/provenance.txt
+          npm --version >> dist/lockfile-recovery/provenance.txt
+      - name: Generate manifest-derived lockfile
+        run: |
+          rm -f package-lock.json
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          node -e 'const p=require("./package.json");const l=require("./package-lock.json");for(const k of ["dependencies","devDependencies","optionalDependencies"]){for(const [n,v] of Object.entries(p[k]||{})){if(l.packages[""][k]?.[n]!==v)throw Error(k+":"+n+" mismatch")}}'
+      - name: Verify clean install
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Record checksum
+        run: sha256sum package-lock.json > dist/lockfile-recovery/sha256.txt
+      - name: Upload reviewed lockfile candidate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-lockfile-candidate-${{ github.sha }}
+          path: |
+            package-lock.json
+            dist/lockfile-recovery/provenance.txt
+            dist/lockfile-recovery/sha256.txt
+          if-no-files-found: warn
+          retention-days: 14
