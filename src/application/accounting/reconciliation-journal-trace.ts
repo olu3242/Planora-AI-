@@ -21,6 +21,7 @@ export async function getReconciliationJournalTrace(
     },
   });
   if (!movement || !movement.matchedJournalId || !movement.matchedJournal) return null;
+  if (movement.status !== 'MATCHED') throw new Error('RECONCILIATION_TRACE_NOT_MATCHED');
   const journal = movement.matchedJournal;
   if (journal.organizationId !== organizationId ||
       journal.legalEntityId !== movement.bankAccount.legalEntityId ||
