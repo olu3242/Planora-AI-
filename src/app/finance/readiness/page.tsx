@@ -17,7 +17,7 @@ export default async function ReadinessCommandCenter({ searchParams }: {
   const params = await searchParams;
   const legalEntityId = params.legalEntityId ?? "";
   const periodId = params.periodId ?? "";
-  const valid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(legalEntityId) && /^[A-Za-z0-9_.:-]{1,128}$/.test(periodId);
+  const valid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(legalEntityId) && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(periodId);
   const state = valid ? await loadReadinessForSession(legalEntityId, periodId) : null;
   const a = state?.assessment;
   const dims = a?.dimensions as Record<string,{score:number|null;checks:number}> | undefined;
@@ -29,7 +29,7 @@ export default async function ReadinessCommandCenter({ searchParams }: {
     </header>
     <form className={styles.filters} method="GET">
       <label>Legal entity UUID<input name="legalEntityId" required defaultValue={legalEntityId} placeholder="Entity ID" /></label>
-      <label>Reporting period<input name="periodId" required defaultValue={periodId} placeholder="2026-10" /></label>
+      <label>Reporting period<input name="periodId" required defaultValue={periodId} placeholder="Fiscal period UUID" /></label>
       <button type="submit">View readiness</button>
     </form>
     {!valid ? <section className={styles.panel}><h2>Select an entity and period</h2><p>Readiness is always evaluated for a specific legal entity and reporting period. No sample scores are shown as actual financial results.</p></section> :
