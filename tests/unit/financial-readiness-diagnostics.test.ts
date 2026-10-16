@@ -4,6 +4,12 @@ const posted = (lines: { debitMinor: bigint; creditMinor: bigint }[]) => ({
   id: "j1", status: "POSTED" as const, postedAt: new Date("2026-10-16T00:00:00Z"), lines,
 });
 describe("readiness live preflight diagnostics", () => {
+  it("preserves known journal failures when scan is truncated", () => {
+    expect(journalPreflight([posted([{ debitMinor: 5n, creditMinor: 0n }, { debitMinor: 0n, creditMinor: 4n }])], true).status).toBe("FAIL");
+  });
+  it("preserves known unmatched bank transactions when scan is truncated", () => {
+    expect(bankPreflight([{ id: "b", status: "UNMATCHED", matchedJournalId: null }], true).status).toBe("FAIL");
+  });
   it("detects unbalanced posted journals", () => {
     expect(journalPreflight([posted([{ debitMinor: 100n, creditMinor: 0n }, { debitMinor: 0n, creditMinor: 90n }])], false).status).toBe("FAIL");
   });
