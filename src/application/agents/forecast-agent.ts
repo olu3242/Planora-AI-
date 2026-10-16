@@ -6,6 +6,7 @@ import { actualFactKey, indexActualFacts } from "@/domain/forecast/actual-fact-i
 import { resolveForecastActualCurrency } from "@/domain/forecast/forecast-actual-currency";
 import { assertForecastDimensionCompatibility } from "@/domain/forecast/forecast-dimension-compatibility";
 import { inspectForecastCoverage } from "@/domain/forecast/inspect-forecast-coverage";
+import { assertForecastActualProvenance } from "@/domain/forecast/forecast-actual-provenance";
 import { acceptedDecisionMemory } from "@/application/agents/decision-context";
 
 export async function runForecastAgent(input:Readonly<{organizationId:string;legalEntityId:string;fiscalPeriodId:string;actorId:string;correlationId:string}>){
@@ -14,10 +15,11 @@ export async function runForecastAgent(input:Readonly<{organizationId:string;leg
  const run=await prisma.agentRun.create({data:{agentDefinitionId:definition.id,organizationId:input.organizationId,actorId:input.actorId,trigger:"ACTUALS_SYNC_COMPLETED",task:"Analyze actual-to-forecast variance",inputReferences:{legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId,correlationId:input.correlationId},toolTrace:[],evidence:{},status:"RUNNING"}});
  try{
   const [actuals,forecastLines,memory]=await Promise.all([
-   prisma.financialFact.findMany({where:{organizationId:input.organizationId,legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId,scenario:"ACTUAL"},select:{accountId:true,costCenterId:true,amount:true,currencyCode:true,sourceIdentifier:true}}),
+   prisma.financialFact.findMany({where:{organizationId:input.organizationId,legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId,scenario:"ACTUAL"},select:{accountId:true,costCenterId:true,amount:true,currencyCode:true,sourceIdentifier:true,sourceMetadata:true}}),
    prisma.forecastLine.findMany({where:{fiscalPeriodId:input.fiscalPeriodId,forecastVersion:{forecast:{organizationId:input.organizationId},status:{in:["DRAFT","REVISION_REQUIRED"]}}},select:{id:true,accountId:true,costCenterId:true,currentForecast:true,forecastVersionId:true}}),
    acceptedDecisionMemory(input.organizationId,["FORECAST_REFRESH_REVIEW","MANAGEMENT_INSIGHT_REVIEW"],{legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId})
   ]);
+  assertForecastActualProvenance(actuals);
   const coverageExceptions=inspectForecastCoverage(forecastLines,actuals);
   if(coverageExceptions.length>0) {
     await prisma.agentRun.update({where:{id:run.id},data:{evidence:{coverageComplete:false,coverageExceptionCount:coverageExceptions.length,coverageExceptions:coverageExceptions.slice(0,50)}}});
