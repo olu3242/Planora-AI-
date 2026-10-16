@@ -7,7 +7,7 @@ export interface TenantTransactionClient {
   $transaction<T>(fn: (tx: TenantTransactionConnection) => Promise<T>): Promise<T>;
 }
 export interface TenantTransactionConnection {
-  $executeRaw(query: TemplateStringsArray, ...values: unknown[]): Promise<number>;
+  $queryRaw(query: TemplateStringsArray, ...values: unknown[]): Promise<unknown>;
 }
 export async function withMappingTenant<T>(
   client: TenantTransactionClient,
@@ -18,7 +18,7 @@ export async function withMappingTenant<T>(
     throw new Error("INVALID_AUTHENTICATED_ORGANIZATION_ID");
   }
   return client.$transaction(async tx => {
-    await tx.$executeRaw`SELECT set_config('app.organization_id', ${authenticatedOrganizationId}, true)`;
+    await tx.$queryRaw`SELECT set_config('app.organization_id', ${authenticatedOrganizationId}, true)`;
     return callback(tx);
   });
 }
