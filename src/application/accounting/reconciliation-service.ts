@@ -43,7 +43,6 @@ export async function previewReconciliation(organizationId: string, bankAccountI
       select: {
         journalId: true, debitMinor: true, creditMinor: true,
       },
-      take: 1000,
     });
     const net = new Map<string, bigint>();
     for (const line of lines) {
