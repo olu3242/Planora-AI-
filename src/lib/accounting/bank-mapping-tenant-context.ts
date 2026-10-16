@@ -11,8 +11,8 @@ export async function withBankMappingTenant<T>(
     throw new Error('TRUSTED_TENANT_IDENTITY_REQUIRED');
   }
   return db.$transaction(async tx => {
-    await tx.$executeRaw`SELECT set_config('app.organization_id', ${trusted.organizationId}, true)`;
-    await tx.$executeRaw`SELECT set_config('app.actor_id', ${trusted.actorId}, true)`;
+    await tx.$queryRaw`SELECT set_config('app.organization_id', ${trusted.organizationId}, true)`;
+    await tx.$queryRaw`SELECT set_config('app.actor_id', ${trusted.actorId}, true)`;
     return work(tx);
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
