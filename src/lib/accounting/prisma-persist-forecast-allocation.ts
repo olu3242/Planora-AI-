@@ -4,6 +4,7 @@ import {withBankMappingTenant} from '@/lib/accounting/bank-mapping-tenant-contex
 import {verifyLedgerAllocationSource} from '@/domain/forecast/verify-ledger-allocation-source';
 import {buildAllocationEvidence} from '@/domain/forecast/allocation-evidence';
 import {prepareAllocationPersistence} from '@/domain/forecast/prepare-allocation-persistence';
+import {assertAllocationRetryIdentity} from '@/domain/forecast/allocation-retry-identity';
 /** Fail-closed, transaction-scoped materialization of derived FP&A facts. */
 export async function persistVerifiedForecastAllocation(db:PrismaClient,actor:Readonly<{organizationId:string;actorId:string}>,ruleId:string){
  return withBankMappingTenant(db,actor,async(tx:Prisma.TransactionClient)=>{
@@ -20,11 +21,12 @@ export async function persistVerifiedForecastAllocation(db:PrismaClient,actor:Re
   const scope={organizationId:actor.organizationId,legalEntityId:rule.legalEntityId,fiscalPeriodId:rule.fiscalPeriodId,accountId:rule.accountId,currencyCode:rule.currencyCode,sourceIdentifier:rule.sourceIdentifier};
   const evidence=buildAllocationEvidence({...scope,amountMinor,rule:{...scope,id:rule.id,shares:rule.shares as unknown as AllocationShare[],preparedById:rule.preparedById,approvedById:rule.approvedById,status:'APPROVED'}});
   const rows=prepareAllocationPersistence(evidence,currency.minorUnits);
-  const existing=await tx.financialFact.findMany({where:{organizationId:actor.organizationId,grainKey:{in:rows.map(row=>row.grainKey)}},select:{grainKey:true,amount:true,sourceMetadata:true}});
+  const existing=await tx.financialFact.findMany({where:{organizationId:actor.organizationId,grainKey:{in:rows.map(row=>row.grainKey)}},select:{grainKey:true,organizationId:true,legalEntityId:true,fiscalPeriodId:true,accountId:true,currencyCode:true,costCenterId:true,sourceIdentifier:true,amount:true,sourceMetadata:true}});
   if(existing.length){
    if(existing.length!==rows.length)throw new Error('ALLOCATION_PARTIAL_PERSISTENCE');
    for(const row of rows){
     const saved=existing.find(f=>f.grainKey===row.grainKey);
+    if(saved)assertAllocationRetryIdentity(row,saved);
     const meta=saved?.sourceMetadata;
     if(!saved||saved.amount.toFixed()!==row.amount||!meta||typeof meta!=='object'||Array.isArray(meta)||(meta as Record<string,unknown>).origin!=='APPROVED_ALLOCATION'||(meta as Record<string,unknown>).ruleId!==rule.id)throw new Error('ALLOCATION_PERSISTENCE_CONFLICT');
    }
