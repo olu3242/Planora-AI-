@@ -31,7 +31,7 @@ export async function resolveApprovedCashMapping(
       cashAccountId: true, approvedById: true, preparedById: true,
       cashAccount: {
         select: {
-          organizationId: true, active: true, systemPurpose: true,
+          organizationId: true, active: true, systemPurpose: true, effectiveFrom: true, effectiveTo: true,
         },
       },
     },
@@ -40,6 +40,8 @@ export async function resolveApprovedCashMapping(
     mapping.approvedById !== mapping.preparedById &&
     mapping.cashAccount.systemPurpose === 'CASH' &&
     mapping.cashAccount.active &&
+    mapping.cashAccount.effectiveFrom <= postedDate &&
+    (!mapping.cashAccount.effectiveTo || mapping.cashAccount.effectiveTo >= postedDate) &&
     mapping.cashAccount.organizationId === organizationId,
   );
   // Never silently select between overlapping approved mappings.
