@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { calculateVariance } from "@/domain/forecast/variance";
 import Decimal from "decimal.js";
+import { indexActualFacts } from "@/domain/forecast/actual-fact-index";
 import { acceptedDecisionMemory } from "@/application/agents/decision-context";
 
 export async function runForecastAgent(input:Readonly<{organizationId:string;legalEntityId:string;fiscalPeriodId:string;actorId:string;correlationId:string}>){
@@ -14,8 +15,10 @@ export async function runForecastAgent(input:Readonly<{organizationId:string;leg
    prisma.forecastLine.findMany({where:{fiscalPeriodId:input.fiscalPeriodId,forecastVersion:{forecast:{organizationId:input.organizationId},status:{in:["DRAFT","REVISION_REQUIRED"]}}},select:{id:true,accountId:true,currentForecast:true,forecastVersionId:true}}),
    acceptedDecisionMemory(input.organizationId,["FORECAST_REFRESH_REVIEW","MANAGEMENT_INSIGHT_REVIEW"],{legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId})
   ]);
-  const actualByAccount=new Map(actuals.map(a=>[a.accountId,a]));
-  const variances=forecastLines.flatMap(line=>{const actual=actualByAccount.get(line.accountId);if(!actual)return[];const v=calculateVariance(actual.amount.toFixed(),line.currentForecast.toFixed());return[{lineId:line.id,versionId:line.forecastVersionId,accountId:line.accountId,actual:actual.amount.toFixed(),actualSourceIdentifier:actual.sourceIdentifier,actualCurrencyCode:actual.currencyCode,forecast:line.currentForecast.toFixed(),variance:v.amount.toFixed(),variancePct:v.percentage.toFixed()}];});
+  const actualByAccountCurrency=indexActualFacts(actuals);
+  const currenciesByAccount=new Map<string,Set<string>>();
+  for(const actual of actuals){const codes=currenciesByAccount.get(actual.accountId)??new Set<string>();codes.add(actual.currencyCode);currenciesByAccount.set(actual.accountId,codes);}
+  const variances=forecastLines.flatMap(line=>{const currencies=currenciesByAccount.get(line.accountId);if(!currencies)return[];if(currencies.size!==1)throw new Error('FORECAST_ACTUAL_CURRENCY_AMBIGUOUS');const currency=[...currencies][0];const actual=actualByAccountCurrency.get(JSON.stringify([line.accountId,currency]));if(!actual)return[];const v=calculateVariance(actual.amount.toFixed(),line.currentForecast.toFixed());return[{lineId:line.id,versionId:line.forecastVersionId,accountId:line.accountId,actual:actual.amount.toFixed(),actualSourceIdentifier:actual.sourceIdentifier,actualCurrencyCode:actual.currencyCode,forecast:line.currentForecast.toFixed(),variance:v.amount.toFixed(),variancePct:v.percentage.toFixed()}];});
   const ranked=[...variances].sort((a,b)=>new Decimal(b.variance).abs().comparedTo(new Decimal(a.variance).abs()));
   const observedFacts={actualFactCount:actuals.length,forecastLineCount:forecastLines.length,varianceCount:variances.length,largestVariances:ranked.slice(0,10),memoryPolicy:"accepted-latest-by-scope",memoryRecommendationIds:memory.map(m=>m.id)};
   const recommendation=await prisma.agentRecommendation.create({data:{runId:run.id,organizationId:input.organizationId,actorId:input.actorId,type:"FORECAST_REFRESH_REVIEW",summary:"Closed-period actuals were compared with editable forecast lines. Human FP&A review is required before any forecast change or publication.",observedFacts,evidence:{correlationId:input.correlationId,fiscalPeriodId:input.fiscalPeriodId,legalEntityId:input.legalEntityId},unsupportedClaim:false,status:"PENDING"}});
