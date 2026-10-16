@@ -27,3 +27,21 @@ export async function proposeForecastAllocation(db:PrismaClient,actor:Allocation
   return {ruleId:created.id};
  });
 }
+
+export async function approveForecastAllocation(db:PrismaClient,actor:AllocationActor,ruleId:string){
+ return withBankMappingTenant(db,actor,async tx=>{
+  await requireAllocationRole(tx,actor);
+  const rule=await tx.forecastAllocationRule.findFirst({where:{id:ruleId,organizationId:actor.organizationId,status:'DRAFT'}});
+  if(!rule||rule.preparedById===actor.actorId)throw new Error('ALLOCATION_APPROVAL_DENIED');
+  const shares=rule.shares as unknown as AllocationShare[];
+  if(!Array.isArray(shares))throw new Error('ALLOCATION_SHARES_INVALID');
+  validateApprovedAllocation(shares,rule.preparedById,actor.actorId);
+  const centers=await tx.costCenter.count({where:{organizationId:actor.organizationId,active:true,id:{in:shares.map(s=>s.costCenterId)}}});
+  if(centers!==shares.length)throw new Error('ALLOCATION_COST_CENTER_INVALID');
+  const approvedAt=new Date();
+  const updated=await tx.forecastAllocationRule.updateMany({where:{id:ruleId,organizationId:actor.organizationId,status:'DRAFT',approvedById:null},data:{status:'APPROVED',approvedById:actor.actorId,approvedAt}});
+  if(updated.count!==1)throw new Error('ALLOCATION_APPROVAL_CONFLICT');
+  await tx.auditEvent.create({data:{organizationId:actor.organizationId,actorId:actor.actorId,action:'FORECAST_ALLOCATION_APPROVED',entityType:'ForecastAllocationRule',entityId:ruleId,correlationId:ruleId,newState:{status:'APPROVED',approvedById:actor.actorId}}});
+  return {ruleId,approvedAt};
+ });
+}
