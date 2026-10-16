@@ -9,7 +9,7 @@ export async function loadReadinessForSession(legalEntityId: string, periodId: s
   const session = await requireApiSession("financial.read");
   if (session.membership.role === "PLATFORM_ADMIN") throw new Error("FORBIDDEN_READINESS");
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(legalEntityId) ||
-    !/^[A-Za-z0-9_.:-]{1,128}$/.test(periodId)) throw new Error("INVALID_READINESS_SCOPE");
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(periodId)) throw new Error("INVALID_READINESS_SCOPE");
   const organizationId = session.organization.id;
   const row = await withMappingTenant(prisma, organizationId, async tx => {
     const db = tx as typeof prisma;
