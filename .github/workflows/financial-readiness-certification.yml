@@ -1,0 +1,76 @@
+name: Financial readiness certification
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/ai-mapping-engine-m01-m10-20261016
+    paths:
+      - 'src/lib/accounting/financial-readiness*'
+      - 'src/app/api/accounting/readiness/**'
+      - 'src/app/finance/readiness/**'
+      - 'tests/unit/financial-readiness*'
+      - 'prisma/schema.prisma'
+      - 'prisma/migrations/*financial_readiness*/**'
+      - '.github/workflows/financial-readiness-certification.yml'
+  pull_request:
+    paths:
+      - 'src/lib/accounting/financial-readiness*'
+      - 'tests/unit/financial-readiness*'
+      - 'prisma/schema.prisma'
+      - 'prisma/migrations/*financial_readiness*/**'
+permissions:
+  contents: read
+jobs:
+  readiness-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgresql://planora:planora_ci@127.0.0.1:5432/planora?schema=public
+      APP_ENV: test
+      APP_URL: http://127.0.0.1:3000
+      SESSION_COOKIE_NAME: planora_session
+      SESSION_TTL_HOURS: 12
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: planora
+          POSTGRES_USER: planora
+          POSTGRES_PASSWORD: planora_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U planora -d planora" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate Prisma schema
+        run: npx prisma validate
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Run readiness regression suite
+        run: npx vitest run tests/unit/financial-readiness.test.ts tests/unit/financial-readiness-repository.test.ts tests/unit/financial-readiness-source-adapters.test.ts tests/unit/financial-readiness-read-model.test.ts tests/unit/financial-readiness-diagnostics.test.ts
+      - name: Verify migration in disposable PostgreSQL
+        run: npx prisma migrate deploy
+      - name: Verify readiness table RLS enabled
+        run: |
+          node --input-type=module <<'NODE'
+          import { PrismaClient } from '@prisma/client';
+          const db = new PrismaClient();
+          try {
+            const rows = await db.$queryRaw`SELECT relname, relrowsecurity, relforcerowsecurity FROM pg_class WHERE relname IN ('FinancialReadinessAssessment', 'FinancialReadinessEvidence')`;
+            if (rows.length !== 2 || rows.some(r => !r.relrowsecurity || !r.relforcerowsecurity)) {
+              throw new Error('Readiness RLS not enabled and forced on both tables');
+            }
+            console.log('RLS flags present (runtime-role cross-tenant proof still required)');
+          } finally {
+            await db.$disconnect();
+          }
+          NODE
