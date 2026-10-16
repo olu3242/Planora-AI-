@@ -1,6 +1,9 @@
+import { actualGrainKey } from './actual-grain-key';
+
 export type ActualFactIdentity = Readonly<{
   accountId: string;
   currencyCode: string;
+  costCenterId: string | null;
 }>;
 
 /** An account may have actuals in more than one currency. */
@@ -8,7 +11,7 @@ export function actualFactKey(value: ActualFactIdentity): string {
   if (!value.accountId.trim() || !/^[A-Z]{3}$/.test(value.currencyCode)) {
     throw new Error('INVALID_ACTUAL_FACT_IDENTITY');
   }
-  return JSON.stringify([value.accountId, value.currencyCode]);
+  return actualGrainKey(value);
 }
 
 export function indexActualFacts<T extends ActualFactIdentity>(facts: readonly T[]): Map<string, T> {
