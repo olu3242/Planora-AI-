@@ -4,6 +4,7 @@ import { requireApiSession } from "@/auth/session";
 import { withMappingTenant } from "./ai-mapping-tenant-transaction";
 import { assessReadinessSources, type SourceControl } from "./financial-readiness-source-adapters";
 import type { ReadinessScope } from "./financial-readiness";
+import { journalPreflight, bankPreflight } from "./financial-readiness-diagnostics";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const control = (id: string, status: SourceControl["status"], evidenceIds: string[], asOf: string): SourceControl => ({
@@ -45,14 +46,15 @@ export async function previewLiveReadiness(legalEntityId: string, fiscalPeriodId
     ]);
     const truncated = journals.length > 1000 || bankAccounts.length > 100 || bankAccounts.some(a => a.transactions.length > 1000) || reportingRuns.length > 100;
     const allBankTransactions = bankAccounts.flatMap(a => a.transactions);
-    const drafts = journals.filter(j => j.status !== "POSTED");
-    const unbalanced = journals.filter(j => j.status === "POSTED" && (j.lines.length < 2 || j.lines.reduce((sum,l) => sum + l.debitMinor - l.creditMinor, 0n) !== 0n));
-    const unmatched = allBankTransactions.filter(t => t.status === "UNMATCHED" || (t.status === "MATCHED" && !t.matchedJournalId));
+    const journal = journalPreflight(journals, truncated);
+    const bank = bankPreflight(allBankTransactions, truncated);
+    const { drafts, unbalanced } = journal;
+    const { unmatched } = bank;
     const result = assessReadinessSources({
       scope,
       completeness: [control("SOURCE_COVERAGE", "UNKNOWN", [], scope.asOf)],
-      bookkeeping: [control("POSTED_JOURNAL_INTEGRITY", truncated || !journals.length ? "UNKNOWN" : drafts.length || unbalanced.length ? "FAIL" : "UNKNOWN", journals.map(j => j.id), scope.asOf)],
-      reconciliation: [control("BANK_RECONCILIATION", truncated || !bankAccounts.length ? "UNKNOWN" : unmatched.length ? "FAIL" : "UNKNOWN", allBankTransactions.map(t => t.id), scope.asOf)],
+      bookkeeping: [control("POSTED_JOURNAL_INTEGRITY", journal.status, journals.map(j => j.id), scope.asOf)],
+      reconciliation: [control("BANK_RECONCILIATION", bank.status, allBankTransactions.map(t => t.id), scope.asOf)],
       accountingControls: [control("APPROVAL_AND_POLICY_VERIFICATION", "UNKNOWN", [], scope.asOf)],
       reporting: [control("STATEMENT_RELEASE", reportingRuns.some(r => r.status === "DRAFT") ? "FAIL" : "UNKNOWN", reportingRuns.map(r => r.id), scope.asOf)],
       closeRun: null,
