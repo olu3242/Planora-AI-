@@ -23,7 +23,7 @@ export async function claimCleanupScan(organizationId: string, jobId: string, le
     const tx = connection as typeof prisma;
     const now = new Date();
     const claimed = await tx.bookkeepingCleanupJob.updateMany({
-      where: { id: jobId, organizationId, status: { in: ["QUEUED", "RETRY_WAIT"] }, nextAttemptAt: { lte: now } },
+      where: { id: jobId, organizationId, OR: [{ status: { in: ["QUEUED", "RETRY_WAIT"] }, nextAttemptAt: { lte: now } }, { status: "RUNNING", leaseExpiresAt: { lte: now } }] },
       data: { status: "RUNNING", leaseToken, leaseExpiresAt: new Date(now.getTime() + 60000), updatedAt: now },
     });
     return claimed.count === 1;
@@ -48,5 +48,26 @@ export async function finishCleanupScan(organizationId: string, jobId: string, l
       },
     });
     if (updated.count !== 1) throw new Error("CLEANUP_LEASE_LOST");
+  });
+}
+
+/** Bounded tenant-scoped candidate selection; claim remains atomic and fenced. */
+export async function listDueCleanupJobs(organizationId: string, limit = 20) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error("INVALID_CLEANUP_LIMIT");
+  return withMappingTenant(prisma, organizationId, async connection => {
+    const tx = connection as typeof prisma;
+    const now = new Date();
+    return tx.bookkeepingCleanupJob.findMany({
+      where: {
+        organizationId,
+        OR: [
+          { status: { in: ["QUEUED", "RETRY_WAIT"] }, nextAttemptAt: { lte: now } },
+          { status: "RUNNING", leaseExpiresAt: { lte: now } },
+        ],
+      },
+      orderBy: [{ nextAttemptAt: "asc" }, { id: "asc" }],
+      take: limit,
+      select: { id: true, organizationId: true, legalEntityId: true, fiscalPeriodId: true },
+    });
   });
 }
