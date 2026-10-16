@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireApiSession } from "@/auth/session";
 import { withMappingTenant } from "@/lib/accounting/ai-mapping-tenant-transaction";
 import { projectReadinessSnapshot, type StoredReadinessAssessment } from "@/lib/accounting/financial-readiness-read-model";
+import { verifyReadinessScopeInTransaction } from "@/lib/accounting/financial-readiness-scope-query";
 
 /** Latest persisted readiness snapshot. Does not evaluate or certify live sources. */
 export async function GET(request: Request) {
@@ -22,6 +23,7 @@ export async function GET(request: Request) {
     const organizationId = session.organization.id;
     const row = await withMappingTenant(prisma, organizationId, async tx => {
       const db = tx as typeof prisma;
+      await verifyReadinessScopeInTransaction(db, organizationId, legalEntityId, periodId);
       return db.financialReadinessAssessment.findFirst({
         where: { organizationId, legalEntityId, periodId },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -32,7 +34,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ assessment }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
-    const status = code === "AUTHENTICATION_REQUIRED" ? 401 : code.startsWith("FORBIDDEN") ? 403 : 503;
+    const status = code === "AUTHENTICATION_REQUIRED" ? 401 : code.startsWith("FORBIDDEN") ? 403 : code === "READINESS_SCOPE_NOT_FOUND" ? 404 : 503;
     return NextResponse.json({ error: status === 503 ? "READINESS_UNAVAILABLE" : status === 401 ? "AUTHENTICATION_REQUIRED" : "FORBIDDEN" }, { status, headers: { "Cache-Control": "no-store" } });
   }
 }
