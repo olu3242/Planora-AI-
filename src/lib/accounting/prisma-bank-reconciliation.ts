@@ -59,7 +59,7 @@ export async function reconcileBankTransaction(
       sameCurrency: bank.bankAccount.currencyCode === journal.currencyCode,
       mappingApproved: true, bankUnmatched: bank.status === 'UNMATCHED' && !bank.matchedJournalId,
       journalPosted: journal.status === 'POSTED' && !journal.reversalOfId,
-      journalAvailable: !otherMatch,
+      journalAvailable: !otherMatch && !journal.reversedBy,
       bankAmount: bank.amountMinor, cashAmount,
     })) throw new Error('RECONCILIATION_INELIGIBLE');
     const changed = await tx.bankTransaction.updateMany({
