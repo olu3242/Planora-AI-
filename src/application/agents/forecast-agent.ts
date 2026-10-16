@@ -5,7 +5,7 @@ import Decimal from "decimal.js";
 import { actualFactKey, indexActualFacts } from "@/domain/forecast/actual-fact-index";
 import { resolveForecastActualCurrency } from "@/domain/forecast/forecast-actual-currency";
 import { assertForecastDimensionCompatibility } from "@/domain/forecast/forecast-dimension-compatibility";
-import { forecastCoverageException } from "@/domain/forecast/forecast-coverage-exception";
+import { inspectForecastCoverage } from "@/domain/forecast/inspect-forecast-coverage";
 import { acceptedDecisionMemory } from "@/application/agents/decision-context";
 
 export async function runForecastAgent(input:Readonly<{organizationId:string;legalEntityId:string;fiscalPeriodId:string;actorId:string;correlationId:string}>){
@@ -18,23 +18,15 @@ export async function runForecastAgent(input:Readonly<{organizationId:string;leg
    prisma.forecastLine.findMany({where:{fiscalPeriodId:input.fiscalPeriodId,forecastVersion:{forecast:{organizationId:input.organizationId},status:{in:["DRAFT","REVISION_REQUIRED"]}}},select:{id:true,accountId:true,costCenterId:true,currentForecast:true,forecastVersionId:true}}),
    acceptedDecisionMemory(input.organizationId,["FORECAST_REFRESH_REVIEW","MANAGEMENT_INSIGHT_REVIEW"],{legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId})
   ]);
+  const coverageExceptions=inspectForecastCoverage(forecastLines,actuals);
+(coverageExceptions.length>0) {
+    await prisma.agentRun.update({where:{id:run.id},data:{evidence:{coverageComplete:false,coverageExceptionCount:coverageExceptions.length,coverageExceptions:coverageExceptions.slice(0,50)}}});
+    throw new Error('FORECAST_ACTUAL_COVERAGE_INCOMPLETE');
+  }
   const actualByAccountCurrency=indexActualFacts(actuals);
   const currenciesByAccount=new Map<string,Set<string>>();
   for(const actual of actuals){const codes=currenciesByAccount.get(actual.accountId)??new Set<string>();codes.add(actual.currencyCode);currenciesByAccount.set(actual.accountId,codes);}
   const variances=forecastLines.flatMap(line=>{const currencies=currenciesByAccount.get(line.accountId);if(!currencies)return[];const currency=resolveForecastActualCurrency([...currencies]);if(!currency)return[];const actual=actualByAccountCurrency.get(actualFactKey({accountId:line.accountId,currencyCode:currency,costCenterId:line.costCenterId}));if(!actual)return[];assertForecastDimensionCompatibility({forecastCostCenterId:line.costCenterId,actualCostCenterId:actual.costCenterId});const v=calculateVariance(actual.amount.toFixed(),line.currentForecast.toFixed());return[{lineId:line.id,versionId:line.forecastVersionId,accountId:line.accountId,actual:actual.amount.toFixed(),actualSourceIdentifier:actual.sourceIdentifier,actualCurrencyCode:actual.currencyCode,forecast:line.currentForecast.toFixed(),variance:v.amount.toFixed(),variancePct:v.percentage.toFixed()}];});
-  const coverageExceptions=forecastLines.flatMap(line=>{
-    const matchingActuals=actuals.filter(actual=>actual.accountId===line.accountId);
-    const issue=forecastCoverageException({
-      lineId:line.id,accountId:line.accountId,costCenterId:line.costCenterId,
-      actualCostCenters:matchingActuals.map(actual=>actual.costCenterId),
-      actualCurrencies:matchingActuals.map(actual=>actual.currencyCode),
-    });
-    return issue?[issue]:[];
-  });
-  if(coverageExceptions.length>0) {
-    await prisma.agentRun.update({where:{id:run.id},data:{evidence:{coverageComplete:false,coverageExceptionCount:coverageExceptions.length,coverageExceptions:coverageExceptions.slice(0,50)}}});
-    throw new Error('FORECAST_ACTUAL_COVERAGE_INCOMPLETE');
-  }
   const ranked=[...variances].sort((a,b)=>new Decimal(b.variance).abs().comparedTo(new Decimal(a.variance).abs()));
   const observedFacts={actualFactCount:actuals.length,forecastLineCount:forecastLines.length,varianceCount:variances.length,coverageExceptionCount:coverageExceptions.length,coverageExceptions:coverageExceptions.slice(0,50),largestVariances:ranked.slice(0,10),memoryPolicy:"accepted-latest-by-scope",memoryRecommendationIds:memory.map(m=>m.id)};
   const recommendation=await prisma.agentRecommendation.create({data:{runId:run.id,organizationId:input.organizationId,actorId:input.actorId,type:"FORECAST_REFRESH_REVIEW",summary:"Closed-period actuals were compared with editable forecast lines. Human FP&A review is required before any forecast change or publication.",observedFacts,evidence:{correlationId:input.correlationId,fiscalPeriodId:input.fiscalPeriodId,legalEntityId:input.legalEntityId},unsupportedClaim:false,status:"PENDING"}});
