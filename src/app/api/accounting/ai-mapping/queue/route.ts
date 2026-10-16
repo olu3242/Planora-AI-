@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { requireMappingPrincipal } from "@/lib/accounting/ai-mapping-session";
 import { createMappingApplication } from "@/lib/accounting/ai-mapping-application";
-import { PrismaAiMappingRepository } from "@/lib/accounting/ai-mapping-prisma-repository";
+import { PrismaAiMappingRepository, type MappingPrismaClient } from "@/lib/accounting/ai-mapping-prisma-repository";
 import { NextResponse } from "next/server";
 
 /**
@@ -13,7 +13,7 @@ export async function GET() {
   try {
     const principal = await requireMappingPrincipal("read");
     const app = createMappingApplication({
-      repository: new PrismaAiMappingRepository(prisma),
+      repository: new PrismaAiMappingRepository(prisma as unknown as MappingPrismaClient),
       loadProposal: async () => { throw new Error("MAPPING_REVIEW_ADAPTER_NOT_CERTIFIED"); },
       loadEligibleAccounts: async () => { throw new Error("MAPPING_ACCOUNT_ADAPTER_NOT_CERTIFIED"); },
       hasReview: async () => { throw new Error("MAPPING_REVIEW_ADAPTER_NOT_CERTIFIED"); },
