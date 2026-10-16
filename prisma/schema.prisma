@@ -1173,7 +1173,7 @@ model BankTransaction {
   reference     String
   amountMinor   BigInt
   status        BankTransactionStatus @default(UNMATCHED)
-  matchedJournalId String?            @db.Uuid
+  matchedJournalId String?            @unique @db.Uuid
   bankAccount   BankAccount           @relation(fields: [bankAccountId], references: [id], onDelete: Restrict)
   matchedJournal AccountingJournal?   @relation(fields: [matchedJournalId], references: [id], onDelete: Restrict)
   @@unique([bankAccountId, externalId])
