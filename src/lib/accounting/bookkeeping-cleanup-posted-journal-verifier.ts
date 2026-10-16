@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { withMappingTenant } from "./ai-mapping-tenant-transaction";
 import { verifyReadinessScopeInTransaction } from "./financial-readiness-scope-query";
+import { assertCleanupJournalLink } from "./bookkeeping-cleanup-journal-link";
 import { verifyCleanupAfterAccountingExecution } from "./bookkeeping-cleanup-verification";
 import type { CleanupCase } from "./bookkeeping-cleanup-workflow";
 
@@ -40,9 +41,7 @@ export async function verifyPostedJournalCleanup(input: {
     }
     // Posted journal existence is necessary but not sufficient proof of issue resolution.
     // A matching source correction link and independent reconciliation are still required.
-    if (!journal.reversalOfId || !row.issueKey.includes(journal.reversalOfId)) {
-      throw new Error("CLEANUP_CORRECTION_LINK_UNVERIFIED");
-    }
+    assertCleanupJournalLink(row.issue as unknown as CleanupCase["issue"], journal.reversalOfId);
     const current: CleanupCase = {
       id: row.id, organizationId: row.organizationId, legalEntityId: row.legalEntityId,
       fiscalPeriodId: row.fiscalPeriodId, issue: row.issue as unknown as CleanupCase["issue"],
