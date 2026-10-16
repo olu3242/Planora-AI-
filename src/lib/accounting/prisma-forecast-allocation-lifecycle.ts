@@ -45,3 +45,14 @@ export async function approveForecastAllocation(db:PrismaClient,actor:Allocation
   return {ruleId,approvedAt};
  });
 }
+
+export async function revokeForecastAllocation(db:PrismaClient,actor:AllocationActor,ruleId:string){
+ return withBankMappingTenant(db,actor,async tx=>{
+  await requireAllocationRole(tx,actor);
+  const revokedAt=new Date();
+  const updated=await tx.forecastAllocationRule.updateMany({where:{id:ruleId,organizationId:actor.organizationId,status:'APPROVED'},data:{status:'REVOKED',revokedById:actor.actorId,revokedAt}});
+  if(updated.count!==1)throw new Error('ALLOCATION_REVOCATION_CONFLICT');
+  await tx.auditEvent.create({data:{organizationId:actor.organizationId,actorId:actor.actorId,action:'FORECAST_ALLOCATION_REVOKED',entityType:'ForecastAllocationRule',entityId:ruleId,correlationId:ruleId,newState:{status:'REVOKED',revokedById:actor.actorId}}});
+  return {ruleId,revokedAt};
+ });
+}
