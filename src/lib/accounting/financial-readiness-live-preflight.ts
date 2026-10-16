@@ -4,6 +4,7 @@ import { requireApiSession } from "@/auth/session";
 import { withMappingTenant } from "./ai-mapping-tenant-transaction";
 import { assessReadinessSources, type SourceControl } from "./financial-readiness-source-adapters";
 import type { ReadinessScope } from "./financial-readiness";
+import { cleanupReadinessControls } from "./bookkeeping-cleanup-readiness";
 import { journalPreflight, bankPreflight } from "./financial-readiness-diagnostics";
 import { assertReadinessScopeOwnership } from "./financial-readiness-scope";
 
@@ -29,7 +30,7 @@ export async function previewLiveReadiness(legalEntityId: string, fiscalPeriodId
     const period = await db.fiscalPeriod.findUnique({ where: { id: fiscalPeriodId }, select: { id: true, accountingCloseState: true, startDate: true, endDate: true, year: { select: { calendar: { select: { organizationId: true } } } } } });
     assertReadinessScopeOwnership({ organizationId, legalEntity: entity, fiscalPeriod: period });
     if (!period) throw new Error("READINESS_SCOPE_NOT_FOUND");
-    const [journals, bankAccounts, reportingRuns] = await Promise.all([
+    const [journals, bankAccounts, reportingRuns, cleanupCases] = await Promise.all([
       db.accountingJournal.findMany({
         where: { organizationId, legalEntityId, fiscalPeriodId },
         select: { id: true, status: true, postedAt: true, lines: { select: { debitMinor: true, creditMinor: true } } },
@@ -45,18 +46,23 @@ export async function previewLiveReadiness(legalEntityId: string, fiscalPeriodId
         select: { id: true, status: true, publishedAt: true },
         take: 101,
       }),
+      db.bookkeepingCleanupCase.findMany({
+        where: { organizationId, legalEntityId, fiscalPeriodId },
+        select: { id: true, issueKey: true, state: true, evidenceIds: true }, take: 1001,
+      }),
     ]);
-    const truncated = journals.length > 1000 || bankAccounts.length > 100 || bankAccounts.some(a => a.transactions.length > 1000) || reportingRuns.length > 100;
+    const truncated = cleanupCases.length > 1000 || journals.length > 1000 || bankAccounts.length > 100 || bankAccounts.some(a => a.transactions.length > 1000) || reportingRuns.length > 100;
     const allBankTransactions = bankAccounts.flatMap(a => a.transactions);
     const journal = journalPreflight(journals, truncated);
     const bank = bankPreflight(allBankTransactions, truncated);
     const { drafts, unbalanced } = journal;
     const { unmatched } = bank;
+    const cleanup = cleanupReadinessControls(cleanupCases.map(c => ({ id: c.id, issueKey: c.issueKey, state: c.state, evidenceIds: Array.isArray(c.evidenceIds) ? c.evidenceIds.filter((id): id is string => typeof id === "string") : [] })), !truncated, scope.asOf);
     const result = assessReadinessSources({
       scope,
       completeness: [control("SOURCE_COVERAGE", "UNKNOWN", [], scope.asOf)],
-      bookkeeping: [control("POSTED_JOURNAL_INTEGRITY", journal.status, journals.map(j => j.id), scope.asOf)],
-      reconciliation: [control("BANK_RECONCILIATION", bank.status, allBankTransactions.map(t => t.id), scope.asOf)],
+      bookkeeping: [control("POSTED_JOURNAL_INTEGRITY", journal.status, journals.map(j => j.id), scope.asOf), cleanup.bookkeeping],
+      reconciliation: [control("BANK_RECONCILIATION", bank.status, allBankTransactions.map(t => t.id), scope.asOf), cleanup.reconciliation],
       accountingControls: [control("APPROVAL_AND_POLICY_VERIFICATION", "UNKNOWN", [], scope.asOf)],
       reporting: [control("STATEMENT_RELEASE", reportingRuns.some(r => r.status === "DRAFT") ? "FAIL" : "UNKNOWN", reportingRuns.map(r => r.id), scope.asOf)],
       closeRun: null,
@@ -64,7 +70,7 @@ export async function previewLiveReadiness(legalEntityId: string, fiscalPeriodId
     });
     return {
       ...result, mode: "LIVE_PREFLIGHT_UNCERTIFIED" as const,
-      sourceCounts: { journals: journals.length, draftJournals: drafts.length, unbalancedPostedJournals: unbalanced.length, bankAccounts: bankAccounts.length, bankTransactions: allBankTransactions.length, unmatchedBankTransactions: unmatched.length, reportingRuns: reportingRuns.length },
+      sourceCounts: { journals: journals.length, draftJournals: drafts.length, unbalancedPostedJournals: unbalanced.length, bankAccounts: bankAccounts.length, bankTransactions: allBankTransactions.length, unmatchedBankTransactions: unmatched.length, reportingRuns: reportingRuns.length, cleanupCases: cleanupCases.length, unresolvedCleanupCases: cleanupCases.filter(c => c.state !== "VERIFIED").length },
       warnings: [
         "Source record counts do not establish completeness, approval, reconciliation, or reporting certification.",
         ...(truncated ? ["Result sets exceeded safe scan limits; checks remain unverified."] : []),
