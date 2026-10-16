@@ -1,4 +1,5 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
+import { withBankMappingTenant } from './bank-mapping-tenant-context';
 
 export type BankMappingActor = Readonly<{ organizationId: string; actorId: string }>;
 
@@ -25,7 +26,7 @@ export async function proposeBankCashMapping(
       (input.effectiveTo != null && (!Number.isFinite(input.effectiveTo.getTime()) || input.effectiveTo < input.effectiveFrom))) {
     throw new Error('BANK_MAPPING_INPUT_INVALID');
   }
-  return db.$transaction(async tx => {
+  return withBankMappingTenant(db, actor, async tx => {
     await requireFinanceRole(tx, actor);
     const bank = await tx.bankAccount.findFirst({
       where: { id: input.bankAccountId, organizationId: actor.organizationId, active: true },
@@ -51,13 +52,13 @@ export async function proposeBankCashMapping(
         correlationId: created.id, newState: { bankAccountId: bank.id, cashAccountId: cash.id } },
     });
     return { mappingId: created.id };
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }
 
 export async function approveBankCashMapping(db: PrismaClient, actor: BankMappingActor, mappingId: string) {
   requireContext(actor);
   if (!mappingId?.trim()) throw new Error('BANK_MAPPING_ID_REQUIRED');
-  return db.$transaction(async tx => {
+  return withBankMappingTenant(db, actor, async tx => {
     await requireFinanceRole(tx, actor);
     const mapping = await tx.bankCashMapping.findFirst({
       where: { id: mappingId, organizationId: actor.organizationId },
@@ -95,13 +96,13 @@ export async function approveBankCashMapping(db: PrismaClient, actor: BankMappin
         correlationId: mapping.id, newState: { approvedById: actor.actorId, approvedAt: approvedAt.toISOString() } },
     });
     return { mappingId: mapping.id, approvedAt };
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }
 
 export async function revokeBankCashMapping(db: PrismaClient, actor: BankMappingActor, mappingId: string) {
   requireContext(actor);
   if (!mappingId?.trim()) throw new Error('BANK_MAPPING_ID_REQUIRED');
-  return db.$transaction(async tx => {
+  return withBankMappingTenant(db, actor, async tx => {
     await requireFinanceRole(tx, actor);
     const revokedAt = new Date();
     const result = await tx.bankCashMapping.updateMany({
@@ -115,5 +116,5 @@ export async function revokeBankCashMapping(db: PrismaClient, actor: BankMapping
         correlationId: mappingId, newState: { revokedAt: revokedAt.toISOString() } },
     });
     return { mappingId, revokedAt };
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }
