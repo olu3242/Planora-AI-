@@ -1,26 +1,12 @@
 import "server-only";
 import { requireApiSession } from "@/auth/session";
-import { hasPermission } from "@/permissions/permissions";
+import { assertMappingAccess, type MappingAccessAction } from "./ai-mapping-access";
 import type { MappingPrincipal } from "./ai-mapping-application";
 
-/**
- * Derives identity exclusively from Planora's validated cookie-backed session.
- * Existing RoleCode is CFO/FPA_DIRECTOR/ANALYST/PLATFORM_ADMIN, not the
- * conceptual BOOKKEEPER/ACCOUNTANT/CONTROLLER roles.
- * Translation is explicit and conservative until persona grants are migrated.
- */
-export async function requireMappingPrincipal(
-  action: "read" | "review",
-): Promise<MappingPrincipal> {
+/** Caller must derive identity from Planora's validated server-side session. */
+export async function requireMappingPrincipal(action: MappingAccessAction): Promise<MappingPrincipal> {
   const session = await requireApiSession(action === "review" ? "mapping.approve" : "financial.read");
-  const role = session.membership.role;
-  if (action === "review" && !hasPermission(role, "mapping.approve")) throw new Error("FORBIDDEN_MAPPING_REVIEW");
-  if (action === "read" && !hasPermission(role, "financial.read")) throw new Error("FORBIDDEN_MAPPING_ACCESS");
-  const roles: MappingPrincipal["roles"][number][] =
-    role === "CFO" ? ["CONTROLLER", "ACCOUNTANT"] :
-    role === "FPA_DIRECTOR" ? ["ACCOUNTANT"] :
-    role === "ANALYST" ? ["BOOKKEEPER"] : [];
-  if (!roles.length) throw new Error("FORBIDDEN_MAPPING_ACCESS");
+  const roles = assertMappingAccess(session.membership.role, action);
   return {
     userId: session.user.id,
     organizationId: session.organization.id,
