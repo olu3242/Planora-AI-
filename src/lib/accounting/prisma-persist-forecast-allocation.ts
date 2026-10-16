@@ -12,10 +12,11 @@ export async function persistVerifiedForecastAllocation(db:PrismaClient,actor:Re
   const rule=await tx.forecastAllocationRule.findFirst({where:{id:ruleId,organizationId:actor.organizationId,status:'APPROVED'}});
   if(!rule)throw new Error('ALLOCATION_RULE_NOT_APPROVED');
   const sources=await tx.financialFact.findMany({where:{organizationId:actor.organizationId,legalEntityId:rule.legalEntityId,fiscalPeriodId:rule.fiscalPeriodId,accountId:rule.accountId,currencyCode:rule.currencyCode,sourceIdentifier:rule.sourceIdentifier,scenario:'ACTUAL'},select:{organizationId:true,legalEntityId:true,fiscalPeriodId:true,accountId:true,currencyCode:true,sourceIdentifier:true,costCenterId:true,amount:true,sourceMetadata:true}});
-  if(sources.length!==1)throw new Error('ALLOCATION_LEDGER_SOURCE_CARDINALITY');
+  const ledgerSources=sources.filter(f=>f.costCenterId===null&&f.sourceMetadata&&typeof f.sourceMetadata==='object'&&!Array.isArray(f.sourceMetadata)&&(f.sourceMetadata as Record<string,unknown>).origin==='POSTED_LEDGER');
+  if(ledgerSources.length!==1||sources.some(f=>f.costCenterId===null&&f!==ledgerSources[0]))throw new Error('ALLOCATION_LEDGER_SOURCE_CARDINALITY');
   const currency=await tx.currency.findUnique({where:{code:rule.currencyCode},select:{minorUnits:true}});
   if(!currency)throw new Error('ALLOCATION_CURRENCY_MISSING');
-  const amountMinor=verifyLedgerAllocationSource({...sources[0],amount:sources[0].amount.toFixed()},rule,currency.minorUnits);
+  const amountMinor=verifyLedgerAllocationSource({...ledgerSources[0],amount:ledgerSources[0].amount.toFixed()},rule,currency.minorUnits);
   const scope={organizationId:actor.organizationId,legalEntityId:rule.legalEntityId,fiscalPeriodId:rule.fiscalPeriodId,accountId:rule.accountId,currencyCode:rule.currencyCode,sourceIdentifier:rule.sourceIdentifier};
   const evidence=buildAllocationEvidence({...scope,amountMinor,rule:{...scope,id:rule.id,shares:rule.shares as unknown as AllocationShare[],preparedById:rule.preparedById,approvedById:rule.approvedById,status:'APPROVED'}});
   const rows=prepareAllocationPersistence(evidence,currency.minorUnits);
