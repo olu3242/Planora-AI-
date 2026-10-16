@@ -1,26 +1,17 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
-import { withMappingTenant } from "./ai-mapping-tenant-transaction";
+import type { PrismaClient } from "@prisma/client";
 import { recordCleanupImportEventInTransaction } from "./bookkeeping-cleanup-outbox";
 import { assertVerifiedBankImportCompletion, type VerifiedBankImportCompletion } from "./bookkeeping-import-completion-contract";
 
 /**
- * Integration seam for the authoritative bank-import writer.
- * The import writer MUST invoke this in its existing database transaction;
- * this function does not authenticate a user or mark an import completed.
+ * Invoke ONLY from the authoritative bank-import writer inside its own
+ * transaction, after it has persisted the completed import record.
+ * This helper does not independently establish authentication or completion.
  */
 export async function appendCleanupOutboxForCommittedImport(
-  tx: typeof prisma,
+  tx: PrismaClient,
   completion: VerifiedBankImportCompletion,
 ) {
   assertVerifiedBankImportCompletion(completion);
   return recordCleanupImportEventInTransaction(tx, completion);
-}
-
-/** Only for verified internal reconciliation/recovery callers, not HTTP input. */
-export async function recoverCleanupOutboxForVerifiedImport(completion: VerifiedBankImportCompletion) {
-  assertVerifiedBankImportCompletion(completion);
-  return withMappingTenant(prisma, completion.organizationId, async connection => {
-    return appendCleanupOutboxForCommittedImport(connection as typeof prisma, completion);
-  });
 }
