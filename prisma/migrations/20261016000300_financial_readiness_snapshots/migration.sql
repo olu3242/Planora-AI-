@@ -4,7 +4,7 @@ CREATE TABLE "FinancialReadinessAssessment" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "organizationId" UUID NOT NULL REFERENCES "Organization"("id") ON DELETE RESTRICT,
   "legalEntityId" UUID NOT NULL REFERENCES "LegalEntity"("id") ON DELETE RESTRICT,
-  "periodId" TEXT NOT NULL,
+  "periodId" UUID NOT NULL REFERENCES "FiscalPeriod"("id") ON DELETE RESTRICT,
   "asOf" TIMESTAMPTZ NOT NULL,
   "score" INTEGER CHECK ("score" BETWEEN 0 AND 100),
   "status" TEXT NOT NULL CHECK ("status" IN ('BLOCKED','INCOMPLETE','CANDIDATE_FOR_APPROVAL')),
