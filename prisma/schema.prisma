@@ -235,9 +235,9 @@ model User {
   agentFeedback           AgentFeedback[]
   runtimeExecutions       RuntimeExecution[]
   accountingApprovalsPrepared AccountingPostingApproval[] @relation("AccountingApprovalPreparer")
-  accountingApprovalsDecided AccountingPostingApproval[]
+  accountingApprovalsDecided AccountingPostingApproval[] @relation("AccountingApprovalDecider")
   bankCashMappingsPrepared BankCashMapping[] @relation("BankMappingPreparer")
-  bankCashMappingsApproved BankCashMapping[] @relation("BankMappingApprover") @relation("AccountingApprovalDecider")
+  bankCashMappingsApproved BankCashMapping[] @relation("BankMappingApprover")
   postedAccountingJournals AccountingJournal[]
   workflowRuns            WorkflowRunRecord[] @relation("WorkflowRunActor")
   preparedReportingRuns   ReportingRun[] @relation("ReportingRunPreparer")
