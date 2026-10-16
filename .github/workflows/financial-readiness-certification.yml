@@ -6,11 +6,14 @@ on:
       - feat/ai-mapping-engine-m01-m10-20261016
     paths:
       - 'src/lib/accounting/financial-readiness*'
+      - 'src/lib/accounting/bookkeeping-cleanup*'
       - 'src/app/api/accounting/readiness/**'
       - 'src/app/finance/readiness/**'
       - 'tests/unit/financial-readiness*'
+      - 'tests/unit/bookkeeping-cleanup*'
       - 'prisma/schema.prisma'
       - 'prisma/migrations/*financial_readiness*/**'
+      - 'prisma/migrations/*bookkeeping_cleanup*/**'
       - '.github/workflows/financial-readiness-certification.yml'
   pull_request:
     paths:
@@ -56,7 +59,7 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
       - name: Run readiness regression suite
-        run: npx vitest run tests/unit/financial-readiness.test.ts tests/unit/financial-readiness-repository.test.ts tests/unit/financial-readiness-source-adapters.test.ts tests/unit/financial-readiness-read-model.test.ts tests/unit/financial-readiness-diagnostics.test.ts tests/unit/financial-readiness-migration.test.ts tests/unit/financial-readiness-scope.test.ts tests/unit/financial-readiness-scope-query.test.ts
+        run: npx vitest run tests/unit/financial-readiness.test.ts tests/unit/financial-readiness-repository.test.ts tests/unit/financial-readiness-source-adapters.test.ts tests/unit/financial-readiness-read-model.test.ts tests/unit/financial-readiness-diagnostics.test.ts tests/unit/financial-readiness-migration.test.ts tests/unit/financial-readiness-scope.test.ts tests/unit/financial-readiness-scope-query.test.ts tests/unit/bookkeeping-cleanup.test.ts tests/unit/bookkeeping-cleanup-workflow.test.ts tests/unit/bookkeeping-cleanup-migration.test.ts
       - name: Verify migration in disposable PostgreSQL
         run: npx prisma migrate deploy
       - name: Verify readiness table RLS enabled
