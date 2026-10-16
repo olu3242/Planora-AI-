@@ -19,7 +19,7 @@ export async function runForecastAgent(input:Readonly<{organizationId:string;leg
    acceptedDecisionMemory(input.organizationId,["FORECAST_REFRESH_REVIEW","MANAGEMENT_INSIGHT_REVIEW"],{legalEntityId:input.legalEntityId,fiscalPeriodId:input.fiscalPeriodId})
   ]);
   const coverageExceptions=inspectForecastCoverage(forecastLines,actuals);
-(coverageExceptions.length>0) {
+  if(coverageExceptions.length>0) {
     await prisma.agentRun.update({where:{id:run.id},data:{evidence:{coverageComplete:false,coverageExceptionCount:coverageExceptions.length,coverageExceptions:coverageExceptions.slice(0,50)}}});
     throw new Error('FORECAST_ACTUAL_COVERAGE_INCOMPLETE');
   }
