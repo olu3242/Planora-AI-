@@ -41,6 +41,10 @@ export async function reconcileBankTransaction(
         !mapping[0].cashAccount.active || mapping[0].cashAccount.systemPurpose !== 'CASH') {
       throw new Error('BANK_LEDGER_MAPPING_REQUIRED');
     }
+    if (mapping[0].cashAccount.effectiveFrom > bank.postedDate ||
+        (mapping[0].cashAccount.effectiveTo && mapping[0].cashAccount.effectiveTo < bank.postedDate)) {
+      throw new Error('CASH_ACCOUNT_NOT_EFFECTIVE');
+    }
     const journal = await tx.accountingJournal.findFirst({
       where: { id: request.journalId, organizationId: trusted.organizationId },
     });
