@@ -6,6 +6,7 @@ import {buildAllocationEvidence} from '@/domain/forecast/allocation-evidence';
 import {prepareAllocationPersistence} from '@/domain/forecast/prepare-allocation-persistence';
 import {assertAllocationRetryIdentity} from '@/domain/forecast/allocation-retry-identity';
 import {minorUnitsFromDecimal} from '@/domain/forecast/financial-fact-minor-units';
+import {assertAllocationAmountReconciled} from '@/domain/forecast/assert-allocation-amount-reconciled';
 /** Fail-closed, transaction-scoped materialization of derived FP&A facts. */
 export async function persistVerifiedForecastAllocation(db:PrismaClient,actor:Readonly<{organizationId:string;actorId:string}>,ruleId:string){
  return withBankMappingTenant(db,actor,async(tx:Prisma.TransactionClient)=>{
@@ -31,6 +32,7 @@ export async function persistVerifiedForecastAllocation(db:PrismaClient,actor:Re
     const meta=saved?.sourceMetadata;
     if(!saved||minorUnitsFromDecimal(saved.amount.toFixed(),currency.minorUnits)!==minorUnitsFromDecimal(row.amount,currency.minorUnits)||!meta||typeof meta!=='object'||Array.isArray(meta)||(meta as Record<string,unknown>).origin!=='APPROVED_ALLOCATION'||(meta as Record<string,unknown>).ruleId!==rule.id||(meta as Record<string,unknown>).allocationKey!==row.allocationKey||(meta as Record<string,unknown>).sourceIdentifier!==row.sourceIdentifier||(meta as Record<string,unknown>).sourceAmountMinor!==amountMinor.toString())throw new Error('ALLOCATION_PERSISTENCE_CONFLICT');
    }
+   assertAllocationAmountReconciled({sourceAmountMinor:amountMinor,derivedAmounts:existing.map(f=>f.amount.toFixed()),minorUnits:currency.minorUnits});
    return {ruleId,created:0,alreadyPresent:rows.length};
   }
   for(const row of rows){
