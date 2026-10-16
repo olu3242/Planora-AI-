@@ -1,8 +1,9 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { claimCleanupScan, finishCleanupScan, listDueCleanupJobs } from "./bookkeeping-cleanup-job-repository";
+import { claimCleanupScan, finishCleanupScan, listDueCleanupJobs, renewCleanupLease } from "./bookkeeping-cleanup-job-repository";
 import { scanReconciliationForCleanup } from "./bookkeeping-reconciliation-scan";
 import { executeClaimedCleanupJob } from "./bookkeeping-cleanup-worker";
+import { withCleanupLeaseHeartbeat } from "./bookkeeping-cleanup-heartbeat";
 
 /** Explicitly invoked by trusted server automation, not by public requests. */
 export async function runCleanupWorkerForOrganization(organizationId: string, limit = 20) {
@@ -18,7 +19,10 @@ export async function runCleanupWorkerForOrganization(organizationId: string, li
     }
     try {
       const result = await executeClaimedCleanupJob({ ...job, leaseToken }, {
-        scan: scanReconciliationForCleanup,
+        scan: scope => withCleanupLeaseHeartbeat(
+          () => renewCleanupLease(organizationId, job.id, leaseToken),
+          () => scanReconciliationForCleanup(scope),
+        ),
         finish: finishCleanupScan,
       });
       if (result.status === "COMPLETED") completed++;
