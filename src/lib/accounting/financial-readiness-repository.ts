@@ -1,12 +1,15 @@
 import type { ReadinessEvidence, ReadinessResult, ReadinessScope } from "./financial-readiness";
 import { evaluateFinancialReadiness } from "./financial-readiness";
 import { withMappingTenant } from "./ai-mapping-tenant-transaction";
+import { verifyReadinessScopeInTransaction } from "./financial-readiness-scope-query";
 
 export interface ReadinessDb {
   $transaction<T>(fn: (tx: ReadinessTx) => Promise<T>): Promise<T>;
 }
 export interface ReadinessTx {
   $queryRaw(query: TemplateStringsArray, ...values: unknown[]): Promise<unknown>;
+  legalEntity: { findFirst(args: unknown): Promise<{ organizationId: string; active: boolean } | null> };
+  fiscalPeriod: { findUnique(args: unknown): Promise<{ year: { calendar: { organizationId: string } } } | null> };
   financialReadinessAssessment: {
     create(args: { data: Record<string, unknown> }): Promise<{ id: string }>;
   };
@@ -27,6 +30,7 @@ export async function saveReadinessSnapshot(db: ReadinessDb, authenticatedOrgani
   const result = evaluateFinancialReadiness(input.scope, input.checks);
   await withMappingTenant(db, authenticatedOrganizationId, async connection => {
     const tx = connection as ReadinessTx;
+    await verifyReadinessScopeInTransaction(tx, authenticatedOrganizationId, input.scope.legalEntityId, input.scope.periodId);
     const row = await tx.financialReadinessAssessment.create({
       data: {
         organizationId: input.scope.organizationId, legalEntityId: input.scope.legalEntityId,
