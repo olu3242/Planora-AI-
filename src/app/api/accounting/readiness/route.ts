@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const legalEntityId = params.get("legalEntityId");
     const periodId = params.get("periodId");
     if (!legalEntityId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(legalEntityId) ||
-      !periodId || periodId.length > 128 || !/^[A-Za-z0-9_.:-]+$/.test(periodId)) {
+      !periodId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(periodId)) {
       return NextResponse.json({ error: "INVALID_READINESS_SCOPE" }, { status: 400, headers: { "Cache-Control": "no-store" } });
     }
     const organizationId = session.organization.id;
