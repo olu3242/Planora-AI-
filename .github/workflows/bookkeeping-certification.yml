@@ -1,0 +1,56 @@
+name: Planora isolated certification
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/bookkeeping-certification-b11-b20-20261016
+permissions:
+  contents: read
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: planora
+          POSTGRES_PASSWORD: planora_test_only
+          POSTGRES_DB: planora_cert_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U planora -d planora_cert_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql://planora:planora_test_only@127.0.0.1:5432/planora_cert_test?schema=public
+      TEST_DATABASE_URL: postgresql://planora:planora_test_only@127.0.0.1:5432/planora_cert_test?schema=public
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run full isolated certification
+        run: npm run certify
+      - name: Upload certification artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-certification-${{ github.sha }}
+          path: |
+            dist/
+            test-results/
+            playwright-report/
+          if-no-files-found: warn
+          retention-days: 14
