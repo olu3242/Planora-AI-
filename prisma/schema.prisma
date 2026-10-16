@@ -218,6 +218,7 @@ enum ReportingApprovalDecision {
 }
 
 model User {
+  aiTransactionMappingReviews AiTransactionMappingReview[]
   id                      String                   @id @default(uuid()) @db.Uuid
   email                   String                   @unique
   name                    String
@@ -246,6 +247,7 @@ model User {
 }
 
 model Organization {
+  aiTransactionMappingProposals AiTransactionMappingProposal[]
   id                   String                   @id @default(uuid()) @db.Uuid
   code                 String                   @unique
   name                 String
@@ -1388,6 +1390,7 @@ model AiTransactionMappingProposal {
   createdAt      DateTime @default(now())
   workItem       AiTransactionMappingWorkItem?
   review         AiTransactionMappingReview?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
 
   @@unique([organizationId, idempotencyKey])
   @@unique([id, organizationId])
@@ -1417,6 +1420,7 @@ model AiTransactionMappingReview {
   reason            String
   createdAt         DateTime @default(now())
   proposal          AiTransactionMappingProposal @relation(fields: [proposalId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  reviewer          User @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, createdAt], map: "AiTransactionMappingReview_tenant_idx")
 }
