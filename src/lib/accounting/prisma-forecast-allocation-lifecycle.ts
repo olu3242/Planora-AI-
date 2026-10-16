@@ -38,6 +38,13 @@ export async function approveForecastAllocation(db:PrismaClient,actor:Allocation
   validateApprovedAllocation(shares,rule.preparedById,actor.actorId);
   const centers=await tx.costCenter.count({where:{organizationId:actor.organizationId,active:true,id:{in:shares.map(s=>s.costCenterId)}}});
   if(centers!==shares.length)throw new Error('ALLOCATION_COST_CENTER_INVALID');
+  const conflicting=await tx.forecastAllocationRule.count({where:{
+   organizationId:actor.organizationId,legalEntityId:rule.legalEntityId,
+   fiscalPeriodId:rule.fiscalPeriodId,accountId:rule.accountId,
+   currencyCode:rule.currencyCode,sourceIdentifier:rule.sourceIdentifier,
+   status:'APPROVED',id:{not:rule.id},
+  }});
+  if(conflicting)throw new Error('ALLOCATION_APPROVED_SCOPE_CONFLICT');
   const approvedAt=new Date();
   const updated=await tx.forecastAllocationRule.updateMany({where:{id:ruleId,organizationId:actor.organizationId,status:'DRAFT',approvedById:null},data:{status:'APPROVED',approvedById:actor.actorId,approvedAt}});
   if(updated.count!==1)throw new Error('ALLOCATION_APPROVAL_CONFLICT');
