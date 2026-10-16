@@ -247,6 +247,7 @@ model User {
 }
 
 model Organization {
+  financialReadinessAssessments FinancialReadinessAssessment[]
   aiTransactionMappingProposals AiTransactionMappingProposal[]
   id                   String                   @id @default(uuid()) @db.Uuid
   code                 String                   @unique
@@ -1423,4 +1424,45 @@ model AiTransactionMappingReview {
   reviewer          User @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, createdAt], map: "AiTransactionMappingReview_tenant_idx")
+}
+
+model FinancialReadinessAssessment {
+  id                String   @id @default(uuid()) @db.Uuid
+  organizationId    String   @db.Uuid
+  legalEntityId     String   @db.Uuid
+  periodId          String
+  asOf              DateTime
+  score             Int?
+  status            String
+  blockers          Json
+  actions           Json
+  dimensions        Json
+  policyVersion     String
+  sourceFingerprint String
+  createdAt         DateTime @default(now())
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  evidence          FinancialReadinessEvidence[]
+
+  @@unique([organizationId, legalEntityId, periodId, policyVersion, sourceFingerprint])
+  @@unique([id, organizationId])
+  @@index([organizationId, legalEntityId, periodId, createdAt], map: "FinancialReadinessAssessment_lookup_idx")
+}
+
+model FinancialReadinessEvidence {
+  id                String   @id @default(uuid()) @db.Uuid
+  assessmentId      String   @db.Uuid
+  organizationId    String   @db.Uuid
+  checkId           String
+  dimension         String
+  status            String
+  weight            Float
+  material          Boolean
+  sourceEvidenceIds Json
+  verifiedAt        DateTime?
+  expiresAt         DateTime?
+  ownerRole         String
+  createdAt         DateTime @default(now())
+  assessment        FinancialReadinessAssessment @relation(fields: [assessmentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([assessmentId, dimension, checkId])
 }
