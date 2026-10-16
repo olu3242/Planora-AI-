@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireApiSession } from "@/auth/session";
 import { withMappingTenant } from "@/lib/accounting/ai-mapping-tenant-transaction";
 import { projectReadinessSnapshot, type StoredReadinessAssessment } from "@/lib/accounting/financial-readiness-read-model";
+import { verifyReadinessScopeInTransaction } from "@/lib/accounting/financial-readiness-scope-query";
 
 /** Server-only projection. No live reassessment or privileged writes. */
 export async function loadReadinessForSession(legalEntityId: string, periodId: string) {
@@ -13,6 +14,7 @@ export async function loadReadinessForSession(legalEntityId: string, periodId: s
   const organizationId = session.organization.id;
   const row = await withMappingTenant(prisma, organizationId, async tx => {
     const db = tx as typeof prisma;
+    await verifyReadinessScopeInTransaction(db, organizationId, legalEntityId, periodId);
     return db.financialReadinessAssessment.findFirst({
       where: { organizationId, legalEntityId, periodId },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
