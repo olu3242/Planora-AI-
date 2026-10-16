@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import { reconciliationEligible } from '@/domain/accounting/reconciliation-eligibility';
 import { withBankMappingTenant } from './bank-mapping-tenant-context';
 
