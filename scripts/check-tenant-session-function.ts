@@ -1,11 +1,24 @@
 import { PrismaClient } from "@prisma/client";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { requireIsolatedTestDatabaseUrl } from "./test-database-url";
 
 if (process.env.APP_ENV !== "test") throw new Error("APP_ENV=test required.");
 const url = requireIsolatedTestDatabaseUrl(process.env.TEST_DATABASE_URL);
 const db = new PrismaClient({ datasourceUrl: url });
 try {
+  const migrationName = "20261009060000_tenant_rls";
+  const migrationSql = readFileSync(`prisma/migrations/${migrationName}/migration.sql`);
+  const checksum = createHash("sha256").update(migrationSql).digest("hex");
+  const migrationRows = await db.$queryRaw<Array<{ migration_name: string; checksum: string; finished_at: Date | null; rolled_back_at: Date | null }>>`
+    SELECT migration_name, checksum, finished_at, rolled_back_at
+    FROM public._prisma_migrations WHERE migration_name = ${migrationName}`;
+  if (migrationRows.length !== 1 || !migrationRows[0].finished_at || migrationRows[0].rolled_back_at) {
+    throw new Error("TENANT_RLS_MIGRATION_NOT_APPLIED");
+  }
+  if (migrationRows[0].checksum !== checksum) {
+    throw new Error("TENANT_RLS_MIGRATION_CHECKSUM_MISMATCH");
+  }
   const functions = await db.$queryRaw<Array<{ schema: string; name: string; args: string; returns: string }>>`
     SELECT n.nspname AS schema, p.proname AS name,
       pg_get_function_identity_arguments(p.oid) AS args,
