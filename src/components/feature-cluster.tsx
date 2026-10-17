@@ -67,6 +67,12 @@ export function FeatureCluster({ media = walkthroughs }: { media?: Walkthrough[]
   const [slide, setSlide] = useState(0);
   const [lightbox, setLightbox] = useState<Walkthrough | null>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const videoOpener = useRef<HTMLButtonElement | null>(null);
+  const lastLightbox = useRef(false);
+  useEffect(() => {
+    if (lastLightbox.current && !lightbox) videoOpener.current?.focus();
+    lastLightbox.current = !!lightbox;
+  }, [lightbox]);
   const track = useRef<HTMLDivElement>(null);
   const [stride, setStride] = useState(0);
   const dragged = useRef(false);
@@ -104,7 +110,7 @@ export function FeatureCluster({ media = walkthroughs }: { media?: Walkthrough[]
         <div className="fc:overflow-hidden"><motion.div ref={track} className="fc:flex fc:gap-6" style={{touchAction:"pan-y"}} animate={carousel} transition={transition} drag={media.length>1?"x":false} dragConstraints={{left:-(stride+24)*Math.max(0,media.length-1),right:0}} dragElastic={0.08} dragMomentum={false} onDragStart={() => { dragged.current=true; }} onDragEnd={(_,info) => {const next=Math.max(0,Math.min(media.length-1,slide+(Math.abs(info.offset.x)>40?(info.offset.x<0?1:-1):0)));move(next);void carousel.start({x:-(stride+24)*next,transition});setTimeout(()=>{dragged.current=false;},0);}}>
           {media.map((item,i)=><motion.div key={item.title} className="media-slide" role="group" aria-roledescription="slide" aria-label={`${i+1} of ${media.length}: ${item.title}`} animate={{scale:i===slide?1:0.95,opacity:i===slide?1:0.5}} transition={transition}>
             <VideoPreview media={item} active={i===slide&&!lightbox} reduced={reduced} />
-            {item.src && <button className="media-open" tabIndex={i===slide?0:-1} aria-label={`Watch ${item.title} with audio`} onClick={() => {if(!dragged.current)setLightbox(item);}}><span className="fc:rounded-full fc:bg-blue-600 fc:p-5"><Play /></span></button>}
+            {item.src && <button className="media-open" ref={node => { if (i===slide) videoOpener.current=node; }} tabIndex={i===slide?0:-1} aria-label={`Watch ${item.title} with audio`} onClick={() => {if(!dragged.current)setLightbox(item);}}><span className="fc:rounded-full fc:bg-blue-600 fc:p-5"><Play /></span></button>}
           </motion.div>)}
         </motion.div></div>
         <div className="media-controls fc:mt-6 fc:flex fc:items-center fc:justify-center fc:gap-3"><button aria-label="Previous walkthrough" disabled={slide===0} onClick={()=>move(slide-1)}><ChevronLeft size={18}/></button>{media.map((item,i)=><button key={item.title} aria-label={`Show ${item.title}`} aria-current={i===slide} onClick={()=>move(i)} />)}<button aria-label="Next walkthrough" disabled={slide>=media.length-1} onClick={()=>move(slide+1)}><ChevronRight size={18}/></button></div>

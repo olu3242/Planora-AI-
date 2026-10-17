@@ -1,0 +1,21 @@
+# Isolated PostgreSQL for host-driven Planora certification.
+# All destructive test scripts run on the host against 127.0.0.1 only.
+services:
+  postgres-cert:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: planora_test
+      POSTGRES_USER: planora_test
+      POSTGRES_PASSWORD: planora_docker_test_only
+    ports:
+      - "127.0.0.1:55433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U planora_test -d planora_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - planora_cert_postgres_data:/var/lib/postgresql
+
+volumes:
+  planora_cert_postgres_data:

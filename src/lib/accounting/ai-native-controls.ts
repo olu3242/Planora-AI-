@@ -60,11 +60,13 @@ export type JournalValidation = Readonly<{
 
 /** Minor-unit integer arithmetic is exact; caller must supply currency-correct minor units. */
 export function validateJournalLines(lines: readonly JournalLineInput[]): JournalValidation {
-  if (lines.length < 2) throw new Error("JOURNAL_REQUIRES_TWO_LINES");
+  if (!Array.isArray(lines) || lines.length < 2) throw new Error("JOURNAL_REQUIRES_TWO_LINES");
   let debitMinor = 0n;
   let creditMinor = 0n;
   for (const line of lines) {
-    if (!line.accountId.trim()) throw new Error("ACCOUNT_REQUIRED");
+    if (line === null || typeof line !== "object" || Array.isArray(line)) throw new Error("INVALID_JOURNAL_LINE");
+    if (typeof line.accountId !== "string" || !line.accountId.trim()) throw new Error("ACCOUNT_REQUIRED");
+    if (typeof line.debitMinor !== "bigint" || typeof line.creditMinor !== "bigint") throw new Error("INVALID_MINOR_UNIT_TYPE");
     if (line.debitMinor < 0n || line.creditMinor < 0n) throw new Error("NEGATIVE_POSTING");
     if ((line.debitMinor > 0n) === (line.creditMinor > 0n)) throw new Error("INVALID_LINE_SIDE");
     debitMinor += line.debitMinor;

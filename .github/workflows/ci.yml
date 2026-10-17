@@ -1,20 +1,41 @@
 name: CI
 on:
-<<<<<<< HEAD
   workflow_dispatch:
-=======
->>>>>>> origin/main
   pull_request:
   push:
-    branches: [main]
+    branches: [main, work/bookkeeping-harmonization-b1-20261015]
 jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - name: Enforce moderate-or-higher vulnerability gate
+        run: npm audit --audit-level=moderate
+      - name: Record dependency audit diagnostics
+        if: always()
+        run: |
+          mkdir -p dist/security-audit
+          npm audit --json > dist/security-audit/npm-audit.json || true
+          npm ls braces micromatch fast-glob @next/eslint-plugin-next eslint-config-next --all > dist/security-audit/dependency-tree.txt || true
+          printf 'source_sha=%s\n' "$GITHUB_SHA" > dist/security-audit/provenance.txt
+      - name: Upload security audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-security-audit-${{ github.sha }}
+          path: dist/security-audit/
+          if-no-files-found: warn
+          retention-days: 14
   certify:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     services:
       postgres:
         image: postgres:18-alpine
         env:
-<<<<<<< HEAD
           POSTGRES_DB: planora_test
           POSTGRES_USER: planora_test
           POSTGRES_PASSWORD: planora_ci_test_only
@@ -24,16 +45,8 @@ jobs:
     env:
       DATABASE_URL: postgresql://planora_test:planora_ci_test_only@127.0.0.1:5432/planora_test?schema=public
       TEST_DATABASE_URL: postgresql://planora_test:planora_ci_test_only@127.0.0.1:5432/planora_test?schema=public
-=======
-          POSTGRES_DB: planora
-          POSTGRES_USER: planora
-          POSTGRES_PASSWORD: planora_ci
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U planora" --health-interval 5s --health-timeout 5s --health-retries 10
-    env:
-      DATABASE_URL: postgresql://planora:planora_ci@127.0.0.1:5432/planora?schema=public
->>>>>>> origin/main
+      TEST_RUNTIME_DATABASE_URL: postgresql://planora_rls_runtime_test:planora_rls_ci_only@127.0.0.1:5432/planora_test?schema=public
+      RUNTIME_DATABASE_URL: postgresql://planora_rls_runtime_test:planora_rls_ci_only@127.0.0.1:5432/planora_test?schema=public
       APP_ENV: test
       APP_URL: http://127.0.0.1:3000
       SESSION_COOKIE_NAME: planora_session
@@ -45,7 +58,38 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: npm }
+      - name: Verify conflict-free repository
+        run: node scripts/check-merge-conflicts.mjs
+      - name: Verify manifest and schema structure
+        run: node scripts/check-structural-preflight.mjs
+      - name: Run dependency-free preflight fixtures
+        run: node --test tests/preflight/*.test.mjs
       - run: npm ci
-      - run: npm audit --audit-level=moderate
       - run: npx playwright install --with-deps chromium
-      - run: npm run certify
+      - name: Run accounting posting regression suite
+        run: npx vitest run tests/unit/accounting-canonical-line-types.test.ts tests/unit/accounting-posting-preflight.test.ts tests/unit/accounting-approval-consumption.test.ts tests/unit/posting-approval-guard.test.ts tests/unit/proposed-journal-validation.test.ts
+      - name: Full exact-SHA certification
+        run: |
+          mkdir -p dist/certification-ci
+          printf 'started_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > dist/certification-ci/timing.txt
+          npm run certify
+        timeout-minutes: 50
+      - name: Record exact SHA and job result
+        if: always()
+        run: |
+          mkdir -p dist/certification-ci
+          printf 'commit=%s\nref=%s\njob=%s\n' "$GITHUB_SHA" "$GITHUB_REF" "${{ job.status }}" > dist/certification-ci/summary.txt
+          printf 'finished_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> dist/certification-ci/timing.txt
+      - name: Upload CI evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-certification-${{ github.sha }}
+          path: |
+            dist/certification-ci/summary.txt
+            dist/certification-ci/timing.txt
+            dist/certification-ci/playwright-results.json
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 14

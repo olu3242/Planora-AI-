@@ -6,6 +6,7 @@ import { withTenantSession } from "@/lib/tenant-database";
 import { requireIsolatedTestDatabaseUrl } from "../../scripts/test-database-url";
 
 const owner = new PrismaClient();
+// The RLS test must use a separate, non-owner PostgreSQL role. Never fall back to DATABASE_URL.
 const runtime = new PrismaClient({ datasourceUrl: requireIsolatedTestDatabaseUrl(process.env.TEST_RUNTIME_DATABASE_URL) });
 const tables: string[] = JSON.parse(readFileSync("docs/tenant-rls-manifest.json", "utf8")).tenantTables.map((x: { table: string }) => x.table);
 const tokenA = randomBytes(32).toString("base64url");

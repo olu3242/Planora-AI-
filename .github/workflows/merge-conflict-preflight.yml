@@ -1,0 +1,91 @@
+name: Merge Conflict Preflight
+on:
+  pull_request:
+  push:
+    branches:
+      - work/bookkeeping-harmonization-b1-20261015
+  workflow_dispatch:
+jobs:
+  conflict-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Detect unresolved merge conflicts
+        run: node scripts/check-merge-conflicts.mjs
+      - name: Validate manifest and schema structure
+        run: node scripts/check-structural-preflight.mjs
+      - name: Test structural gate behavior
+        if: always()
+        run: node --test tests/preflight/structural-preflight.test.mjs
+      - name: Test conflict gate behavior
+        if: always()
+        run: node --test tests/preflight/merge-conflicts.test.mjs
+
+  lockfile-recovery:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/work/bookkeeping-harmonization-b1-20261015'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/bookkeeping-harmonization-b1-20261015
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - name: Record source provenance
+        run: |
+          mkdir -p dist/lockfile-recovery
+          printf 'source_sha=%s\n' "$GITHUB_SHA" > dist/lockfile-recovery/provenance.txt
+          node --version >> dist/lockfile-recovery/provenance.txt
+          npm --version >> dist/lockfile-recovery/provenance.txt
+      - name: Generate manifest-derived lockfile
+        run: |
+          rm -f package-lock.json
+          npm cache clean --force
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          node -e 'const p=require("./package.json");const l=require("./package-lock.json");for(const k of ["dependencies","devDependencies","optionalDependencies"]){for(const [n,v] of Object.entries(p[k]||{})){if(l.packages[""][k]?.[n]!==v)throw Error(k+":"+n+" mismatch")}}'
+      - name: Verify clean install
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Collect npm diagnostics on failure
+        if: failure()
+        run: |
+          mkdir -p dist/lockfile-recovery
+          npm --version > dist/lockfile-recovery/npm-version.txt
+          find "$HOME/.npm/_logs" -type f -name '*debug-0.log' -exec cp {} dist/lockfile-recovery/ \; || true
+      - name: Record checksum
+        if: success()
+        run: sha256sum package-lock.json > dist/lockfile-recovery/sha256.txt
+      - name: Commit verified lockfile on same branch and exact source SHA
+        if: success()
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$(git ls-remote origin refs/heads/work/bookkeeping-harmonization-b1-20261015 | cut -f1)" = "$SOURCE_SHA"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- package-lock.json
+          if git diff --cached --quiet; then
+            echo "Lockfile already matches"; exit 0
+          fi
+          git commit -m "fix(deps): regenerate validated lockfile from manifest"
+          git push origin HEAD:refs/heads/work/bookkeeping-harmonization-b1-20261015
+      - name: Upload reviewed lockfile candidate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-lockfile-candidate-${{ github.sha }}
+          path: |
+            package-lock.json
+            dist/lockfile-recovery/provenance.txt
+            dist/lockfile-recovery/sha256.txt
+            dist/lockfile-recovery/npm-version.txt
+            dist/lockfile-recovery/*debug-0.log
+          if-no-files-found: warn
+          retention-days: 14
