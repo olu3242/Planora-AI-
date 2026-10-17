@@ -68,6 +68,11 @@ export function FeatureCluster({ media = walkthroughs }: { media?: Walkthrough[]
   const [lightbox, setLightbox] = useState<Walkthrough | null>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const videoOpener = useRef<HTMLButtonElement | null>(null);
+  const lastLightbox = useRef(false);
+  useEffect(() => {
+    if (lastLightbox.current && !lightbox) videoOpener.current?.focus();
+    lastLightbox.current = !!lightbox;
+  }, [lightbox]);
   const track = useRef<HTMLDivElement>(null);
   const [stride, setStride] = useState(0);
   const dragged = useRef(false);
@@ -110,7 +115,7 @@ export function FeatureCluster({ media = walkthroughs }: { media?: Walkthrough[]
         </motion.div></div>
         <div className="media-controls fc:mt-6 fc:flex fc:items-center fc:justify-center fc:gap-3"><button aria-label="Previous walkthrough" disabled={slide===0} onClick={()=>move(slide-1)}><ChevronLeft size={18}/></button>{media.map((item,i)=><button key={item.title} aria-label={`Show ${item.title}`} aria-current={i===slide} onClick={()=>move(i)} />)}<button aria-label="Next walkthrough" disabled={slide>=media.length-1} onClick={()=>move(slide+1)}><ChevronRight size={18}/></button></div>
       </div>
-      <AnimatePresence onExitComplete={() => { if (!lightbox) videoOpener.current?.focus(); }}>{lightbox && <VideoLightbox key="lightbox" media={lightbox} close={()=>setLightbox(null)} />}</AnimatePresence>
+      <AnimatePresence>{lightbox && <VideoLightbox key="lightbox" media={lightbox} close={()=>setLightbox(null)} />}</AnimatePresence>
     </div>
   </section>;
 }
