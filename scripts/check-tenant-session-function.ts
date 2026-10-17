@@ -26,11 +26,18 @@ try {
     FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
     WHERE p.proname = 'planora_session_tenant'
     ORDER BY n.nspname, p.oid`;
-  const exact = functions.some(f => f.schema === "public" && f.name === "planora_session_tenant" && f.args === "");
+  const exact = functions.some(f => f.schema === "public" && f.name === "planora_session_tenant" && f.args === "" && f.returns === "uuid");
   if (!exact) {
     process.stderr.write("Required public.planora_session_tenant() function absent after migrations.\n");
     process.stderr.write("Discovered matching signatures: " + JSON.stringify(functions) + "\n");
     throw new Error("TENANT_SESSION_MIGRATION_MISSING");
+  }
+  const [databaseIdentity] = await db.$queryRaw<Array<{ database: string; schema: string; role: string }>>`
+    SELECT current_database() AS database, current_schema() AS schema, current_user AS role`;
+  const parsedOwner = new URL(url);
+  if (!databaseIdentity || databaseIdentity.database !== decodeURIComponent(parsedOwner.pathname.slice(1)) ||
+      databaseIdentity.schema !== "public" || parsedOwner.searchParams.get("schema") !== "public") {
+    throw new Error("TENANT_MIGRATION_DATABASE_SCHEMA_MISMATCH");
   }
   const manifest = JSON.parse(readFileSync("docs/tenant-rls-manifest.json", "utf8")) as { tenantTables: Array<{ table: string }> };
   if (manifest.tenantTables.length !== 56 || new Set(manifest.tenantTables.map(t => t.table)).size !== 56) {
@@ -60,7 +67,8 @@ try {
     const runtime = new URL(runtimeUrl);
     const owner = new URL(url);
     if (runtime.hostname !== owner.hostname || runtime.port !== owner.port || runtime.pathname !== owner.pathname ||
-        runtime.username !== "planora_rls_runtime_test" || runtime.username === owner.username) {
+        runtime.username !== "planora_rls_runtime_test" || runtime.username === owner.username ||
+        runtime.searchParams.get("schema") !== owner.searchParams.get("schema")) {
       throw new Error("TENANT_RUNTIME_DATABASE_MISMATCH");
     }
     const runtimeDb = new PrismaClient({ datasourceUrl: runtimeUrl });
@@ -68,6 +76,13 @@ try {
       const [runtimeGrant] = await runtimeDb.$queryRaw<Array<{ executable: boolean }>>`
         SELECT has_function_privilege(current_user, 'public.planora_session_tenant()', 'EXECUTE') AS executable`;
       if (!runtimeGrant?.executable) throw new Error("TENANT_SESSION_RUNTIME_EXECUTE_DENIED");
+      const [runtimeIdentity] = await runtimeDb.$queryRaw<Array<{ role: string; schema: string; bypass: boolean; superuser: boolean }>>`
+        SELECT current_user AS role, current_schema() AS schema, rolbypassrls AS bypass, rolsuper AS superuser
+        FROM pg_roles WHERE rolname = current_user`;
+      if (!runtimeIdentity || runtimeIdentity.role !== "planora_rls_runtime_test" ||
+          runtimeIdentity.schema !== "public" || runtimeIdentity.bypass || runtimeIdentity.superuser) {
+        throw new Error("TENANT_RUNTIME_IDENTITY_UNSAFE");
+      }
     } finally {
       await runtimeDb.$disconnect();
     }
