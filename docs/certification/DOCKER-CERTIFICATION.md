@@ -17,6 +17,9 @@ The script starts `compose.certification.yaml`, binding PostgreSQL **only** to `
 ## Diagnose missing tenant function
 After reset/seed the runner queries `to_regprocedure('public.planora_session_tenant()')` and stops before E2E if absent. This is a diagnostic, not a replacement for a migration. Correct the canonical Prisma migration, ensure it creates the session-validation function and all required RLS policies, then rerun. Do not stub the function, bypass tenant checks or use the owner role for browser requests.
 
+## Troubleshooting
+Run `docker compose -f compose.certification.yaml ps` to inspect container health and `docker compose -f compose.certification.yaml logs postgres-cert` to inspect PostgreSQL startup. The runner validates Compose configuration and the Prisma schema before resetting the isolated database, and installs Chromium before browser E2E. A missing `planora_session_tenant()` function is a migration blocker, not a reason to bypass tenant security. If npm audit fails, certification remains NO-GO.
+
 ## Shutdown
 ```bash
 docker compose -f compose.certification.yaml down
