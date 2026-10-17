@@ -88,6 +88,7 @@ jobs:
           path: |
             dist/certification-ci/summary.txt
             dist/certification-ci/timing.txt
+            dist/certification-ci/playwright-results.json
             playwright-report/
             test-results/
           if-no-files-found: warn
