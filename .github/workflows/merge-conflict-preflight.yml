@@ -25,7 +25,7 @@ jobs:
         run: node --test tests/preflight/merge-conflicts.test.mjs
 
   lockfile-recovery:
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/work/bookkeeping-harmonization-b1-20261015') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'work/bookkeeping-harmonization-b1-20261015')
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/work/bookkeeping-harmonization-b1-20261015'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
