@@ -13,6 +13,7 @@ const files = [
 try {
   mkdirSync(join(root, "prisma"), { recursive: true });
   mkdirSync(join(root, "scripts"), { recursive: true });
+  mkdirSync(join(root, "docs"), { recursive: true });
   writeFileSync(join(root, "prisma/schema.prisma"), readFileSync("prisma/schema.prisma"));
   writeFileSync(join(root, "scripts/generate-tenant-rls.mjs"), readFileSync("scripts/generate-tenant-rls.mjs"));
   const generated = spawnSync(process.execPath, ["scripts/generate-tenant-rls.mjs"], {
