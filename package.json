@@ -29,8 +29,9 @@
     "db:seed": "tsx database/seeds/index.ts",
     "db:seed:test": "tsx scripts/seed-test.ts",
     "db:generate": "prisma generate",
-    "certify": "npm run db:generate && npm run db:validate && npm run db:reset:test && npm run db:seed:test && npm run db:status:test && npm run test:tenant-migration && npm run lint && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:financial && npm run test:excel && npm run test:security && npm run test:performance && npm run db:reset:test && npm run db:seed:test && npm run test:tenant-migration && npx tsx scripts/provision-rls-runtime-test.ts && npm run test:e2e && npm run build",
-    "test:tenant-migration": "tsx scripts/check-tenant-session-function.ts"
+    "certify": "npm run db:generate && npm run db:validate && npm run db:reset:test && npm run db:seed:test && npm run db:status:test && npm run test:tenant-migration && npm run lint && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:financial && npm run test:excel && npm run test:security && npm run test:performance && npm run db:reset:test && npm run db:seed:test && npm run test:tenant-migration && npx tsx scripts/provision-rls-runtime-test.ts && npm run test:tenant-migration:runtime && npm run test:e2e && npm run build",
+    "test:tenant-migration": "tsx scripts/check-tenant-session-function.ts",
+    "test:tenant-migration:runtime": "cross-env CHECK_RUNTIME_ROLE=1 tsx scripts/check-tenant-session-function.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.1",
