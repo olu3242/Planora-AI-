@@ -31,6 +31,7 @@ jobs:
           retention-days: 14
   certify:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     services:
       postgres:
         image: postgres:18-alpine
@@ -67,12 +68,17 @@ jobs:
       - name: Run accounting posting regression suite
         run: npx vitest run tests/unit/accounting-canonical-line-types.test.ts tests/unit/accounting-posting-preflight.test.ts tests/unit/accounting-approval-consumption.test.ts tests/unit/posting-approval-guard.test.ts tests/unit/proposed-journal-validation.test.ts
       - name: Full exact-SHA certification
-        run: npm run certify
+        run: |
+          mkdir -p dist/certification-ci
+          printf 'started_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > dist/certification-ci/timing.txt
+          npm run certify
+        timeout-minutes: 50
       - name: Record exact SHA and job result
         if: always()
         run: |
           mkdir -p dist/certification-ci
           printf 'commit=%s\nref=%s\njob=%s\n' "$GITHUB_SHA" "$GITHUB_REF" "${{ job.status }}" > dist/certification-ci/summary.txt
+          printf 'finished_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> dist/certification-ci/timing.txt
       - name: Upload CI evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -80,6 +86,7 @@ jobs:
           name: planora-certification-${{ github.sha }}
           path: |
             dist/certification-ci/summary.txt
+            dist/certification-ci/timing.txt
             playwright-report/
             test-results/
           if-no-files-found: warn
