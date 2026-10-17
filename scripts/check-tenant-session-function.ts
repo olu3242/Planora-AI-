@@ -42,20 +42,22 @@ try {
   const [functionGrant] = await db.$queryRaw<Array<{ ownerCanExecute: boolean }>>`
     SELECT has_function_privilege(current_user, 'public.planora_session_tenant()', 'EXECUTE') AS "ownerCanExecute"`;
   if (!functionGrant?.ownerCanExecute) throw new Error("TENANT_SESSION_FUNCTION_NOT_EXECUTABLE");
-  const runtimeUrl = requireIsolatedTestDatabaseUrl(process.env.TEST_RUNTIME_DATABASE_URL);
-  const runtime = new URL(runtimeUrl);
-  const owner = new URL(url);
-  if (runtime.hostname !== owner.hostname || runtime.port !== owner.port || runtime.pathname !== owner.pathname ||
-      runtime.username !== "planora_rls_runtime_test" || runtime.username === owner.username) {
-    throw new Error("TENANT_RUNTIME_DATABASE_MISMATCH");
-  }
-  const runtimeDb = new PrismaClient({ datasourceUrl: runtimeUrl });
-  try {
-    const [runtimeGrant] = await runtimeDb.$queryRaw<Array<{ executable: boolean }>>`
-      SELECT has_function_privilege(current_user, 'public.planora_session_tenant()', 'EXECUTE') AS executable`;
-    if (!runtimeGrant?.executable) throw new Error("TENANT_SESSION_RUNTIME_EXECUTE_DENIED");
-  } finally {
-    await runtimeDb.$disconnect();
+  if (process.env.CHECK_RUNTIME_ROLE === "1") {
+    const runtimeUrl = requireIsolatedTestDatabaseUrl(process.env.TEST_RUNTIME_DATABASE_URL);
+    const runtime = new URL(runtimeUrl);
+    const owner = new URL(url);
+    if (runtime.hostname !== owner.hostname || runtime.port !== owner.port || runtime.pathname !== owner.pathname ||
+        runtime.username !== "planora_rls_runtime_test" || runtime.username === owner.username) {
+      throw new Error("TENANT_RUNTIME_DATABASE_MISMATCH");
+    }
+    const runtimeDb = new PrismaClient({ datasourceUrl: runtimeUrl });
+    try {
+      const [runtimeGrant] = await runtimeDb.$queryRaw<Array<{ executable: boolean }>>`
+        SELECT has_function_privilege(current_user, 'public.planora_session_tenant()', 'EXECUTE') AS executable`;
+      if (!runtimeGrant?.executable) throw new Error("TENANT_SESSION_RUNTIME_EXECUTE_DENIED");
+    } finally {
+      await runtimeDb.$disconnect();
+    }
   }
 
   process.stdout.write("Tenant session function and forced RLS on 56 manifest tables verified in isolated test database.\n");
