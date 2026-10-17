@@ -14,26 +14,8 @@ export PLAYWRIGHT_BASE_URL="http://127.0.0.1:3000"
 docker compose -f compose.certification.yaml config --quiet
 docker compose -f compose.certification.yaml up -d --wait
 npm ci
-npm run db:generate
-npm run db:validate
-npm run db:reset:test
-npm run db:seed:test
-npm run db:status:test
-npm run test:tenant-migration
-npm run lint
-npm run typecheck
-npm run test:unit
-npm run test:integration
-npm run test:financial
-npm run test:excel
-npm run test:security
-npm run test:performance
-npm run db:reset:test
-npm run db:seed:test
-npx tsx scripts/provision-rls-runtime-test.ts
-mkdir -p dist/certification-ci
-npm run test:tenant-migration
+# Use the same authoritative certification sequence as GitHub Actions.
+# This prevents Docker from silently skipping newly added release gates.
 npx playwright install chromium
-npm run test:e2e
-npm run build
+npm run certify
 npm audit --audit-level=moderate
