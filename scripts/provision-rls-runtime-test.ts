@@ -53,7 +53,7 @@ try {
   } finally {
     await runtimeClient.$disconnect();
   }
-  process.stdout.write("Provisioned and verified restricted local test role; RLS assertions remain mandatory.\\n");
+  process.stdout.write("Provisioned and verified restricted local test role; RLS assertions remain mandatory.\n");
 } finally {
   await db.$disconnect();
 }
