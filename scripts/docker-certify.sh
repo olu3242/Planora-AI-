@@ -19,7 +19,7 @@ npm run db:validate
 npm run db:reset:test
 npm run db:seed:test
 npm run db:status:test
-npx tsx scripts/check-tenant-session-function.ts
+npm run test:tenant-migration
 npm run lint
 npm run typecheck
 npm run test:unit
@@ -32,7 +32,7 @@ npm run db:reset:test
 npm run db:seed:test
 npx tsx scripts/provision-rls-runtime-test.ts
 mkdir -p dist/certification-ci
-npx tsx scripts/check-tenant-session-function.ts
+npm run test:tenant-migration
 npx playwright install chromium
 npm run test:e2e
 npm run build
