@@ -31,15 +31,7 @@ npm run db:reset:test
 npm run db:seed:test
 npx tsx scripts/provision-rls-runtime-test.ts
 mkdir -p dist/certification-ci
-node --input-type=module -e '
-import { PrismaClient } from "@prisma/client";
-const db = new PrismaClient();
-try {
-  const rows = await db.$queryRawUnsafe("SELECT to_regprocedure($1)::text AS signature", "public.planora_session_tenant()");
-  if (!rows[0]?.signature) throw new Error("Missing tenant-session database function; repair migration before browser tests.");
-  console.log("Tenant function:", rows[0].signature);
-} finally { await db.$disconnect(); }
-'
+npx tsx scripts/check-tenant-session-function.ts
 npx playwright install chromium
 npm run test:e2e
 npm run build
