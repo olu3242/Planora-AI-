@@ -33,7 +33,7 @@ node --input-type=module -e '
 import { PrismaClient } from "@prisma/client";
 const db = new PrismaClient();
 try {
-  const rows = await db.$queryRawUnsafe("SELECT to_regprocedure(\u0027public.planora_session_tenant()\u0027)::text AS signature");
+  const rows = await db.$queryRawUnsafe("SELECT to_regprocedure($1)::text AS signature", "public.planora_session_tenant()");
   if (!rows[0]?.signature) throw new Error("Missing tenant-session database function; repair migration before browser tests.");
   console.log("Tenant function:", rows[0].signature);
 } finally { await db.$disconnect(); }
