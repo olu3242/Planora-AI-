@@ -18,7 +18,9 @@ try {
     process.stderr.write("Discovered matching signatures: " + JSON.stringify(functions) + "\n");
     throw new Error("TENANT_SESSION_MIGRATION_MISSING");
   }
-  process.stdout.write("Tenant session function present in isolated test database.\n");
+  const [policy] = await db.$queryRaw<Array<{ enabled: boolean; forced: boolean }>>`SELECT relrowsecurity AS enabled, relforcerowsecurity AS forced FROM pg_class WHERE oid = to_regclass('public."Account"')`;
+  if (!policy?.enabled || !policy.forced) throw new Error("TENANT_ACCOUNT_RLS_NOT_FORCED");
+  process.stdout.write("Tenant session function and forced Account RLS present in isolated test database.\n");
 } finally {
   await db.$disconnect();
 }
