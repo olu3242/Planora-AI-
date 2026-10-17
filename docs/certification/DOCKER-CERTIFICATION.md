@@ -17,6 +17,9 @@ The script starts `compose.certification.yaml`, binding PostgreSQL **only** to `
 ## Diagnose missing tenant function
 The canonical certification pipeline checks after both initial and pre-browser reset/seed, querying PostgreSQL `pg_proc` and `pg_namespace` for the exact zero-argument `public.planora_session_tenant()` signature and stops if absent. It reports discovered matching signatures to distinguish an absent migration from a wrong schema or argument list. This is a diagnostic, not a replacement for a migration. Correct the canonical Prisma migration, ensure it creates the session-validation function and all required RLS policies, then rerun. Do not stub the function, bypass tenant checks or use the owner role for browser requests.
 
+## Captured evidence
+The runner writes `dist/certification-ci/docker-start.txt`, `docker-run.txt`, `docker-ps.txt`, and `docker-postgres.log` on exit, including failures. Review these locally before retrying. The runner rejects non-default Docker contexts; confirm `docker context show` reports `default` and that the default context targets your local Docker Engine. These files are local diagnostic evidence, not proof of a passing certification.
+
 ## Troubleshooting
 Run `docker compose -f compose.certification.yaml ps` to inspect container health and `docker compose -f compose.certification.yaml logs postgres-cert` to inspect PostgreSQL startup. The runner validates Compose configuration and the Prisma schema before resetting the isolated database, and installs Chromium before browser E2E. A missing `planora_session_tenant()` function is a migration blocker, not a reason to bypass tenant security. If npm audit fails, certification remains NO-GO.
 
