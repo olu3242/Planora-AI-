@@ -19,6 +19,7 @@ npm run db:validate
 npm run db:reset:test
 npm run db:seed:test
 npm run db:status:test
+npx tsx scripts/check-tenant-session-function.ts
 npm run lint
 npm run typecheck
 npm run test:unit
