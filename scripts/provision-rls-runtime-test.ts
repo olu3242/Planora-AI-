@@ -26,7 +26,8 @@ try {
   } else {
     await db.$executeRawUnsafe(`ALTER ROLE "${role}" WITH LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS PASSWORD ${quote(password)}`);
   }
-  await db.$executeRawUnsafe(`GRANT CONNECT ON DATABASE "planora_test" TO "${role}"`);
+  const databaseName = decodeURIComponent(owner.pathname.slice(1));
+  await db.$executeRawUnsafe(`GRANT CONNECT ON DATABASE "${databaseName.replaceAll('"', '""')}" TO "${role}"`);
   await db.$executeRawUnsafe(`GRANT USAGE ON SCHEMA public TO "${role}"`);
   await db.$executeRawUnsafe(`REVOKE ALL ON ALL TABLES IN SCHEMA public FROM "${role}"`);
   await db.$executeRawUnsafe(`GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO "${role}"`);
@@ -35,6 +36,8 @@ try {
   await db.$executeRawUnsafe(`GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO "${role}"`);
   const [check] = await db.$queryRaw<Array<{ superuser: boolean; bypass: boolean; createdb: boolean; createrole: boolean }>>`SELECT rolsuper AS superuser, rolbypassrls AS bypass, rolcreatedb AS createdb, rolcreaterole AS createrole FROM pg_roles WHERE rolname='planora_rls_runtime_test'`;
   if (!check || Object.values(check).some(Boolean)) throw new Error("Unsafe RLS runtime role.");
+  const [ownership] = await db.$queryRaw<Array<{ ownsTables: boolean; inheritsOwner: boolean }>>`SELECT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relkind='r' AND c.relowner=(SELECT oid FROM pg_roles WHERE rolname='planora_rls_runtime_test')) AS "ownsTables", pg_has_role('planora_rls_runtime_test', current_user, 'MEMBER') AS "inheritsOwner"`;
+  if (!ownership || ownership.ownsTables || ownership.inheritsOwner) throw new Error("RLS runtime cannot own tenant tables or inherit the database owner.");
   process.stdout.write("Provisioned restricted local test role; RLS assertions remain mandatory.\n");
 } finally {
   await db.$disconnect();
