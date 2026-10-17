@@ -38,6 +38,8 @@ try {
   if (!check || Object.values(check).some(Boolean)) throw new Error("Unsafe RLS runtime role.");
   const [ownership] = await db.$queryRaw<Array<{ ownsTables: boolean; inheritsOwner: boolean }>>`SELECT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relkind='r' AND c.relowner=(SELECT oid FROM pg_roles WHERE rolname='planora_rls_runtime_test')) AS "ownsTables", pg_has_role('planora_rls_runtime_test', current_user, 'MEMBER') AS "inheritsOwner"`;
   if (!ownership || ownership.ownsTables || ownership.inheritsOwner) throw new Error("RLS runtime cannot own tenant tables or inherit the database owner.");
+  const [roleStatus] = await db.$queryRaw<Array<{ canLogin: boolean; inherits: boolean; replication: boolean }>>`SELECT rolcanlogin AS "canLogin", rolinherit AS inherits, rolreplication AS replication FROM pg_roles WHERE rolname='planora_rls_runtime_test'`;
+  if (!roleStatus?.canLogin || roleStatus.inherits || roleStatus.replication) throw new Error("RLS runtime role privileges exceed isolated test policy.");
   process.stdout.write("Provisioned restricted local test role; RLS assertions remain mandatory.\n");
 } finally {
   await db.$disconnect();
