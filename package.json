@@ -15,7 +15,7 @@
     "test:integration": "tsx scripts/run-isolated-integration.ts",
     "test:financial": "vitest run tests/financial-calculations",
     "test:excel": "vitest run tests/excel",
-    "test:security": "vitest run tests/security tests/auth tests/rbac",
+    "test:security": "tsx scripts/provision-rls-runtime-test.ts && vitest run tests/security tests/auth tests/rbac",
     "test:performance": "vitest run tests/performance",
     "test:e2e": "playwright test",
     "test:e2e:responsive": "playwright test --grep @responsive",
