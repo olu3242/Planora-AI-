@@ -11,6 +11,7 @@ export APP_URL="http://127.0.0.1:3000"
 export SESSION_COOKIE_NAME="planora_session"
 export SESSION_TTL_HOURS="12"
 export PLAYWRIGHT_BASE_URL="http://127.0.0.1:3000"
+docker compose -f compose.certification.yaml config --quiet
 docker compose -f compose.certification.yaml up -d --wait
 npm ci
 npm run db:generate
