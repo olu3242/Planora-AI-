@@ -66,12 +66,6 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Run accounting posting regression suite
         run: npx vitest run tests/unit/accounting-canonical-line-types.test.ts tests/unit/accounting-posting-preflight.test.ts tests/unit/accounting-approval-consumption.test.ts tests/unit/posting-approval-guard.test.ts tests/unit/proposed-journal-validation.test.ts
-      - name: Provision restricted RLS runtime role after migrations and seed
-        run: |
-          npm run db:generate
-          npm run db:reset:test
-          npm run db:seed:test
-          npx tsx scripts/provision-rls-runtime-test.ts
       - name: Full exact-SHA certification
         run: npm run certify
       - name: Record exact SHA and job result
