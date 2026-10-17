@@ -29,7 +29,7 @@ try {
     WHERE n.nspname='public' AND c.relkind='r'`;
   const missing = manifest.tenantTables.map(t => t.table).filter(table => !catalog.some(row => row.name === table && row.enabled && row.forced));
   if (missing.length) throw new Error("TENANT_RLS_POLICY_MISSING: " + missing.join(", "));
-  process.stdout.write("Tenant session function and forced RLS on 56 manifest tables verified in isolated test database.\\n");
+  process.stdout.write("Tenant session function and forced RLS on 56 manifest tables verified in isolated test database.\n");
 } finally {
   await db.$disconnect();
 }
