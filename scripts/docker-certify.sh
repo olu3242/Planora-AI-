@@ -14,6 +14,7 @@ export PLAYWRIGHT_BASE_URL="http://127.0.0.1:3000"
 docker compose -f compose.certification.yaml up -d --wait
 npm ci
 npm run db:generate
+npm run db:validate
 npm run db:reset:test
 npm run db:seed:test
 npm run db:status:test
