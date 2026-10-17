@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { readFileSync } from "node:fs";
 import { requireIsolatedTestDatabaseUrl } from "./test-database-url";
 
 if (process.env.APP_ENV !== "test") throw new Error("APP_ENV=test required.");
@@ -18,9 +19,17 @@ try {
     process.stderr.write("Discovered matching signatures: " + JSON.stringify(functions) + "\n");
     throw new Error("TENANT_SESSION_MIGRATION_MISSING");
   }
-  const [policy] = await db.$queryRaw<Array<{ enabled: boolean; forced: boolean }>>`SELECT relrowsecurity AS enabled, relforcerowsecurity AS forced FROM pg_class WHERE oid = to_regclass('public."Account"')`;
-  if (!policy?.enabled || !policy.forced) throw new Error("TENANT_ACCOUNT_RLS_NOT_FORCED");
-  process.stdout.write("Tenant session function and forced Account RLS present in isolated test database.\n");
+  const manifest = JSON.parse(readFileSync("docs/tenant-rls-manifest.json", "utf8")) as { tenantTables: Array<{ table: string }> };
+  if (manifest.tenantTables.length !== 56 || new Set(manifest.tenantTables.map(t => t.table)).size !== 56) {
+    throw new Error("TENANT_RLS_MANIFEST_INVALID");
+  }
+  const catalog = await db.$queryRaw<Array<{ name: string; enabled: boolean; forced: boolean }>>`
+    SELECT c.relname AS name, c.relrowsecurity AS enabled, c.relforcerowsecurity AS forced
+    FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+    WHERE n.nspname='public' AND c.relkind='r'`;
+  const missing = manifest.tenantTables.map(t => t.table).filter(table => !catalog.some(row => row.name === table && row.enabled && row.forced));
+  if (missing.length) throw new Error("TENANT_RLS_POLICY_MISSING: " + missing.join(", "));
+  process.stdout.write("Tenant session function and forced RLS on 56 manifest tables verified in isolated test database.\\n");
 } finally {
   await db.$disconnect();
 }
