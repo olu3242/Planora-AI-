@@ -29,6 +29,20 @@ try {
     WHERE n.nspname='public' AND c.relkind='r'`;
   const missing = manifest.tenantTables.map(t => t.table).filter(table => !catalog.some(row => row.name === table && row.enabled && row.forced));
   if (missing.length) throw new Error("TENANT_RLS_POLICY_MISSING: " + missing.join(", "));
+  const policies = await db.$queryRaw<Array<{ name: string; count: bigint }>>`
+    SELECT c.relname AS name, COUNT(p.oid)::bigint AS count
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid=c.relnamespace
+    LEFT JOIN pg_policy p ON p.polrelid=c.oid
+    WHERE n.nspname='public' AND c.relkind='r'
+    GROUP BY c.relname`;
+  const noPolicies = manifest.tenantTables.map(t => t.table).filter(table =>
+    !policies.some(row => row.name === table && row.count > 0n));
+  if (noPolicies.length) throw new Error("TENANT_RLS_POLICY_DEFINITION_MISSING: " + noPolicies.join(", "));
+  const [functionGrant] = await db.$queryRaw<Array<{ ownerCanExecute: boolean }>>`
+    SELECT has_function_privilege(current_user, 'public.planora_session_tenant()', 'EXECUTE') AS "ownerCanExecute"`;
+  if (!functionGrant?.ownerCanExecute) throw new Error("TENANT_SESSION_FUNCTION_NOT_EXECUTABLE");
+
   process.stdout.write("Tenant session function and forced RLS on 56 manifest tables verified in isolated test database.\n");
 } finally {
   await db.$disconnect();
