@@ -10,7 +10,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  reporter: [["list"], ["html", { open: "never" }]],
+  reporter: [["list"], ["html", { open: "never" }], ["json", { outputFile: "dist/certification-ci/playwright-results.json" }]],
   use: {
     baseURL,
     trace: "retain-on-failure",
