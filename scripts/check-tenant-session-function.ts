@@ -42,7 +42,7 @@ try {
   const [functionGrant] = await db.$queryRaw<Array<{ ownerCanExecute: boolean }>>`
     SELECT has_function_privilege(current_user, 'public.planora_session_tenant()', 'EXECUTE') AS "ownerCanExecute"`;
   if (!functionGrant?.ownerCanExecute) throw new Error("TENANT_SESSION_FUNCTION_NOT_EXECUTABLE");
-  if (process.env.CHECK_RUNTIME_ROLE === "1") {
+  if (process.argv.includes("--runtime")) {
     const runtimeUrl = requireIsolatedTestDatabaseUrl(process.env.TEST_RUNTIME_DATABASE_URL);
     const runtime = new URL(runtimeUrl);
     const owner = new URL(url);
