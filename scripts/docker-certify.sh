@@ -39,6 +39,7 @@ try {
   console.log("Tenant function:", rows[0].signature);
 } finally { await db.$disconnect(); }
 '
+npx playwright install chromium
 npm run test:e2e
 npm run build
 npm audit --audit-level=moderate
