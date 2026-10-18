@@ -48,6 +48,28 @@ describe("forced PostgreSQL tenant policies using a non-owner runtime role", () 
     await expect(runtime.$executeRawUnsafe('SET ROLE planora_wave1_test')).rejects.toThrow();
     await expect(runtime.$executeRawUnsafe('ALTER TABLE "Account" DISABLE ROW LEVEL SECURITY')).rejects.toThrow();
   });
+  it("reads forecast audit history without joining forbidden authentication records", async () => {
+    const ownVersion = await owner.forecastVersion.findFirstOrThrow({
+      where: { organizationId: tenantA },
+      select: { id: true },
+    });
+    await withTenantSession(runtime, tokenA, async tx => {
+      const audits = await tx.auditEvent.findMany({
+        where: {
+          organizationId: tenantA,
+          OR: [
+            { entityId: ownVersion.id },
+            { metadata: { path: ["forecastVersionId"], equals: ownVersion.id } },
+          ],
+        },
+        orderBy: { occurredAt: "desc" },
+        take: 40,
+      });
+      expect(Array.isArray(audits)).toBe(true);
+      expect(audits.every(audit => audit.organizationId === tenantA)).toBe(true);
+      await expect(tx.user.findMany({ take: 1 })).rejects.toThrow();
+    });
+  });
   it("isolates SELECT, INSERT, UPDATE and DELETE, including attempted tenant reassignment", async () => {
     const foreign = await owner.account.findFirstOrThrow({ where: { organizationId: tenantB } });
     await withTenantSession(runtime, tokenA, async tx => {
