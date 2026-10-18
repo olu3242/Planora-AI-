@@ -140,7 +140,7 @@ jobs:
           try { audit = JSON.parse(raw); } catch { audit = { parse_error: true }; }
           const names = ['braces', 'micromatch', 'fast-glob', '@next/eslint-plugin-next'];
           const findings = Object.fromEntries(names.map(name => [name, audit.vulnerabilities?.[name] ? { severity: audit.vulnerabilities[name].severity, range: audit.vulnerabilities[name].range, fixAvailable: audit.vulnerabilities[name].fixAvailable } : null]));
-          process.stdout.write(JSON.stringify({ findings, totals: audit.metadata?.vulnerabilities ?? null, parse_error: Boolean(audit.parse_error) }, null, 2) + '\\n');
+          process.stdout.write(JSON.stringify({ findings, totals: audit.metadata?.vulnerabilities ?? null, parse_error: Boolean(audit.parse_error) }, null, 2) + '\n');
           NODE
           if npm audit --audit-level=moderate > dist/remediation/alternate/audit-gate.log 2>&1; then audit_status=0; else audit_status=$?; fi
           printf 'alternate_lint_exit=%s\nalternate_typecheck_exit=%s\nalternate_unit_exit=%s\nalternate_audit_exit=%s\n' "$lint_status" "$typecheck_status" "$unit_status" "$audit_status" | tee dist/remediation/alternate/gate-status.txt
