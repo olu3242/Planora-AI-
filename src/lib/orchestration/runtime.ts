@@ -77,8 +77,9 @@ export async function executeReadySteps(
   registry: RuntimeRegistry,
   claimed = false,
 ): Promise<WorkflowRun> {
-  let run = await runs.load(runId);
-  if (!run) throw new Error(`Workflow run not found: ${runId}`);
+  const loaded = await runs.load(runId);
+  if (!loaded) throw new Error(`Workflow run not found: ${runId}`);
+  let run: WorkflowRun = loaded;
   if (claimed && run.status !== "RUNNING") {
     throw new Error("WORKFLOW_SCOPE_CLAIM_STATE_MISMATCH");
   }
