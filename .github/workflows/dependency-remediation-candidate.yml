@@ -57,6 +57,39 @@ jobs:
           npm view micromatch@4.0.8 dependencies --json > dist/remediation/installed-micromatch-dependencies.json 2>&1 || true
       - name: Enforce candidate security gate
         run: npm audit --audit-level=moderate
+      - name: Evaluate alternate ESLint stack in isolated candidate
+        if: always()
+        run: |
+          mkdir -p dist/remediation/alternate
+          # This experiment must not replace the existing production lint configuration.
+          cp package.json dist/remediation/alternate/original-package.json
+          cp package-lock.json dist/remediation/alternate/original-package-lock.json
+          cp eslint.config.mjs dist/remediation/alternate/original-eslint.config.mjs
+          npm uninstall --save-dev eslint-config-next --ignore-scripts > dist/remediation/alternate/uninstall.log 2>&1 || true
+          npm install --save-dev --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y > dist/remediation/alternate/install.log 2>&1 || true
+          cat > eslint.config.mjs <<'EOF'
+          import { defineConfig, globalIgnores } from "eslint/config";
+          import tseslint from "typescript-eslint";
+          import react from "eslint-plugin-react";
+          import reactHooks from "eslint-plugin-react-hooks";
+          import jsxA11y from "eslint-plugin-jsx-a11y";
+          export default defineConfig([
+            ...tseslint.configs.recommended,
+            react.configs.flat.recommended,
+            react.configs.flat["jsx-runtime"],
+            reactHooks.configs.flat.recommended,
+            jsxA11y.flatConfigs.recommended,
+            globalIgnores([".next/**", "coverage/**", "playwright-report/**", "test-results/**", "next-env.d.ts"]),
+          ]);
+          EOF
+          npm run lint > dist/remediation/alternate/lint.log 2>&1 || true
+          npm run typecheck > dist/remediation/alternate/typecheck.log 2>&1 || true
+          npm audit --json > dist/remediation/alternate/audit.json 2>&1 || true
+          npm audit --audit-level=moderate > dist/remediation/alternate/audit-gate.log 2>&1 || true
+          cp package.json dist/remediation/alternate/package.json
+          cp package-lock.json dist/remediation/alternate/package-lock.json
+          cp eslint.config.mjs dist/remediation/alternate/eslint.config.mjs
+          # The experiment is evidence-only; it cannot pass or bypass the original candidate gate.
       - name: Upload candidate evidence
         if: always()
         uses: actions/upload-artifact@v4
