@@ -64,6 +64,26 @@ describe("governed runtime fail-closed boundary", () => {
     expect(test.authorize).not.toHaveBeenCalled();
   });
 
+  it.each(["RUNNING", "RETRYING", "COMPENSATING"] as const)(
+    "rejects active %s run re-entry without a durable worker lease",
+    async (status) => {
+      const test = setup();
+      await test.seed();
+      const runs = new MemoryWorkflowRunStore();
+      const run = createWorkflowRun(envelope.runId, definition, {
+        organizationId: envelope.organizationId,
+        actorId: envelope.actorId,
+        correlationId: envelope.correlationId,
+      });
+      await runs.save({ ...run, status });
+      await expect(test.execute({}, { runs })).rejects.toThrow(
+        "WORKFLOW_SCOPE_ACTIVE_RUN_REQUIRES_LEASE",
+      );
+      expect(test.authorize).not.toHaveBeenCalled();
+      expect(test.handler).not.toHaveBeenCalled();
+    },
+  );
+
   it("rejects an external executor even for nonfinancial work", async () => {
     const test = setup();
     await test.seed();
