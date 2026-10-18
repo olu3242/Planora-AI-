@@ -41,14 +41,14 @@ function VideoPreview({ media, active, reduced }: { media: Walkthrough; active: 
   return <video ref={video} src={media.src} poster={media.poster} muted playsInline loop preload="metadata" onError={() => setFailed(true)} aria-label={media.title}>{media.captions && <track kind="captions" src={media.captions} srcLang="en" label="English" />}</video>;
 }
 
-function VideoLightbox({ media, close }: { media: Walkthrough; close: () => void }) {
+function VideoLightbox({ media, close, restoreFocus }: { media: Walkthrough; close: () => void; restoreFocus: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const reduced = useReducedMotion();
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     dialog.current?.showModal(); document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = overflow; previous?.focus(); };
+    return () => { document.body.style.overflow = overflow; if (previous?.isConnected) previous.focus(); else restoreFocus(); };
   }, []);
   return <motion.dialog initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:reduced?0:0.2,ease:[0.16,1,0.3,1]}} ref={dialog} className="cluster-dialog" aria-label={media.title} onCancel={event => { event.preventDefault(); close(); }}>
     <div className="fc:mx-auto fc:flex fc:h-full fc:max-w-6xl fc:flex-col fc:justify-center fc:gap-6 fc:p-6">
@@ -68,11 +68,6 @@ export function FeatureCluster({ media = walkthroughs }: { media?: Walkthrough[]
   const [lightbox, setLightbox] = useState<Walkthrough | null>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const videoOpener = useRef<HTMLButtonElement | null>(null);
-  const lastLightbox = useRef(false);
-  useEffect(() => {
-    if (lastLightbox.current && !lightbox) videoOpener.current?.focus();
-    lastLightbox.current = !!lightbox;
-  }, [lightbox]);
   const track = useRef<HTMLDivElement>(null);
   const [stride, setStride] = useState(0);
   const dragged = useRef(false);
@@ -115,7 +110,7 @@ export function FeatureCluster({ media = walkthroughs }: { media?: Walkthrough[]
         </motion.div></div>
         <div className="media-controls fc:mt-6 fc:flex fc:items-center fc:justify-center fc:gap-3"><button aria-label="Previous walkthrough" disabled={slide===0} onClick={()=>move(slide-1)}><ChevronLeft size={18}/></button>{media.map((item,i)=><button key={item.title} aria-label={`Show ${item.title}`} aria-current={i===slide} onClick={()=>move(i)} />)}<button aria-label="Next walkthrough" disabled={slide>=media.length-1} onClick={()=>move(slide+1)}><ChevronRight size={18}/></button></div>
       </div>
-      <AnimatePresence>{lightbox && <VideoLightbox key="lightbox" media={lightbox} close={()=>setLightbox(null)} />}</AnimatePresence>
+      <AnimatePresence>{lightbox && <VideoLightbox key="lightbox" media={lightbox} close={()=>setLightbox(null)} restoreFocus={()=>videoOpener.current?.focus()} />}</AnimatePresence>
     </div>
   </section>;
 }
