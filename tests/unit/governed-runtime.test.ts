@@ -88,16 +88,27 @@ describe("governed runtime fail-closed boundary", () => {
     const test = setup();
     await test.seed();
     const updateMany = vi.fn(async () => ({ count: 1 }));
-    await test.execute({}, {
+    await expect(test.execute({}, {
       claimDb: { workflowRunRecord: { updateMany } },
-    });
+    })).rejects.toThrow("WORKFLOW_SCOPE_CLAIM_STATE_MISMATCH");
     expect(updateMany).toHaveBeenCalledOnce();
-    expect(test.handler).toHaveBeenCalledOnce();
+    expect(test.handler).not.toHaveBeenCalled();
     expect(test.authorize).toHaveBeenCalledOnce();
     expect(test.authorize.mock.invocationCallOrder[0])
       .toBeLessThan(updateMany.mock.invocationCallOrder[0]);
     expect(updateMany.mock.invocationCallOrder[0])
       .toBeLessThan(test.handler.mock.invocationCallOrder[0]);
+  });
+
+  it("rejects a claimed run when the store does not reflect the atomic claim", async () => {
+    const test = setup();
+    await test.seed();
+    const updateMany = vi.fn(async () => ({ count: 1 }));
+    await expect(test.execute({}, {
+      claimDb: { workflowRunRecord: { updateMany } },
+      // MemoryWorkflowRunStore is not synchronized with the claimed database.
+    })).rejects.toThrow("WORKFLOW_SCOPE_CLAIM_STATE_MISMATCH");
+    expect(test.handler).not.toHaveBeenCalled();
   });
 
   it("does not execute when the database claim loses a race", async () => {
