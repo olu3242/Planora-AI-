@@ -22,6 +22,7 @@ export type StepHandler = (
 export interface WorkflowRunStore {
   load(runId: string): Promise<WorkflowRun | null>;
   save(run: WorkflowRun): Promise<void>;
+  saveIfUnchanged?(run: WorkflowRun, expected: WorkflowRun): Promise<void>;
 }
 
 export interface RuntimeExecutionRecord {
@@ -78,9 +79,17 @@ export async function executeReadySteps(
   let run = await runs.load(runId);
   if (!run) throw new Error(`Workflow run not found: ${runId}`);
 
+  const persist = async (next: WorkflowRun): Promise<void> => {
+    if (runs.saveIfUnchanged) {
+      await runs.saveIfUnchanged(next, run);
+    } else {
+      await runs.save(next);
+    }
+    run = next;
+  };
+
   for (const step of readySteps(definition, run)) {
-    run = beginStep(run, step);
-    await runs.save(run);
+    await persist(beginStep(run, step));
 
     if (run.steps[step.id]?.status === "WAITING_APPROVAL") {
       break;
@@ -89,8 +98,7 @@ export async function executeReadySteps(
     const key = stepIdempotencyKey(run, step);
     const existing = await executions.load(key);
     if (existing?.status === "SUCCEEDED" && existing.evidenceId) {
-      run = completeStep(run, step.id, existing.evidenceId);
-      await runs.save(run);
+      await persist(completeStep(run, step.id, existing.evidenceId));
       continue;
     }
 
@@ -120,8 +128,7 @@ export async function executeReadySteps(
         evidenceId: result.evidenceId,
         attempts: attempt,
       });
-      run = completeStep(run, step.id, result.evidenceId);
-      await runs.save(run);
+      await persist(completeStep(run, step.id, result.evidenceId));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown runtime failure";
       const errorClass = classifyRuntimeError(error);
@@ -134,7 +141,7 @@ export async function executeReadySteps(
         errorClass,
         error: message,
       });
-      run = {
+      const failedRun: WorkflowRun = {
         ...run,
         status: "FAILED",
         steps: {
@@ -142,13 +149,13 @@ export async function executeReadySteps(
           [step.id]: { ...run.steps[step.id], status: "FAILED", error: message },
         },
       };
-      await runs.save(run);
+      await persist(failedRun);
       return run;
     }
   }
 
-  run = finalizeRun(run);
-  await runs.save(run);
+  const finalized = finalizeRun(run);
+  if (finalized !== run) await persist(finalized);
   return run;
 }
 
