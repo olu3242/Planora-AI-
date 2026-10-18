@@ -1,0 +1,40 @@
+name: Dependency Remediation Candidate
+on:
+  workflow_dispatch:
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - name: Establish baseline
+        run: |
+          mkdir -p dist/remediation
+          npm ci
+          npm audit --json > dist/remediation/baseline-audit.json || true
+      - name: Resolve compatible dependency updates without forced downgrades
+        run: |
+          npm update --package-lock-only --ignore-scripts
+          npm install --package-lock-only --ignore-scripts
+          npm ci
+          npm audit --json > dist/remediation/candidate-audit.json || true
+          npm audit --omit=dev --json > dist/remediation/candidate-production-audit.json || true
+          npm ls braces micromatch fast-glob @next/eslint-plugin-next eslint-config-next --all > dist/remediation/candidate-tree.txt 2>&1 || true
+          git diff -- package.json package-lock.json > dist/remediation/lockfile.patch
+          cp package-lock.json dist/remediation/package-lock.json
+          printf 'source_sha=%s\n' "$GITHUB_SHA" > dist/remediation/provenance.txt
+      - name: Check candidate compatibility
+        run: |
+          npm run lint
+          npm run typecheck
+      - name: Enforce candidate security gate
+        run: npm audit --audit-level=moderate
+      - name: Upload candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-dependency-candidate-${{ github.sha }}
+          path: dist/remediation/
+          if-no-files-found: warn
+          retention-days: 14
