@@ -129,7 +129,7 @@ describe("forced PostgreSQL tenant policies using a non-owner runtime role", () 
     });
     await withTenantSession(runtime, tokenB, async tx => {
       const foreignVersion = await tx.forecastVersion.findFirst({
-        where: { id: version.id, forecast: { organizationId: tenantB } },
+        where: { id: version.id },
         include: { comments: true },
       });
       expect(foreignVersion).toBeNull();
