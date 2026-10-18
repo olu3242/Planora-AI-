@@ -84,6 +84,43 @@ describe("governed runtime fail-closed boundary", () => {
     },
   );
 
+  it("claims the database row before invoking a governed handler", async () => {
+    const test = setup();
+    await test.seed();
+    const updateMany = vi.fn(async () => ({ count: 1 }));
+    await test.execute({}, {
+      claimDb: { workflowRunRecord: { updateMany } },
+    });
+    expect(updateMany).toHaveBeenCalledOnce();
+    expect(test.handler).toHaveBeenCalledOnce();
+    expect(test.authorize).toHaveBeenCalledOnce();
+    expect(test.authorize.mock.invocationCallOrder[0])
+      .toBeLessThan(updateMany.mock.invocationCallOrder[0]);
+    expect(updateMany.mock.invocationCallOrder[0])
+      .toBeLessThan(test.handler.mock.invocationCallOrder[0]);
+  });
+
+  it("does not execute when the database claim loses a race", async () => {
+    const test = setup();
+    await test.seed();
+    const updateMany = vi.fn(async () => ({ count: 0 }));
+    await expect(test.execute({}, {
+      claimDb: { workflowRunRecord: { updateMany } },
+    })).rejects.toThrow("WORKFLOW_SCOPE_CLAIM_UNAVAILABLE");
+    expect(test.handler).not.toHaveBeenCalled();
+  });
+
+  it("does not claim a database row when policy authorization denies", async () => {
+    const test = setup();
+    await test.seed();
+    test.authorize.mockRejectedValueOnce(new Error("FORBIDDEN_POLICY"));
+    const updateMany = vi.fn(async () => ({ count: 1 }));
+    await expect(test.execute({}, {
+      claimDb: { workflowRunRecord: { updateMany } },
+    })).rejects.toThrow("FORBIDDEN_POLICY");
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
   it("rejects an external executor even for nonfinancial work", async () => {
     const test = setup();
     await test.seed();
