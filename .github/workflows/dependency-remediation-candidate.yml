@@ -121,6 +121,18 @@ jobs:
           # replacement; lint/unit tests alone do not exercise compilation.
           if npm run build > dist/remediation/alternate/build.log 2>&1; then build_status=0; else build_status=$?; fi
           npm audit --json > dist/remediation/alternate/audit.json 2>&1 || true
+          # Capture the exact installed vulnerable chain after clean install.
+          # Do not infer remediation from package-lock-only changes.
+          npm ls braces micromatch fast-glob @next/eslint-plugin-next --all --json > dist/remediation/alternate/dependency-tree.json 2>&1 || true
+          node --input-type=module <<'NODE' > dist/remediation/alternate/audit-findings.json
+          import fs from 'node:fs';
+          const raw = fs.readFileSync('dist/remediation/alternate/audit.json', 'utf8');
+          let audit;
+          try { audit = JSON.parse(raw); } catch { audit = { parse_error: true }; }
+          const names = ['braces', 'micromatch', 'fast-glob', '@next/eslint-plugin-next'];
+          const findings = Object.fromEntries(names.map(name => [name, audit.vulnerabilities?.[name] ? { severity: audit.vulnerabilities[name].severity, range: audit.vulnerabilities[name].range, fixAvailable: audit.vulnerabilities[name].fixAvailable } : null]));
+          process.stdout.write(JSON.stringify({ findings, totals: audit.metadata?.vulnerabilities ?? null, parse_error: Boolean(audit.parse_error) }, null, 2) + '\\n');
+          NODE
           if npm audit --audit-level=moderate > dist/remediation/alternate/audit-gate.log 2>&1; then audit_status=0; else audit_status=$?; fi
           printf 'alternate_lint_exit=%s\nalternate_typecheck_exit=%s\nalternate_unit_exit=%s\nalternate_audit_exit=%s\n' "$lint_status" "$typecheck_status" "$unit_status" "$audit_status" | tee dist/remediation/alternate/gate-status.txt
           printf 'alternate_financial_exit=%s\nalternate_integration_exit=%s\n' "$financial_status" "$integration_status" >> dist/remediation/alternate/gate-status.txt
