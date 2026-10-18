@@ -337,7 +337,9 @@ jobs:
           try { report = JSON.parse(fs.readFileSync(path, 'utf8')); } catch { report = null; }
           const findings = report?.vulnerabilities ?? {};
           const names = Object.keys(findings).sort();
-          const result = { diagnostic_only: true, audit_parse_valid: Boolean(report?.metadata?.vulnerabilities), severity_totals: report?.metadata?.vulnerabilities ?? null, vulnerable_packages: names, next_lint_chain_present: names.some(name => ['eslint-config-next', '@next/eslint-plugin-next', 'fast-glob', 'micromatch', 'braces'].includes(name)) };
+          const uninstallSucceeded = fs.readFileSync('dist/remediation/no-next-plugin/status.txt', 'utf8').includes('isolation_uninstall_exit=0');
+          const auditParseValid = Boolean(report?.metadata?.vulnerabilities);
+          const result = { diagnostic_only: true, isolation_valid: uninstallSucceeded && auditParseValid, isolation_uninstall_succeeded: uninstallSucceeded, audit_parse_valid: auditParseValid, severity_totals: report?.metadata?.vulnerabilities ?? null, vulnerable_packages: names, next_lint_chain_present: names.some(name => ['eslint-config-next', '@next/eslint-plugin-next', 'fast-glob', 'micromatch', 'braces'].includes(name)) };
           process.stdout.write(JSON.stringify(result, null, 2) + '\n');
           NODE
           printf 'diagnostic_only=true\nframework_lint_equivalence=false\nproduction_migration_approved=false\n' >> dist/remediation/no-next-plugin/status.txt
