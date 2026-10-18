@@ -12,10 +12,11 @@ function runGuard(experience, landing) {
   try {
     mkdirSync(join(dir, "scripts"));
     mkdirSync(join(dir, "src/app/experience"), { recursive: true });
-    mkdirSync(join(dir, "src/components"), { recursive: true });
+    mkdirSync(join(dir, "src/components/showcase"), { recursive: true });
+    for (const file of ["src/app/page.tsx", "src/components/showcase/content.ts", "src/components/showcase/dashboard-showcase.tsx", "src/components/showcase/video-showcase.tsx", "src/components/showcase/feature-carousel.tsx", "src/components/showcase/customer-showcase.tsx"]) writeFileSync(join(dir, file), "");
     copyFileSync(runner, join(dir, "scripts/check-public-experience.mjs"));
     writeFileSync(join(dir, "src/app/experience/page.tsx"), experience);
-    writeFileSync(join(dir, "src/components/brand-landing.tsx"), landing);
+    writeFileSync(join(dir, "src/components/approved-landing.tsx"), landing);
     return spawnSync(process.execPath, ["scripts/check-public-experience.mjs"], { cwd: dir, encoding: "utf8" });
   } finally {
     rmSync(dir, { recursive: true, force: true });

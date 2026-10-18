@@ -20,11 +20,11 @@ test("unauthenticated users are redirected and can sign in", async ({ page }) =>
 test("landing navigation, calls to action, footer links, and keyboard focus work", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /From numbers to what/ })).toBeVisible();
-  await page.getByRole("link", { name: "Product" }).click();
-  await expect(page).toHaveURL(/#features$/);
-  await expect(page.locator("#features")).toBeInViewport();
-  await page.getByRole("link", { name: "Planora home" }).focus();
+  await expect(page.getByRole("heading", { name: /Your finance operations/, level: 1 })).toBeVisible();
+  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Platform", exact: true }).click();
+  await expect(page).toHaveURL(/#platform$/);
+  await expect(page.locator("#platform")).toBeInViewport();
+  await page.getByRole("link", { name: "Planora home" }).first().focus();
   await page.keyboard.press("Tab");
   const focus = await page.evaluate(() => {
     const element = document.activeElement as HTMLElement;
@@ -36,8 +36,8 @@ test("landing navigation, calls to action, footer links, and keyboard focus work
   expect(focus.width).not.toBe("0px");
   const deadLinks = await page.locator("a").evaluateAll((links) => links.filter((link) => link.getAttribute("href") === "#").length);
   expect(deadLinks).toBe(0);
-  await expect(page.locator("footer").getByRole("link", { name: "Financial Reporting" })).toHaveAttribute("href", "#features");
-  await page.locator("a:visible").filter({ hasText: /^Get Started/ }).first().click();
+  await expect(page.locator("footer").getByRole("link", { name: "Platform" })).toHaveAttribute("href", "#platform");
+  await page.getByRole("link", { name: "Sign in to your workspace" }).click();
   await expect(page).toHaveURL(/\/login$/);
 });
 
@@ -46,12 +46,14 @@ for (const width of [375, 430, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
     expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
-    await expect(page.locator("a:visible").filter({ hasText: /^Get Started/ }).first()).toBeVisible();
-    if (width <= 900) {
-      const menu = page.locator(".nav-panel");
+    const clippedPanels = await page.locator(".tour-layout > div,.video-layout > div").evaluateAll(nodes => nodes.some(node => { const box = node.getBoundingClientRect(); return box.left < 0 || box.right > innerWidth; }));
+    expect(clippedPanels).toBe(false);
+    await expect(page.getByRole("link", { name: "Sign in to your workspace" })).toBeVisible();
+    if (width <= 600) {
+      const menu = page.locator("#marketing-nav");
       await page.getByRole("button", { name: "Open menu" }).click();
-      await expect(menu.getByRole("link", { name: "Product" })).toBeVisible();
-      await page.getByRole("button", { name: "Open menu" }).click();
+      await expect(menu.getByRole("link", { name: "Platform", exact: true })).toBeVisible();
+      await page.getByRole("button", { name: "Close menu" }).click();
       await expect(page.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
     } else {
       await expect(page.getByRole("navigation", { name: "Primary navigation" })).toBeVisible();

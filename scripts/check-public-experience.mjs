@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Static guard for public marketing content. This is defense in depth, not a secret scan of the repository.
 import { readFileSync } from "node:fs";
-const files = ["src/app/experience/page.tsx", "src/components/brand-landing.tsx"];
+const files = ["src/app/page.tsx", "src/app/experience/page.tsx", "src/components/approved-landing.tsx", "src/components/showcase/content.ts", "src/components/showcase/dashboard-showcase.tsx", "src/components/showcase/video-showcase.tsx", "src/components/showcase/feature-carousel.tsx", "src/components/showcase/customer-showcase.tsx"];
 const violations = [];
 for (const file of files) {
   const source = readFileSync(file, "utf8");

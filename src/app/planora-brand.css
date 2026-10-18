@@ -1,0 +1,29 @@
+/* Shared Planora identity for public pages, authentication and workspaces. */
+:root {
+  --brand-forest: #064d38; --brand-forest-deep: #003b2b; --brand-sage: #e5ede7;
+  --brand-cream: #f6f6f0; --brand-ink: #102e33; --brand-muted: #60706c;
+  --brand-border: #dfe5df; --brand-radius: 12px;
+  --ink: var(--brand-ink); --muted: var(--brand-muted); --paper: #f7f8f4;
+  --line: var(--brand-border); --green: var(--brand-forest); --nav: #f0f3ed;
+}
+html { scroll-behavior: smooth; }
+body { font-family: Arial, Helvetica, sans-serif; }
+.planora-logo { display: inline-flex; align-items: center; gap: 7px; color: var(--brand-forest); vertical-align: middle; }
+.planora-logo > span { color: var(--brand-ink); font-size: 29px; font-weight: 700; letter-spacing: -1.7px; }
+.brand { color: var(--brand-ink); }
+.brand .planora-logo > span { font-size: 25px; }
+.sidebar { color: var(--ink); border-right: 1px solid var(--line); }
+.nav-label { color: #6c7e73; }
+.nav-link { color: #334e43; border-radius: 7px; }
+.nav-link:hover { background: #dcebe0; color: var(--brand-forest); }
+.nav-link.disabled { color: #82918a; }
+.panel, .metrics, .filter-bar, .statement, .lineage-panel, .cycle-row { border-radius: var(--brand-radius); }
+.metrics { overflow: hidden; }
+.button { border-radius: 7px; }
+.button-primary { background: var(--brand-forest); }
+.login-context { background: radial-gradient(ellipse at 75% 10%, #57886c 0, #1c5e46 45%, #003b2b 95%); }
+.login-context h2 { letter-spacing: -2px; }
+.login-context p { color: #d8e6dc; }
+.login-panel { background: #fafbf7; }
+:focus-visible { outline: 3px solid #209977; outline-offset: 4px; }
+@media(prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
