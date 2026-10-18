@@ -102,7 +102,7 @@ jobs:
           # Validate accounting invariants and financial calculation behavior
           # against the alternate dependency graph, beyond generic unit tests.
           if npm run test:financial > dist/remediation/alternate/financial.log 2>&1; then financial_status=0; else financial_status=$?; fi
-          if npm run test:integration > dist/remediation/alternate/integration.log 2>&1; then integration_status=0; else integration_status=$?; fi
+          if APP_ENV=test npm run test:integration > dist/remediation/alternate/integration.log 2>&1; then integration_status=0; else integration_status=$?; fi
           npm audit --json > dist/remediation/alternate/audit.json 2>&1 || true
           if npm audit --audit-level=moderate > dist/remediation/alternate/audit-gate.log 2>&1; then audit_status=0; else audit_status=$?; fi
           printf 'alternate_lint_exit=%s\nalternate_typecheck_exit=%s\nalternate_unit_exit=%s\nalternate_audit_exit=%s\n' "$lint_status" "$typecheck_status" "$unit_status" "$audit_status" | tee dist/remediation/alternate/gate-status.txt
