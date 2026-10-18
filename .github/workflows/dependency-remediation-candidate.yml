@@ -208,6 +208,15 @@ jobs:
             echo 'migration_patch_integrity=incomplete' > dist/remediation/alternate/migration-integrity.txt
           fi
           cat dist/remediation/alternate/migration-integrity.txt >> "$GITHUB_STEP_SUMMARY"
+          # A migration patch is useful only if it is reversible against the
+          # candidate worktree. Validate its syntax and reverse applicability.
+          if git apply --check --reverse dist/remediation/alternate/migration.patch; then
+            echo 'migration_patch_reversible=true' > dist/remediation/alternate/migration-apply-status.txt
+          else
+            echo 'migration_patch_reversible=false' > dist/remediation/alternate/migration-apply-status.txt
+            echo 'migration_patch_integrity=incomplete' > dist/remediation/alternate/migration-integrity.txt
+          fi
+          cat dist/remediation/alternate/migration-apply-status.txt >> "$GITHUB_STEP_SUMMARY"
           # Reject an incomplete migration artifact even if earlier checks
           # happened to pass; do not promote a partial lockfile change.
           if ! grep -qx 'migration_patch_integrity=manifest_and_lockfile_present' dist/remediation/alternate/migration-integrity.txt; then
