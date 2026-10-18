@@ -119,15 +119,6 @@ jobs:
           else
             printf 'framework_lint_equivalence=requires_review\n' > dist/remediation/alternate/coverage-status.txt
           fi
-          # Explicit promotion verdict: all four checks must pass AND framework
-          # lint equivalence must be independently established. Never infer
-          # promotion readiness solely from the npm audit result.
-          if [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
-            echo 'promotion_readiness=eligible_for_review' > dist/remediation/alternate/promotion-status.txt
-          else
-            echo 'promotion_readiness=blocked' > dist/remediation/alternate/promotion-status.txt
-          fi
-          cat dist/remediation/alternate/promotion-status.txt >> "$GITHUB_STEP_SUMMARY"
           # Audit the scope of framework-specific lint suppressions before
           # considering migration. Keep the existing rules and source unchanged.
           # This counts source files containing inline Next.js lint directives;
@@ -165,6 +156,14 @@ jobs:
             echo 'image_rule_negative_control=INCONCLUSIVE' > dist/remediation/alternate/image-rule-status.txt
           fi
           cat dist/remediation/alternate/image-rule-status.txt >> "$GITHUB_STEP_SUMMARY"
+          # Evaluate promotion only after all evidence, including the negative
+          # control, exists. A passing audit alone never approves migration.
+          if [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
+            echo 'promotion_readiness=eligible_for_review' > dist/remediation/alternate/promotion-status.txt
+          else
+            echo 'promotion_readiness=blocked' > dist/remediation/alternate/promotion-status.txt
+          fi
+          cat dist/remediation/alternate/promotion-status.txt >> "$GITHUB_STEP_SUMMARY"
           # The experiment is evidence-only; it cannot pass or bypass the original candidate gate.
       - name: Upload candidate evidence
         if: always()
