@@ -51,16 +51,19 @@ describe("PostgreSQL atomic workflow claim", () => {
     const outcomes = await Promise.allSettled(
       Array.from({ length: 10 }, () => claimReadyWorkflowRun({
         workflowRunRecord: {
-          updateMany: ({ where, data }) => db.workflowRunRecord.updateMany({
+          updateMany: ({ where, data }) => {
+            if (!where.state || !data.state) throw new Error("WORKFLOW_CLAIM_SNAPSHOT_REQUIRED");
+            return db.workflowRunRecord.updateMany({
             where: {
               ...where,
-              state: { equals: where.state.equals as Prisma.InputJsonValue },
+              state: { equals: JSON.parse(JSON.stringify(where.state?.equals)) as Prisma.InputJsonValue },
             },
             data: {
               ...data,
-              state: data.state as Prisma.InputJsonValue,
+              state: JSON.parse(JSON.stringify(data.state)) as Prisma.InputJsonValue,
             },
-          }),
+            });
+          },
         },
       }, request)),
     );
