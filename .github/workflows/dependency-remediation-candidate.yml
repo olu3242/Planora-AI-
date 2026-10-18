@@ -130,8 +130,8 @@ jobs:
           import fs from 'node:fs';
           const manifest = JSON.parse(fs.readFileSync('node_modules/@next/eslint-plugin-next/package.json', 'utf8'));
           const actual = manifest.version;
-          process.stdout.write('next_plugin_version=' + actual + '\\n');
-          process.stdout.write('next_plugin_pin_verified=' + String(actual === '14.2.35') + '\\n');
+          process.stdout.write('next_plugin_version=' + actual + '\n');
+          process.stdout.write('next_plugin_pin_verified=' + String(actual === '14.2.35') + '\n');
           NODE
           node --input-type=module <<'NODE' > dist/remediation/alternate/audit-findings.json
           import fs from 'node:fs';
