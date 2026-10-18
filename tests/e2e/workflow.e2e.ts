@@ -66,7 +66,10 @@ test.describe.serial("canonical forecast cycle", () => {
       expect(persistedRun?.status, "Workflow Assistant run must complete successfully").toBe("SUCCEEDED");
       expect(persistedRun?.agentDefinition.agentId).toBe("PLANORA.WORKFLOW.ASSISTANT.NEXT_ACTION.v1");
       expect(persistedRun?.recommendations.length, "Workflow Assistant must persist its recommendation").toBeGreaterThan(0);
-      const renderedRecommendation = page.locator(".agent-result").filter({ hasText: persistedRun!.recommendations[0].summary }).first();
+      const recommendationSummary = persistedRun!.recommendations[0].summary;
+      const renderedRecommendation = page.locator(".agent-result").filter({ hasText: recommendationSummary }).first();
+      const renderedSummaries = await page.locator(".agent-result h3").allTextContents();
+      expect(renderedSummaries, `Redirected run ${workflowRunId} must render persisted recommendation. URL: ${page.url()}; rendered summaries: ${JSON.stringify(renderedSummaries)}`).toContain(recommendationSummary);
       await expect(renderedRecommendation).toBeVisible();
       await expect(renderedRecommendation).toContainText(persistedRun!.recommendations[0].summary);
     } finally {
