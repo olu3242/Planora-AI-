@@ -145,14 +145,14 @@ jobs:
           fi
           cat dist/remediation/alternate/next-rule-mapping-status.txt >> "$GITHUB_STEP_SUMMARY"
           # Verify the alternate graph does not silently omit framework checks.
-          # The existing no-op compatibility rule is deliberately treated as
-          # an unverified coverage gap, not an acceptable replacement.
+          # Inspect whether the official Next.js plugin is installed and its
+          # recommended rule sets are configured; parity remains review-gated.
           node --input-type=module <<'NODE' > dist/remediation/alternate/lint-parity.json
           import fs from 'node:fs';
           const config = fs.readFileSync('dist/remediation/alternate/eslint.config.mjs', 'utf8');
           const result = {
-            nextPluginLoaded: config.includes('@next/eslint-plugin-next'),
-            nextRecommendedRulesLoaded: config.includes('eslint-config-next/core-web-vitals'),
+            nextPluginLoaded: config.includes('from "@next/eslint-plugin-next"'),
+            nextRecommendedRulesLoaded: config.includes('nextPlugin.configs.recommended.rules') && config.includes('nextPlugin.configs["core-web-vitals"].rules'),
             noOpNextRule: config.includes('create: () => ({})'),
             conclusion: 'requires_manual_framework_parity_review'
           };
