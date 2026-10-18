@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 
 type View = "Command Center" | "Accounting" | "Tax" | "FP&A" | "AI Agents";
@@ -28,15 +29,13 @@ const card:React.CSSProperties={background:"#fff",border:"1px solid #E0E7E2",bor
 export default function ExperiencePage(){
   const [view,setView]=useState<View>("Command Center");
   const [slide,setSlide]=useState(0);
-  const [playing,setPlaying]=useState(false);
-  const video=useRef<HTMLVideoElement>(null);
   const selected=dashboards[view];
   const move=(direction:number)=>setSlide(current=>(current+direction+features.length)%features.length);
   return <main style={{background:"#F6F7F3",color:"#173C34",fontFamily:"Inter,Arial,sans-serif",minHeight:"100vh"}}>
     <header style={{...shell,display:"flex",alignItems:"center",justifyContent:"space-between",paddingTop:22,paddingBottom:22,gap:20,flexWrap:"wrap"}}>
-      <a href="/" style={{fontWeight:800,fontSize:25,color:"inherit",textDecoration:"none"}}>planora</a>
+      <Link href="/" style={{fontWeight:800,fontSize:25,color:"inherit",textDecoration:"none"}}>planora</Link>
       <nav aria-label="Experience navigation" style={{display:"flex",gap:18,flexWrap:"wrap",fontSize:14}}>
-        <a href="#dashboards">Dashboards</a><a href="#video">Video</a><a href="#solutions">Solutions</a><a href="#companies">Who it's for</a>
+        <a href="#dashboards">Dashboards</a><a href="#video">Video</a><a href="#solutions">Solutions</a><a href="#companies">Who it&apos;s for</a>
       </nav>
       <a href="/login" style={{...button,textDecoration:"none"}}>Get started</a>
     </header>
@@ -81,6 +80,6 @@ export default function ExperiencePage(){
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:16}}>{audiences.map(a=><article key={a.name} style={card}><h3 style={{fontSize:20}}>{a.name}</h3><p style={{color:"#53675D",lineHeight:1.6}}>{a.description}</p></article>)}</div>
       <p style={{fontSize:13,color:"#53675D",marginTop:22}}>Customer logos, testimonials and results will appear only after verification and permission.</p>
     </div></section>
-    <footer style={{...shell,paddingTop:40,paddingBottom:45,display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:16}}><strong>planora</strong><span style={{fontSize:13,color:"#53675D"}}>Public product preview · Illustrative content</span><a href="/">Return home</a></footer>
+    <footer style={{...shell,paddingTop:40,paddingBottom:45,display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:16}}><strong>planora</strong><span style={{fontSize:13,color:"#53675D"}}>Public product preview · Illustrative content</span><Link href="/">Return home</Link></footer>
   </main>;
 }

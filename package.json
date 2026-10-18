@@ -9,13 +9,13 @@
     "build": "npm run db:generate && next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "npm run db:generate && tsc --noEmit",
+    "typecheck": "npm run db:generate && next typegen && tsc --noEmit",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "vitest run tests/unit",
     "test:integration": "tsx scripts/run-isolated-integration.ts",
     "test:financial": "vitest run tests/financial-calculations",
     "test:excel": "vitest run tests/excel",
-    "test:security": "vitest run tests/security tests/auth tests/rbac",
+    "test:security": "vitest run tests/security tests/auth tests/rbac && node --test tests/security/public-experience-guard.test.mjs",
     "test:performance": "vitest run tests/performance",
     "test:e2e": "playwright test",
     "test:e2e:responsive": "playwright test --grep @responsive",
@@ -29,7 +29,7 @@
     "db:seed": "tsx database/seeds/index.ts",
     "db:seed:test": "tsx scripts/seed-test.ts",
     "db:generate": "prisma generate",
-    "certify": "npm run db:generate && npm run db:validate && npm run db:reset:test && npm run db:seed:test && npm run db:status:test && npm run lint && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:financial && npm run test:excel && npm run test:security && npm run test:performance && npm run db:reset:test && npm run db:seed:test && npm run test:e2e && npm run build"
+    "certify": "npm run db:generate && npm run db:validate && npm run db:reset:test && npm run db:seed:test && npm run db:status:test && tsx scripts/provision-test-runtime.ts && npm run lint && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:financial && npm run test:excel && npm run test:security && npm run test:performance && npm run db:reset:test && npm run db:seed:test && tsx scripts/provision-test-runtime.ts && npm run test:e2e && npm run build"
   },
   "dependencies": {
     "@prisma/client": "6.19.1",

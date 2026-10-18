@@ -2,14 +2,11 @@ import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 const hostedTarget = !/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?(?:\/|$)/i.test(baseURL);
-<<<<<<< HEAD
 const localPort = new URL(baseURL).port || "3000";
-=======
->>>>>>> origin/main
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  testMatch: "**/*.e2e.ts",
+  testMatch: ["**/*.e2e.ts", "**/*.spec.ts"],
   fullyParallel: false,
   workers: 1,
   retries: 0,
@@ -20,13 +17,8 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   webServer: hostedTarget ? undefined : {
-<<<<<<< HEAD
-    command: `npm run dev -- --hostname 127.0.0.1 --port ${localPort}`,
-    url: `${baseURL}/api/health`,
-=======
-    command: "npm run dev",
-    url: "http://127.0.0.1:3000/api/health",
->>>>>>> origin/main
+    command: `npm run ${process.env.PLAYWRIGHT_PRODUCTION === "1" ? "start" : "dev"} -- --hostname 127.0.0.1 --port ${localPort}`,
+    url: `${baseURL}${process.env.PLAYWRIGHT_PUBLIC_ONLY === "1" ? "/" : "/api/health"}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

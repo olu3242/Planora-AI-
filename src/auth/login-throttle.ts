@@ -1,10 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
-<<<<<<< HEAD
 import { authenticationPrisma as prisma } from "@/lib/prisma";
-=======
-import { prisma } from "@/lib/prisma";
->>>>>>> origin/main
 import { AppError } from "@/lib/errors";
 
 const windowMs = 15 * 60 * 1000;
@@ -38,7 +34,3 @@ export async function recordLoginFailure(key: string, now = new Date()) {
 export async function clearLoginFailures(key: string) {
   await prisma.loginThrottle.deleteMany({ where: { key } });
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
