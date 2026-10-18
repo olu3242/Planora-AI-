@@ -185,6 +185,22 @@ jobs:
           else
             echo 'negative_control_exit=1' >> dist/remediation/alternate/gate-status.txt
           fi
+          # The official Next.js plugin must actively reject a framework
+          # violation; a configured plugin name alone is insufficient.
+          cat > .planora-next-script-negative-control.tsx <<'EOF'
+          export function ScriptNegativeControl() {
+            return <script src="/unsafe-script.js" />;
+          }
+          EOF
+          if npx eslint --no-ignore .planora-next-script-negative-control.tsx > dist/remediation/alternate/next-script-negative-control.log 2>&1; then
+            echo 'next_script_negative_control=FAILED_TO_DETECT' > dist/remediation/alternate/next-script-status.txt
+          elif grep -Eq '[0-9]+:[0-9]+[[:space:]]+error.*@next/next/no-sync-scripts' dist/remediation/alternate/next-script-negative-control.log; then
+            echo 'next_script_negative_control=DETECTED' > dist/remediation/alternate/next-script-status.txt
+          else
+            echo 'next_script_negative_control=INCONCLUSIVE' > dist/remediation/alternate/next-script-status.txt
+          fi
+          rm -f .planora-next-script-negative-control.tsx
+          cat dist/remediation/alternate/next-script-status.txt >> "$GITHUB_STEP_SUMMARY"
           # Evaluate promotion only after all evidence, including the negative
           # control, exists. A passing audit alone never approves migration.
           if [ "$uninstall_status" -eq 0 ] && [ "$install_status" -eq 0 ] && [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$build_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
