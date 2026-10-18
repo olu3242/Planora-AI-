@@ -20,7 +20,7 @@ async function handlePOST(request: Request, { params }: { params: Promise<{ id: 
     forecastVersionId = body.forecastVersionId;
     const result = await respondToRecommendation({ organizationId: session.organization.id, actorId: session.user.id, role: session.membership.role, correlationId: cid, recommendationId, decision: body.decision, finalContent: body.finalContent, reason: body.reason });
     if (wantsJson) return Response.json({ recommendation: result });
-    return seeOther(`/forecasts/${forecastVersionId}?agentDecision=${result.status}#assistants`);
+    return seeOther(`/forecasts/${forecastVersionId}?agentDecision=${result.status}&agentRecommendation=${recommendationId}#assistants`);
   } catch (error) {
     if (!wantsJson && error instanceof AppError && forecastVersionId) return seeOther(`/forecasts/${forecastVersionId}?error=${encodeURIComponent(error.message)}#assistants`);
     return errorResponse(error, cid);
