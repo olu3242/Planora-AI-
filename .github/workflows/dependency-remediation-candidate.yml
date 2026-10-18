@@ -65,8 +65,9 @@ jobs:
           cp package.json dist/remediation/alternate/original-package.json
           cp package-lock.json dist/remediation/alternate/original-package-lock.json
           cp eslint.config.mjs dist/remediation/alternate/original-eslint.config.mjs
-          npm uninstall --save-dev eslint-config-next --ignore-scripts > dist/remediation/alternate/uninstall.log 2>&1 || true
-          npm install --save-dev --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y > dist/remediation/alternate/install.log 2>&1 || true
+          if npm uninstall --save-dev eslint-config-next --ignore-scripts > dist/remediation/alternate/uninstall.log 2>&1; then uninstall_status=0; else uninstall_status=$?; fi
+          if npm install --save-dev --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y > dist/remediation/alternate/install.log 2>&1; then install_status=0; else install_status=$?; fi
+          printf 'alternate_uninstall_exit=%s\nalternate_install_exit=%s\n' "$uninstall_status" "$install_status" > dist/remediation/alternate/dependency-operations-status.txt
           cat > eslint.config.mjs <<'EOF'
           import { defineConfig, globalIgnores } from "eslint/config";
           import tseslint from "typescript-eslint";
@@ -174,7 +175,7 @@ jobs:
           fi
           # Evaluate promotion only after all evidence, including the negative
           # control, exists. A passing audit alone never approves migration.
-          if [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
+          if [ "$uninstall_status" -eq 0 ] && [ "$install_status" -eq 0 ] && [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
             echo 'promotion_readiness=eligible_for_review' > dist/remediation/alternate/promotion-status.txt
           else
             echo 'promotion_readiness=blocked' > dist/remediation/alternate/promotion-status.txt
@@ -222,6 +223,7 @@ jobs:
             printf 'source_sha=%s\n' "$GITHUB_SHA"
             printf 'candidate_experiment_only=true\nrelease_certified=false\n'
             cat dist/remediation/alternate/gate-status.txt
+            cat dist/remediation/alternate/dependency-operations-status.txt
             cat dist/remediation/alternate/coverage-status.txt
             cat dist/remediation/alternate/image-rule-status.txt
             cat dist/remediation/alternate/migration-integrity.txt
