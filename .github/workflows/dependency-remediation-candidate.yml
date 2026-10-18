@@ -149,6 +149,22 @@ jobs:
           };
           process.stdout.write(JSON.stringify(result, null, 2) + '\\n');
           NODE
+          # Require a negative-control lint fixture to prove that the
+          # replacement image rule reports an actual violation. This does not
+          # establish full Next.js framework-rule parity.
+          cat > dist/remediation/alternate/raw-image-negative-control.tsx <<'EOF'
+          export function RawImageNegativeControl() {
+            return <img src="/negative-control.png" alt="negative control" />;
+          }
+          EOF
+          if npx eslint --no-ignore dist/remediation/alternate/raw-image-negative-control.tsx > dist/remediation/alternate/image-rule-negative-control.log 2>&1; then
+            echo 'image_rule_negative_control=FAILED_TO_DETECT' > dist/remediation/alternate/image-rule-status.txt
+          elif grep -q '@next/next/no-img-element' dist/remediation/alternate/image-rule-negative-control.log; then
+            echo 'image_rule_negative_control=DETECTED' > dist/remediation/alternate/image-rule-status.txt
+          else
+            echo 'image_rule_negative_control=INCONCLUSIVE' > dist/remediation/alternate/image-rule-status.txt
+          fi
+          cat dist/remediation/alternate/image-rule-status.txt >> "$GITHUB_STEP_SUMMARY"
           # The experiment is evidence-only; it cannot pass or bypass the original candidate gate.
       - name: Upload candidate evidence
         if: always()
