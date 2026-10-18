@@ -82,10 +82,17 @@ jobs:
             globalIgnores([".next/**", "coverage/**", "playwright-report/**", "test-results/**", "next-env.d.ts"]),
           ]);
           EOF
-          npm run lint > dist/remediation/alternate/lint.log 2>&1 || true
-          npm run typecheck > dist/remediation/alternate/typecheck.log 2>&1 || true
+          if npm run lint > dist/remediation/alternate/lint.log 2>&1; then lint_status=0; else lint_status=$?; fi
+          if npm run typecheck > dist/remediation/alternate/typecheck.log 2>&1; then typecheck_status=0; else typecheck_status=$?; fi
           npm audit --json > dist/remediation/alternate/audit.json 2>&1 || true
-          npm audit --audit-level=moderate > dist/remediation/alternate/audit-gate.log 2>&1 || true
+          if npm audit --audit-level=moderate > dist/remediation/alternate/audit-gate.log 2>&1; then audit_status=0; else audit_status=$?; fi
+          printf 'alternate_lint_exit=%s\nalternate_typecheck_exit=%s\nalternate_audit_exit=%s\n' "$lint_status" "$typecheck_status" "$audit_status" | tee dist/remediation/alternate/gate-status.txt
+          echo '### Alternate ESLint candidate validation' >> "$GITHUB_STEP_SUMMARY"
+          cat dist/remediation/alternate/gate-status.txt >> "$GITHUB_STEP_SUMMARY"
+          echo 'Alternate ESLint lint output (last 30 lines):'
+          tail -n 30 dist/remediation/alternate/lint.log
+          echo 'Alternate ESLint audit output (last 30 lines):'
+          tail -n 30 dist/remediation/alternate/audit-gate.log
           cp package.json dist/remediation/alternate/package.json
           cp package-lock.json dist/remediation/alternate/package-lock.json
           cp eslint.config.mjs dist/remediation/alternate/eslint.config.mjs
