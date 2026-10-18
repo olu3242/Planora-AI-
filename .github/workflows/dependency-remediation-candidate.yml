@@ -133,12 +133,12 @@ jobs:
           import fs from 'node:fs';
           const config = fs.readFileSync('dist/remediation/alternate/eslint.config.mjs', 'utf8');
           const result = {
-            nextPluginLoaded: /from ['"]@next\\/eslint-plugin-next['"]/.test(config),
-            nextRecommendedRulesLoaded: /eslint-config-next\\/core-web-vitals/.test(config),
-            noOpNextRule: /create:\\s*\\(\\)\\s*=>\\s*\\(\\{\\}\\)/.test(config),
+            nextPluginLoaded: config.includes('@next/eslint-plugin-next'),
+            nextRecommendedRulesLoaded: config.includes('eslint-config-next/core-web-vitals'),
+            noOpNextRule: config.includes('create: () => ({})'),
             conclusion: 'requires_manual_framework_parity_review'
           };
-          process.stdout.write(JSON.stringify(result, null, 2) + '\\n');
+          process.stdout.write(JSON.stringify(result, null, 2) + String.fromCharCode(10));
           NODE
           # Require a negative-control lint fixture to prove that the
           # replacement image rule reports an actual violation. This does not
