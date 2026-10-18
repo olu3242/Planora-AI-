@@ -314,6 +314,31 @@ jobs:
             cat dist/remediation/alternate/promotion-status.txt
           } > dist/remediation/alternate/verification-provenance.txt
           # The experiment is evidence-only; it cannot pass or bypass the original candidate gate.
+      - name: Diagnose Next.js lint dependency isolation
+        if: always()
+        run: |
+          mkdir -p dist/remediation/no-next-plugin
+          scratch="$(mktemp -d)"
+          git show HEAD:package.json > "$scratch/package.json"
+          git show HEAD:package-lock.json > "$scratch/package-lock.json"
+          # Diagnostic only: determine whether the Next.js lint packages
+          # account for the remaining advisories. Never use this reduced
+          # graph for application certification or candidate promotion.
+          if (cd "$scratch" && npm uninstall --package-lock-only --ignore-scripts eslint-config-next @next/eslint-plugin-next > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/uninstall.log" 2>&1); then
+            echo 'isolation_uninstall_exit=0' > dist/remediation/no-next-plugin/status.txt
+          else
+            echo 'isolation_uninstall_exit=1' > dist/remediation/no-next-plugin/status.txt
+          fi
+          (cd "$scratch" && npm audit --package-lock-only --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/audit.json") || true
+          printf 'diagnostic_only=true\\nframework_lint_equivalence=false\\nproduction_migration_approved=false\\n' >> dist/remediation/no-next-plugin/status.txt
+          rm -rf "$scratch"
+      - name: Upload isolation diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-lint-dependency-isolation-${{ github.sha }}
+          path: dist/remediation/no-next-plugin/
+          if-no-files-found: warn
       - name: Upload candidate evidence
         if: always()
         uses: actions/upload-artifact@v4
