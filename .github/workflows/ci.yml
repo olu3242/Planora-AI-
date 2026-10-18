@@ -42,7 +42,26 @@ jobs:
         run: npm ci
         timeout-minutes: 15
       - name: Dependency vulnerability audit
+        id: audit
+        continue-on-error: true
         run: npm audit --audit-level=moderate
+      - name: Generate Prisma client
+        id: prisma_generate
+        continue-on-error: true
+        run: npm run db:generate
+      - name: Validate Prisma schema
+        id: prisma_validate
+        continue-on-error: true
+        run: npm run db:validate
+      - name: Enforce security and schema gates
+        if: always()
+        env:
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
+          GENERATE_OUTCOME: ${{ steps.prisma_generate.outcome }}
+          VALIDATE_OUTCOME: ${{ steps.prisma_validate.outcome }}
+        run: |
+          printf 'audit=%s prisma_generate=%s prisma_validate=%s\n' "$AUDIT_OUTCOME" "$GENERATE_OUTCOME" "$VALIDATE_OUTCOME"
+          test "$AUDIT_OUTCOME" = success && test "$GENERATE_OUTCOME" = success && test "$VALIDATE_OUTCOME" = success
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: E2E certification suite
