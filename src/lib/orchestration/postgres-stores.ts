@@ -121,7 +121,7 @@ export class PostgresRuntimeExecutionStore implements RuntimeExecutionStore {
     if (existing && (existing.runId !== record.runId || existing.stepId !== record.stepId)) {
       throw new Error("WORKFLOW_SCOPE_IDEMPOTENCY_COLLISION");
     }
-    await this.db.workflowExecutionRecord.upsert({
+    // The unique idempotency key is the database arbitration point. An\n    // already-completed execution must never be downgraded by a stale worker.\n    if (existing && record.status !== "SUCCEEDED") {\n      const completed = await this.db.workflowExecutionRecord.findUnique({\n        where: { idempotencyKey: record.idempotencyKey },\n        select: { status: true },\n      });\n      if (completed?.status === "SUCCEEDED") {\n        throw new Error("WORKFLOW_SCOPE_COMPLETED_EXECUTION_IMMUTABLE");\n      }\n    }\n    await this.db.workflowExecutionRecord.upsert({
       where: { idempotencyKey: record.idempotencyKey },
       create: {
         idempotencyKey: record.idempotencyKey,
