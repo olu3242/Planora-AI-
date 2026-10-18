@@ -49,6 +49,11 @@ export async function executeGovernedWorkflow(input: {
       existing.context.fiscalPeriodId !== envelope.fiscalPeriodId) {
     throw new Error("WORKFLOW_SCOPE_RUN_MISMATCH");
   }
+  // A run already executing must be resumed by a leased, persistent worker, not
+  // re-entered through this request path. This guard is not an atomic lease.
+  if (existing.status === "RUNNING" || existing.status === "RETRYING" || existing.status === "COMPENSATING") {
+    throw new Error("WORKFLOW_SCOPE_ACTIVE_RUN_REQUIRES_LEASE");
+  }
   // The core policy service must check the current period, role, segregation
   // of duties, policy version, and approval evidence before any step executes.
   await input.authorize({
