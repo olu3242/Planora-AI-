@@ -34,6 +34,9 @@ export async function executeGovernedWorkflow(input: {
     throw new Error("FORBIDDEN_EXTERNAL_RUNTIME_EXECUTION");
   }
   assertExecutionBoundary(scenario, executor, input.approvalEvidenceId);
+  if (!envelope.idempotencyKey.trim() || !envelope.policyVersion.trim()) {
+    throw new Error("WORKFLOW_SCOPE_GOVERNANCE_REQUIRED");
+  }
   const existing = await input.runs.load(envelope.runId);
   if (!existing) throw new Error("WORKFLOW_SCOPE_RUN_NOT_FOUND");
   if (existing.id !== envelope.runId ||
