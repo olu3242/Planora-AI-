@@ -346,6 +346,32 @@ jobs:
             echo 'replacement_clean_install_exit=1' >> dist/remediation/no-next-plugin/status.txt
           fi
           (cd "$scratch" && npm ls --depth=0 --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-tree.json" 2> "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-tree-error.log") || true
+          # Exercise the secure replacement lint engine against a known-bad
+          # React Hooks fixture. This tests rule execution, not Next.js parity.
+          cat > "$scratch/eslint.config.mjs" <<'EOF'
+          import tseslint from 'typescript-eslint';
+          import reactHooks from 'eslint-plugin-react-hooks';
+          export default [
+            ...tseslint.configs.recommended,
+            reactHooks.configs.flat.recommended,
+          ];
+          EOF
+          cat > "$scratch/invalid-hooks.tsx" <<'EOF'
+          import { useState } from 'react';
+          export function InvalidHooks({ enabled }: { enabled: boolean }) {
+            if (enabled) { useState(0); }
+            return null;
+          }
+          EOF
+          if (cd "$scratch" && ./node_modules/.bin/eslint invalid-hooks.tsx > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/hooks-negative-control.log" 2>&1); then
+            echo 'replacement_hooks_negative_control=NOT_DETECTED' >> dist/remediation/no-next-plugin/status.txt
+          else
+            if grep -q 'react-hooks/rules-of-hooks' dist/remediation/no-next-plugin/hooks-negative-control.log; then
+              echo 'replacement_hooks_negative_control=DETECTED' >> dist/remediation/no-next-plugin/status.txt
+            else
+              echo 'replacement_hooks_negative_control=INCONCLUSIVE' >> dist/remediation/no-next-plugin/status.txt
+            fi
+          fi
           # Preserve a reproducible patch for an explicitly reviewed source
           # migration. It is evidence, not an automatic production change.
           git show HEAD:package.json > dist/remediation/no-next-plugin/original-package.json
@@ -387,8 +413,9 @@ jobs:
           const installed = status.includes('replacement_install_exit=0');
           const cleanInstall = status.includes('replacement_clean_install_exit=0');
           const consistency = JSON.parse(fs.readFileSync('dist/remediation/no-next-plugin/lockfile-consistency.json', 'utf8'));
-          const valid = installed && cleanInstall && consistency.consistent && Boolean(audit?.metadata?.vulnerabilities);
-          process.stdout.write(JSON.stringify({ diagnostic_only: true, replacement_graph_valid: valid, replacement_clean_install_succeeded: cleanInstall, lockfile_consistent: consistency.consistent, severity_totals: valid ? audit.metadata.vulnerabilities : null, vulnerable_packages: valid ? Object.keys(audit.vulnerabilities ?? {}).sort() : [], next_framework_rule_parity_verified: false, production_migration_approved: false }, null, 2) + '\n');
+          const hooksDetected = status.includes('replacement_hooks_negative_control=DETECTED');
+          const valid = installed && cleanInstall && consistency.consistent && hooksDetected && Boolean(audit?.metadata?.vulnerabilities);
+          process.stdout.write(JSON.stringify({ diagnostic_only: true, replacement_graph_valid: valid, replacement_clean_install_succeeded: cleanInstall, lockfile_consistent: consistency.consistent, hooks_negative_control_detected: hooksDetected, severity_totals: valid ? audit.metadata.vulnerabilities : null, vulnerable_packages: valid ? Object.keys(audit.vulnerabilities ?? {}).sort() : [], next_framework_rule_parity_verified: false, production_migration_approved: false }, null, 2) + '\n');
           NODE
           printf 'diagnostic_only=true\nframework_lint_equivalence=false\nproduction_migration_approved=false\n' >> dist/remediation/no-next-plugin/status.txt
           rm -rf "$scratch"
