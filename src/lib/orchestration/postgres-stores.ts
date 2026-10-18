@@ -116,6 +116,12 @@ export class PostgresRuntimeExecutionStore implements RuntimeExecutionStore {
     if (!run) throw new Error("WORKFLOW_SCOPE_EXECUTION_RUN_NOT_FOUND");
     // Creation is guarded by the database unique idempotency key. An existing
     // execution may only move forward through an atomic conditional update.
+    if (record.status === "SUCCEEDED" && !record.evidenceId?.trim()) {
+      throw new Error("WORKFLOW_SCOPE_SUCCESS_EVIDENCE_REQUIRED");
+    }
+    if (!Number.isInteger(record.attempts ?? 0) || (record.attempts ?? 0) < 0) {
+      throw new Error("WORKFLOW_SCOPE_INVALID_EXECUTION_ATTEMPTS");
+    }
     const attempts = record.attempts ?? 0;
     const data = {
       status: record.status,
