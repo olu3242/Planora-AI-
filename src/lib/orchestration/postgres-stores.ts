@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import type { WorkflowRun, WorkflowRunStatus } from "./types";
+import type { WorkflowRun } from "./types";
 import type {
   WorkflowRunStore, RuntimeExecutionStore, RuntimeExecutionRecord,
 } from "./runtime";
