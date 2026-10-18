@@ -203,6 +203,15 @@ jobs:
             echo 'migration_patch_integrity=incomplete' > dist/remediation/alternate/migration-integrity.txt
           fi
           cat dist/remediation/alternate/migration-integrity.txt >> "$GITHUB_STEP_SUMMARY"
+          # Reject an incomplete migration artifact even if earlier checks
+          # happened to pass; do not promote a partial lockfile change.
+          if ! grep -qx 'migration_patch_integrity=manifest_and_lockfile_present' dist/remediation/alternate/migration-integrity.txt; then
+            echo 'promotion_readiness=blocked' > dist/remediation/alternate/promotion-status.txt
+            echo 'migration_integrity_exit=1' >> dist/remediation/alternate/gate-status.txt
+          else
+            echo 'migration_integrity_exit=0' >> dist/remediation/alternate/gate-status.txt
+          fi
+          cat dist/remediation/alternate/promotion-status.txt >> "$GITHUB_STEP_SUMMARY"
           # The experiment is evidence-only; it cannot pass or bypass the original candidate gate.
       - name: Upload candidate evidence
         if: always()
