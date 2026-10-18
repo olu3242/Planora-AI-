@@ -338,6 +338,14 @@ jobs:
             echo 'replacement_install_exit=1' >> dist/remediation/no-next-plugin/status.txt
           fi
           (cd "$scratch" && npm audit --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-audit.json") || true
+          # Verify the candidate lockfile reproduces a clean installation;
+          # a lockfile-only zero-vulnerability audit is insufficient.
+          if (cd "$scratch" && npm ci --ignore-scripts > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-ci.log" 2>&1); then
+            echo 'replacement_clean_install_exit=0' >> dist/remediation/no-next-plugin/status.txt
+          else
+            echo 'replacement_clean_install_exit=1' >> dist/remediation/no-next-plugin/status.txt
+          fi
+          (cd "$scratch" && npm ls --depth=0 --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-tree.json" 2> "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-tree-error.log") || true
           node --input-type=module <<'NODE' > dist/remediation/no-next-plugin/summary.json
           import fs from 'node:fs';
           const path = 'dist/remediation/no-next-plugin/audit.json';
@@ -356,8 +364,9 @@ jobs:
           try { audit = JSON.parse(fs.readFileSync('dist/remediation/no-next-plugin/replacement-audit.json', 'utf8')); } catch { audit = null; }
           const status = fs.readFileSync('dist/remediation/no-next-plugin/status.txt', 'utf8');
           const installed = status.includes('replacement_install_exit=0');
-          const valid = installed && Boolean(audit?.metadata?.vulnerabilities);
-          process.stdout.write(JSON.stringify({ diagnostic_only: true, replacement_graph_valid: valid, severity_totals: valid ? audit.metadata.vulnerabilities : null, vulnerable_packages: valid ? Object.keys(audit.vulnerabilities ?? {}).sort() : [], next_framework_rule_parity_verified: false, production_migration_approved: false }, null, 2) + '\n');
+          const cleanInstall = status.includes('replacement_clean_install_exit=0');
+          const valid = installed && cleanInstall && Boolean(audit?.metadata?.vulnerabilities);
+          process.stdout.write(JSON.stringify({ diagnostic_only: true, replacement_graph_valid: valid, replacement_clean_install_succeeded: cleanInstall, severity_totals: valid ? audit.metadata.vulnerabilities : null, vulnerable_packages: valid ? Object.keys(audit.vulnerabilities ?? {}).sort() : [], next_framework_rule_parity_verified: false, production_migration_approved: false }, null, 2) + '\n');
           NODE
           printf 'diagnostic_only=true\nframework_lint_equivalence=false\nproduction_migration_approved=false\n' >> dist/remediation/no-next-plugin/status.txt
           rm -rf "$scratch"
