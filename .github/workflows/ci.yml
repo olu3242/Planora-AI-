@@ -40,9 +40,25 @@ jobs:
         run: node scripts/b1-b10-preflight.mjs
       - name: Clean dependency install
         run: npm ci
+        timeout-minutes: 15
       - name: Dependency vulnerability audit
         run: npm audit --audit-level=moderate
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: E2E certification suite
         run: npm run certify
+        timeout-minutes: 25
+      - name: Record exact-SHA CI evidence
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p evidence/ci
+          printf 'commit_sha=%s\nrun_id=%s\nrun_attempt=%s\nrepository=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_REPOSITORY" > evidence/ci/execution-context.txt
+          printf 'workflow_status=%s\n' "${{ job.status }}" >> evidence/ci/execution-context.txt
+      - name: Upload CI execution context
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-ci-context-${{ github.run_id }}
+          path: evidence/ci/execution-context.txt
+          retention-days: 14
