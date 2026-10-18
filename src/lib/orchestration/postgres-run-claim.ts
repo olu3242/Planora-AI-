@@ -16,9 +16,9 @@ export interface WorkflowClaimDatabase {
         definitionId: string;
         definitionVersion: number;
         status: "READY";
-        state?: { equals: WorkflowRun };
+        state: { equals: WorkflowRun };
       };
-      data: { status: "RUNNING"; state?: WorkflowRun };
+      data: { status: "RUNNING"; state: WorkflowRun };
     }): Promise<{ count: number }>;
   };
 }
