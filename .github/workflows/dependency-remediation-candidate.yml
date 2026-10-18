@@ -107,6 +107,15 @@ jobs:
           cp package.json dist/remediation/alternate/package.json
           cp package-lock.json dist/remediation/alternate/package-lock.json
           cp eslint.config.mjs dist/remediation/alternate/eslint.config.mjs
+          # Record whether the experimental config replaces any framework rule
+          # with a no-op. A zero-exit lint run is not equivalent to framework
+          # coverage when this marker is present.
+          if grep -q 'no-img-element.*create: () => ({})' dist/remediation/alternate/eslint.config.mjs; then
+            printf 'framework_lint_equivalence=unverified_noop_rule\n' > dist/remediation/alternate/coverage-status.txt
+            echo 'WARNING: alternate lint includes a no-op Next.js rule; do not promote as equivalent.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf 'framework_lint_equivalence=requires_review\n' > dist/remediation/alternate/coverage-status.txt
+          fi
           # The experiment is evidence-only; it cannot pass or bypass the original candidate gate.
       - name: Upload candidate evidence
         if: always()
