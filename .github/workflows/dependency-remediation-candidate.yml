@@ -148,18 +148,22 @@ jobs:
           # Require a negative-control lint fixture to prove that the
           # replacement image rule reports an actual violation. This does not
           # establish full Next.js framework-rule parity.
-          cat > dist/remediation/alternate/raw-image-negative-control.tsx <<'EOF'
+          # Place the fixture outside dist/, which is excluded from normal lint
+          # traversal. Remove it after evaluation, even when lint exits nonzero.
+          fixture=.planora-image-lint-negative-control.tsx
+          cat > "$fixture" <<'EOF'
           export function RawImageNegativeControl() {
             return <img src="/negative-control.png" alt="negative control" />;
           }
           EOF
-          if npx eslint --no-ignore dist/remediation/alternate/raw-image-negative-control.tsx > dist/remediation/alternate/image-rule-negative-control.log 2>&1; then
+          if npx eslint --no-ignore "$fixture" > dist/remediation/alternate/image-rule-negative-control.log 2>&1; then
             echo 'image_rule_negative_control=FAILED_TO_DETECT' > dist/remediation/alternate/image-rule-status.txt
           elif grep -q '@next/next/no-img-element' dist/remediation/alternate/image-rule-negative-control.log; then
             echo 'image_rule_negative_control=DETECTED' > dist/remediation/alternate/image-rule-status.txt
           else
             echo 'image_rule_negative_control=INCONCLUSIVE' > dist/remediation/alternate/image-rule-status.txt
           fi
+          rm -f "$fixture"
           cat dist/remediation/alternate/image-rule-status.txt >> "$GITHUB_STEP_SUMMARY"
           # Capture an explicit negative-control pass/fail exit code, rather
           # than relying on a human-readable summary alone.
