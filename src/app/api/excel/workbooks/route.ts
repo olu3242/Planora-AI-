@@ -1,18 +1,11 @@
-<<<<<<< HEAD
 import { withTenantApi } from "@/lib/tenant-request";
-=======
->>>>>>> origin/main
 import { ingestWorkbook } from "@/application/excel/workbook-service";
 import { requireApiSession } from "@/auth/session";
 import { AppError, errorResponse } from "@/lib/errors";
 import { assertSameOrigin, correlationId, seeOther } from "@/lib/request";
 import { MAX_WORKBOOK_BYTES } from "@/integrations/spreadsheets/upload-security";
 
-<<<<<<< HEAD
 async function handlePOST(request: Request) {
-=======
-export async function POST(request: Request) {
->>>>>>> origin/main
   const cid = correlationId(request);
   try {
     assertSameOrigin(request);
@@ -28,8 +21,5 @@ export async function POST(request: Request) {
     return errorResponse(error, cid);
   }
 }
-<<<<<<< HEAD
 
 export const POST = withTenantApi(handlePOST);
-=======
->>>>>>> origin/main
