@@ -50,7 +50,7 @@ describe("forced PostgreSQL tenant policies using a non-owner runtime role", () 
   });
   it("reads forecast audit history without joining forbidden authentication records", async () => {
     const ownVersion = await owner.forecastVersion.findFirstOrThrow({
-      where: { organizationId: tenantA },
+      where: { forecast: { organizationId: tenantA } },
       select: { id: true },
     });
     await withTenantSession(runtime, tokenA, async tx => {
