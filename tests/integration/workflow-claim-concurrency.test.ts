@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { createWorkflowRun } from "../../src/lib/orchestration/engine";
 import { claimReadyWorkflowRun } from "../../src/lib/orchestration/postgres-run-claim";
 
@@ -49,7 +49,20 @@ describe("PostgreSQL atomic workflow claim", () => {
       expectedRun,
     };
     const outcomes = await Promise.allSettled(
-      Array.from({ length: 10 }, () => claimReadyWorkflowRun(db, request)),
+      Array.from({ length: 10 }, () => claimReadyWorkflowRun({
+        workflowRunRecord: {
+          updateMany: ({ where, data }) => db.workflowRunRecord.updateMany({
+            where: {
+              ...where,
+              state: { equals: where.state.equals as Prisma.InputJsonValue },
+            },
+            data: {
+              ...data,
+              state: data.state as Prisma.InputJsonValue,
+            },
+          }),
+        },
+      }, request)),
     );
     expect(outcomes.filter((item) => item.status === "fulfilled")).toHaveLength(1);
     expect(outcomes.filter((item) => item.status === "rejected")).toHaveLength(9);
