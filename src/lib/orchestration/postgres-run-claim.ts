@@ -28,24 +28,24 @@ export interface WorkflowClaimRequest {
   runId: string;
   definitionId: string;
   definitionVersion: number;
-  expectedRun?: WorkflowRun;
+  expectedRun: WorkflowRun;
 }
 
 export async function claimReadyWorkflowRun(
   db: WorkflowClaimDatabase,
   request: WorkflowClaimRequest,
 ): Promise<void> {
-  if (!request.organizationId.trim() || !request.runId.trim() || !request.definitionId.trim()) {
+  if (!request.organizationId.trim() || !request.runId.trim() || !request.definitionId.trim() || !request.expectedRun) {
     throw new Error("WORKFLOW_SCOPE_CLAIM_REQUIRED");
   }
   if (!Number.isInteger(request.definitionVersion) || request.definitionVersion < 1) {
     throw new Error("INVALID_WORKFLOW_DEFINITION_VERSION");
   }
-  if (request.expectedRun && (request.expectedRun.id !== request.runId ||
+  if (request.expectedRun.id !== request.runId ||
       request.expectedRun.context.organizationId !== request.organizationId ||
       request.expectedRun.definitionId !== request.definitionId ||
       request.expectedRun.definitionVersion !== request.definitionVersion ||
-      request.expectedRun.status !== "READY")) {
+      request.expectedRun.status !== "READY") {
     throw new Error("WORKFLOW_SCOPE_CLAIM_STATE_MISMATCH");
   }
   // One SQL UPDATE with a READY predicate is an atomic compare-and-swap.
@@ -57,11 +57,11 @@ export async function claimReadyWorkflowRun(
       definitionId: request.definitionId,
       definitionVersion: request.definitionVersion,
       status: "READY",
-      ...(request.expectedRun ? { state: { equals: request.expectedRun } } : {}),
+      state: { equals: request.expectedRun },
     },
     data: {
       status: "RUNNING",
-      ...(request.expectedRun ? { state: { ...request.expectedRun, status: "RUNNING" as const } } : {}),
+      state: { ...request.expectedRun, status: "RUNNING" as const },
     },
   });
   if (result.count !== 1) {
