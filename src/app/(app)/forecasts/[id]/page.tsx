@@ -18,7 +18,7 @@ const actionsByState: Record<string, Record<string, Array<[string, string]>>> = 
 };
 async function loadWorkspace(organizationId: string, id: string, query: { search?: string; period?: string; page?: string }) { try { return await forecastWorkspace(organizationId, id, query); } catch (error) { if (error instanceof AppError && error.code === "RESOURCE_NOT_FOUND") notFound(); throw error; } }
 
-async function ForecastPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ search?: string; period?: string; page?: string; error?: string; agentRun?: string; agentDecision?: string }> }) {
+async function ForecastPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ search?: string; period?: string; page?: string; error?: string; agentRun?: string; agentDecision?: string; agentRecommendation?: string }> }) {
   const session = await requirePageSession(); if (!hasPermission(session.membership.role, "financial.read")) return <section className="panel" role="alert"><h1>403 — Forecast unavailable</h1><p>Platform operations does not grant tenant financial access.</p></section>; const { id } = await params; const query = await searchParams;
   const workspace = await loadWorkspace(session.organization.id, id, query);
   const periods = [...new Map(workspace.version.lines.map((line) => [line.fiscalPeriod.id, line.fiscalPeriod])).values()];
@@ -32,9 +32,15 @@ async function ForecastPage({ params, searchParams }: { params: Promise<{ id: st
         include: { run: { include: { agentDefinition: true } }, feedback: true },
       })
     : null;
-  const recommendations = requestedRun && !recentRecommendations.some(item => item.id === requestedRun.id)
-    ? [requestedRun, ...recentRecommendations]
-    : recentRecommendations;
+  const reviewedRecommendation = query.agentRecommendation && /^[0-9a-f-]{36}$/i.test(query.agentRecommendation)
+    ? await prisma.agentRecommendation.findFirst({
+        where: { id: query.agentRecommendation, organizationId: session.organization.id, forecastVersionId: id },
+        include: { run: { include: { agentDefinition: true } }, feedback: true },
+      })
+    : null;
+  const recommendations = [requestedRun, reviewedRecommendation, ...recentRecommendations].filter(
+    (item, index, items): item is NonNullable<typeof item> => item !== null && items.findIndex(other => other?.id === item.id) === index,
+  );
   const byType = (type: string) => workspace.version.lines.filter((line) => line.account.type === type).reduce((sum, line) => sum + Number(line.currentForecast), 0);
   const revenue = byType("REVENUE"); const cogs = byType("COGS"); const opex = byType("OPERATING_EXPENSE"); const ebitda = revenue - cogs - opex;
   const workflowActions = actionsByState[workspace.version.status]?.[session.membership.role] ?? [];
