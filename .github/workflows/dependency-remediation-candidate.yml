@@ -44,6 +44,9 @@ jobs:
           npm view micromatch version --json > dist/remediation/micromatch-upstream.json 2>&1 || true
           npm view fast-glob version --json > dist/remediation/fast-glob-upstream.json 2>&1 || true
           npm view eslint-config-next version dependencies --json > dist/remediation/eslint-config-next-upstream.json 2>&1 || true
+          npm view @next/eslint-plugin-next@16.4.2 dependencies --json > dist/remediation/installed-next-eslint-dependencies.json 2>&1 || true
+          npm view fast-glob@3.3.1 dependencies --json > dist/remediation/installed-fast-glob-dependencies.json 2>&1 || true
+          npm view micromatch@4.0.8 dependencies --json > dist/remediation/installed-micromatch-dependencies.json 2>&1 || true
       - name: Enforce candidate security gate
         run: npm audit --audit-level=moderate
       - name: Upload candidate evidence
