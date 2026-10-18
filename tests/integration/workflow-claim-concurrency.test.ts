@@ -56,7 +56,7 @@ describe("PostgreSQL atomic workflow claim", () => {
             return db.workflowRunRecord.updateMany({
             where: {
               ...where,
-              state: { equals: JSON.parse(JSON.stringify(where.state?.equals)) as Prisma.InputJsonValue },
+              state: { equals: JSON.parse(JSON.stringify(where.state.equals)) as Prisma.InputJsonValue },
             },
             data: {
               ...data,
