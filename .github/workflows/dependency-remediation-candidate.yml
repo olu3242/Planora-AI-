@@ -136,6 +136,14 @@ jobs:
           git grep -n -E 'eslint-disable(-next-line|-line)?[[:space:]]+@next/next/' -- ':!package-lock.json' > dist/remediation/alternate/next-inline-directives.txt || true
           printf 'next_inline_directives=%s\n' "$(wc -l < dist/remediation/alternate/next-inline-directives.txt | tr -d ' ')" > dist/remediation/alternate/next-inline-summary.txt
           cat dist/remediation/alternate/next-inline-summary.txt >> "$GITHUB_STEP_SUMMARY"
+          # Compare framework-specific inline directives with rules implemented
+          # by the alternate config. Unknown directives remain a migration blocker.
+          if grep -E '@next/next/' dist/remediation/alternate/next-inline-directives.txt | grep -Ev '@next/next/no-img-element' > dist/remediation/alternate/unmapped-next-directives.txt; then
+            echo 'next_inline_rule_mapping=unverified' > dist/remediation/alternate/next-rule-mapping-status.txt
+          else
+            echo 'next_inline_rule_mapping=known_directives_only' > dist/remediation/alternate/next-rule-mapping-status.txt
+          fi
+          cat dist/remediation/alternate/next-rule-mapping-status.txt >> "$GITHUB_STEP_SUMMARY"
           # Verify the alternate graph does not silently omit framework checks.
           # The existing no-op compatibility rule is deliberately treated as
           # an unverified coverage gap, not an acceptable replacement.
