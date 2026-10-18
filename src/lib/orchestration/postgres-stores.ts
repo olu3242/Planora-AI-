@@ -32,6 +32,38 @@ export class PostgresWorkflowRunStore implements WorkflowRunStore {
     return state;
   }
 
+  /**
+   * Optimistic compare-and-swap for a previously loaded workflow snapshot.
+   * Unlike save(), this refuses stale writes after another worker changes
+   * either the persisted status or JSON state. Not yet used by the runner.
+   */
+  async saveIfUnchanged(run: WorkflowRun, expected: WorkflowRun): Promise<void> {
+    if (run.id !== expected.id ||
+        run.context.organizationId !== this.organizationId ||
+        expected.context.organizationId !== this.organizationId ||
+        run.definitionId !== expected.definitionId ||
+        run.definitionVersion !== expected.definitionVersion ||
+        run.context.actorId !== expected.context.actorId) {
+      throw new Error("WORKFLOW_SCOPE_CAS_MISMATCH");
+    }
+    const result = await this.db.workflowRunRecord.updateMany({
+      where: {
+        id: expected.id,
+        organizationId: this.organizationId,
+        actorId: expected.context.actorId,
+        definitionId: expected.definitionId,
+        definitionVersion: expected.definitionVersion,
+        status: expected.status,
+        state: { equals: JSON.parse(JSON.stringify(expected)) },
+      },
+      data: {
+        status: run.status,
+        state: JSON.parse(JSON.stringify(run)),
+      },
+    });
+    if (result.count !== 1) throw new Error("WORKFLOW_SCOPE_STALE_WRITE");
+  }
+
   async save(run: WorkflowRun): Promise<void> {
     if (run.context.organizationId !== this.organizationId) {
       throw new Error("WORKFLOW_SCOPE_TENANT_MISMATCH");
