@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 const failures = [];
 const checks = [];
 function check(name, ok, detail) { checks.push({ name, status: ok ? "PASS" : "FAIL", detail }); if (!ok) failures.push(name); }
-const required = ["package.json", "package-lock.json", "README.md", "AGENTS.md", ".github/workflows/ci.yml", "prisma/schema.prisma", "docs/IMPLEMENTATION-STATUS.md"];
+const required = ["package.json", "package-lock.json", "README.md", "AGENTS.md", ".github/workflows/ci.yml", "prisma/schema.prisma", "tests/setup.ts", "docs/IMPLEMENTATION-STATUS.md"];
 for (const file of required) {
   if (!existsSync(file)) { check("exists:" + file, false, "missing"); continue; }
   const body = readFileSync(file, "utf8");
