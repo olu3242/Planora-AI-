@@ -91,6 +91,15 @@ describe("forced PostgreSQL tenant policies using a non-owner runtime role", () 
         select: { id: true },
       });
     }
+    const author = await owner.user.findUniqueOrThrow({ where: { email: "cfo@planora.local" }, select: { id: true } });
+    const comment = await owner.forecastComment.create({
+      data: {
+        forecastVersionId: version.id,
+        authorId: author.id,
+        body: "Tenant RLS comment hydration regression",
+        context: { source: "rls-regression" },
+      },
+    });
     await withTenantSession(runtime, tokenA, async tx => {
       const result = await tx.forecastVersion.findFirst({
         where: { id: version.id, forecast: { organizationId: tenantA } },
@@ -116,7 +125,7 @@ describe("forced PostgreSQL tenant policies using a non-owner runtime role", () 
         },
       });
       expect(result?.id).toBe(version.id);
-      expect(result?.comments.every(comment => typeof comment.authorId === "string")).toBe(true);
+      expect(result?.comments.some(item => item.id === comment.id && item.authorId === author.id && item.body === comment.body)).toBe(true);
     });
   });
   it("isolates SELECT, INSERT, UPDATE and DELETE, including attempted tenant reassignment", async () => {
