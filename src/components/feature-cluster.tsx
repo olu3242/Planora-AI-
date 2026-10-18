@@ -44,11 +44,13 @@ function VideoPreview({ media, active, reduced }: { media: Walkthrough; active: 
 function VideoLightbox({ media, close, restoreFocus }: { media: Walkthrough; close: () => void; restoreFocus: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const reduced = useReducedMotion();
+  const restoreFocusRef = useRef(restoreFocus);
+  restoreFocusRef.current = restoreFocus;
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     dialog.current?.showModal(); document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = overflow; if (previous?.isConnected) previous.focus(); else restoreFocus(); };
+    return () => { document.body.style.overflow = overflow; if (previous?.isConnected) previous.focus(); else restoreFocusRef.current(); };
   }, []);
   return <motion.dialog initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:reduced?0:0.2,ease:[0.16,1,0.3,1]}} ref={dialog} className="cluster-dialog" aria-label={media.title} onCancel={event => { event.preventDefault(); close(); }}>
     <div className="fc:mx-auto fc:flex fc:h-full fc:max-w-6xl fc:flex-col fc:justify-center fc:gap-6 fc:p-6">
