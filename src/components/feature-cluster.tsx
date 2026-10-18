@@ -45,7 +45,7 @@ function VideoLightbox({ media, close, restoreFocus }: { media: Walkthrough; clo
   const dialog = useRef<HTMLDialogElement>(null);
   const reduced = useReducedMotion();
   const restoreFocusRef = useRef(restoreFocus);
-  restoreFocusRef.current = restoreFocus;
+  useEffect(() => { restoreFocusRef.current = restoreFocus; }, [restoreFocus]);
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
