@@ -36,6 +36,14 @@ jobs:
         run: |
           npm run lint
           npm run typecheck
+      - name: Investigate supported ESLint alternative without modifying candidate
+        if: always()
+        run: |
+          npm view @next/eslint-plugin-next version dependencies --json > dist/remediation/next-eslint-upstream.json 2>&1 || true
+          npm view braces version --json > dist/remediation/braces-upstream.json 2>&1 || true
+          npm view micromatch version --json > dist/remediation/micromatch-upstream.json 2>&1 || true
+          npm view fast-glob version --json > dist/remediation/fast-glob-upstream.json 2>&1 || true
+          npm view eslint-config-next version dependencies --json > dist/remediation/eslint-config-next-upstream.json 2>&1 || true
       - name: Enforce candidate security gate
         run: npm audit --audit-level=moderate
       - name: Upload candidate evidence
