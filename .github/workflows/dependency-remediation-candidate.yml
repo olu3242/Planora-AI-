@@ -66,7 +66,7 @@ jobs:
           cp package-lock.json dist/remediation/alternate/original-package-lock.json
           cp eslint.config.mjs dist/remediation/alternate/original-eslint.config.mjs
           if npm uninstall --save-dev eslint-config-next --ignore-scripts > dist/remediation/alternate/uninstall.log 2>&1; then uninstall_status=0; else uninstall_status=$?; fi
-          if npm install --save-dev --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y > dist/remediation/alternate/install.log 2>&1; then install_status=0; else install_status=$?; fi
+          if npm install --save-dev --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y @next/eslint-plugin-next > dist/remediation/alternate/install.log 2>&1; then install_status=0; else install_status=$?; fi
           printf 'alternate_uninstall_exit=%s\nalternate_install_exit=%s\n' "$uninstall_status" "$install_status" > dist/remediation/alternate/dependency-operations-status.txt
           cat > eslint.config.mjs <<'EOF'
           import { defineConfig, globalIgnores } from "eslint/config";
@@ -74,6 +74,7 @@ jobs:
           import react from "eslint-plugin-react";
           import reactHooks from "eslint-plugin-react-hooks";
           import jsxA11y from "eslint-plugin-jsx-a11y";
+          import nextPlugin from "@next/eslint-plugin-next";
           export default defineConfig([
             ...tseslint.configs.recommended,
             react.configs.flat.recommended,
@@ -81,12 +82,11 @@ jobs:
             reactHooks.configs.flat.recommended,
             jsxA11y.flatConfigs.recommended,
             {
-              // Legacy Next-specific inline disables cannot be resolved without
-              // the removed plugin. Keep a no-op rule only for compatibility;
-              // do not suppress React Hooks or TypeScript safety checks.
-              plugins: { "@next/next": { rules: { "no-img-element": { meta: { type: "problem", docs: { description: "Avoid raw img elements in Next.js UI" }, schema: [] }, create(context) { return { JSXOpeningElement(node) { if (node.name.type === "JSXIdentifier" && node.name.name === "img") context.report({ node, message: "Use next/image rather than a raw img element." }); } }; } } } } },
+              // Use the actual Next.js rules rather than a hand-written shim.
+              plugins: { "@next/next": nextPlugin },
               rules: {
-                "@next/next/no-img-element": "error",
+                ...nextPlugin.configs.recommended.rules,
+                ...nextPlugin.configs["core-web-vitals"].rules,
                 "jsx-a11y/no-autofocus": "off",
                 "jsx-a11y/media-has-caption": "off",
               },
