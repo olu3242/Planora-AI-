@@ -23,7 +23,18 @@ async function ForecastPage({ params, searchParams }: { params: Promise<{ id: st
   const workspace = await loadWorkspace(session.organization.id, id, query);
   const periods = [...new Map(workspace.version.lines.map((line) => [line.fiscalPeriod.id, line.fiscalPeriod])).values()];
   const audits = await prisma.auditEvent.findMany({ where: { organizationId: session.organization.id, OR: [{ entityId: id }, { metadata: { path: ["forecastVersionId"], equals: id } }] }, orderBy: { occurredAt: "desc" }, take: 40, include: { actor: { select: { id: true, name: true, email: true } } } });
-  const recommendations = await listForecastRecommendations(session.organization.id, id);
+  const recentRecommendations = await listForecastRecommendations(session.organization.id, id);
+  // A completed POST redirects with the run id. Keep its persisted recommendation
+  // visible even when the bounded recent-history list has moved past it.
+  const requestedRun = query.agentRun && /^[0-9a-f-]{36}$/i.test(query.agentRun)
+    ? await prisma.agentRecommendation.findFirst({
+        where: { organizationId: session.organization.id, forecastVersionId: id, runId: query.agentRun },
+        include: { run: { include: { agentDefinition: true } }, feedback: true },
+      })
+    : null;
+  const recommendations = requestedRun && !recentRecommendations.some(item => item.id === requestedRun.id)
+    ? [requestedRun, ...recentRecommendations]
+    : recentRecommendations;
   const byType = (type: string) => workspace.version.lines.filter((line) => line.account.type === type).reduce((sum, line) => sum + Number(line.currentForecast), 0);
   const revenue = byType("REVENUE"); const cogs = byType("COGS"); const opex = byType("OPERATING_EXPENSE"); const ebitda = revenue - cogs - opex;
   const workflowActions = actionsByState[workspace.version.status]?.[session.membership.role] ?? [];
