@@ -66,7 +66,7 @@ jobs:
           cp package-lock.json dist/remediation/alternate/original-package-lock.json
           cp eslint.config.mjs dist/remediation/alternate/original-eslint.config.mjs
           if npm uninstall --save-dev eslint-config-next --ignore-scripts > dist/remediation/alternate/uninstall.log 2>&1; then uninstall_status=0; else uninstall_status=$?; fi
-          if npm install --save-dev --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y @next/eslint-plugin-next@14.2.35 > dist/remediation/alternate/install.log 2>&1; then install_status=0; else install_status=$?; fi
+          if npm install --save-dev --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y @next/eslint-plugin-next@16.4.2 > dist/remediation/alternate/install.log 2>&1; then install_status=0; else install_status=$?; fi
           printf 'alternate_uninstall_exit=%s\nalternate_install_exit=%s\n' "$uninstall_status" "$install_status" > dist/remediation/alternate/dependency-operations-status.txt
           # Evaluate the audit-suggested plugin release only inside the isolated
           # candidate; compatibility is determined by lint, tests and build.
@@ -131,7 +131,7 @@ jobs:
           const manifest = JSON.parse(fs.readFileSync('node_modules/@next/eslint-plugin-next/package.json', 'utf8'));
           const actual = manifest.version;
           process.stdout.write('next_plugin_version=' + actual + '\n');
-          process.stdout.write('next_plugin_pin_verified=' + String(actual === '14.2.35') + '\n');
+          process.stdout.write('next_plugin_pin_verified=' + String(actual === '16.4.2') + '\n');
           NODE
           node --input-type=module <<'NODE' > dist/remediation/alternate/audit-findings.json
           import fs from 'node:fs';
