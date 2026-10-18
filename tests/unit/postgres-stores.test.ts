@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { PostgresWorkflowRunStore } from "../../src/lib/orchestration/postgres-stores";
+import { PostgresRuntimeExecutionStore, PostgresWorkflowRunStore } from "../../src/lib/orchestration/postgres-stores";
 import { createWorkflowRun } from "../../src/lib/orchestration/engine";
 import { executeReadySteps, MemoryRuntimeExecutionStore, RuntimeRegistry } from "../../src/lib/orchestration/runtime";
 
@@ -67,6 +67,37 @@ describe("persisted workflow snapshot CAS", () => {
     expect(result.status).toBe("SUCCEEDED");
     expect(saveIfUnchanged).toHaveBeenCalled();
     expect(runs.save).not.toHaveBeenCalled();
+  });
+
+  it("round-trips retry attempts and terminal error classification", async () => {
+    const upsert = vi.fn(async () => ({}));
+    const db = {
+      workflowRunRecord: { findFirst: vi.fn(async () => ({ id: "run-1" })) },
+      workflowExecutionRecord: {
+        findUnique: vi.fn(async () => null),
+        upsert,
+        findFirst: vi.fn(async () => ({
+          idempotencyKey: "key-1", runId: "run-1", stepId: "step",
+          status: "FAILED", attempts: 3, errorClass: "TERMINAL",
+          error: "FORBIDDEN_POLICY", evidenceId: null,
+        })),
+      },
+    };
+    const store = new PostgresRuntimeExecutionStore(db as never, "tenant-a");
+    await store.save({
+      idempotencyKey: "key-1", runId: "run-1", stepId: "step",
+      status: "FAILED", attempts: 3, errorClass: "TERMINAL",
+      error: "FORBIDDEN_POLICY",
+    });
+    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({ attempts: 3, errorClass: "TERMINAL" }),
+      update: expect.objectContaining({ attempts: 3, errorClass: "TERMINAL" }),
+    }));
+    await expect(store.load("key-1")).resolves.toEqual({
+      idempotencyKey: "key-1", runId: "run-1", stepId: "step",
+      status: "FAILED", attempts: 3, errorClass: "TERMINAL",
+      error: "FORBIDDEN_POLICY", evidenceId: undefined,
+    });
   });
 
 });
