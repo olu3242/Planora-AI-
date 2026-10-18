@@ -1,3 +1,5 @@
+import type { WorkflowRun } from "./types";
+
 /**
  * Atomic, tenant-scoped run claim for the existing WorkflowRunRecord table.
  *
@@ -14,8 +16,9 @@ export interface WorkflowClaimDatabase {
         definitionId: string;
         definitionVersion: number;
         status: "READY";
+        state?: { equals: WorkflowRun };
       };
-      data: { status: "RUNNING" };
+      data: { status: "RUNNING"; state?: WorkflowRun };
     }): Promise<{ count: number }>;
   };
 }
@@ -25,6 +28,7 @@ export interface WorkflowClaimRequest {
   runId: string;
   definitionId: string;
   definitionVersion: number;
+  expectedRun?: WorkflowRun;
 }
 
 export async function claimReadyWorkflowRun(
@@ -37,6 +41,13 @@ export async function claimReadyWorkflowRun(
   if (!Number.isInteger(request.definitionVersion) || request.definitionVersion < 1) {
     throw new Error("INVALID_WORKFLOW_DEFINITION_VERSION");
   }
+  if (request.expectedRun && (request.expectedRun.id !== request.runId ||
+      request.expectedRun.context.organizationId !== request.organizationId ||
+      request.expectedRun.definitionId !== request.definitionId ||
+      request.expectedRun.definitionVersion !== request.definitionVersion ||
+      request.expectedRun.status !== "READY")) {
+    throw new Error("WORKFLOW_SCOPE_CLAIM_STATE_MISMATCH");
+  }
   // One SQL UPDATE with a READY predicate is an atomic compare-and-swap.
   // The unique run ID and organization scope prevent cross-tenant claims.
   const result = await db.workflowRunRecord.updateMany({
@@ -46,8 +57,12 @@ export async function claimReadyWorkflowRun(
       definitionId: request.definitionId,
       definitionVersion: request.definitionVersion,
       status: "READY",
+      ...(request.expectedRun ? { state: { equals: request.expectedRun } } : {}),
     },
-    data: { status: "RUNNING" },
+    data: {
+      status: "RUNNING",
+      ...(request.expectedRun ? { state: { ...request.expectedRun, status: "RUNNING" as const } } : {}),
+    },
   });
   if (result.count !== 1) {
     throw new Error("WORKFLOW_SCOPE_CLAIM_UNAVAILABLE");
