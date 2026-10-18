@@ -51,7 +51,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - run: npx prisma generate
       - run: npx prisma validate
       - run: npm run db:migrate:test
