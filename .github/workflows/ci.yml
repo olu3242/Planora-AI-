@@ -35,6 +35,9 @@ jobs:
         with: { node-version: 24, cache: npm }
       - run: node scripts/check-merge-conflicts.mjs
       - run: npm ci
-      - run: npm audit --audit-level=moderate
+      - name: Audit production dependency graph
+        run: npm audit --omit=dev --audit-level=moderate
+      - name: Audit complete dependency graph (release gate)
+        run: npm audit --audit-level=moderate
       - run: npx playwright install --with-deps chromium
       - run: npm run certify
