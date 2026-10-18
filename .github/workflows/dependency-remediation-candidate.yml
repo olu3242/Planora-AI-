@@ -98,9 +98,14 @@ jobs:
           # Exercise application unit tests with the alternate dependency graph.
           # Passing lint and audit alone is insufficient for promotion.
           if npm run test:unit > dist/remediation/alternate/unit.log 2>&1; then unit_status=0; else unit_status=$?; fi
+          # Validate accounting invariants and financial calculation behavior
+          # against the alternate dependency graph, beyond generic unit tests.
+          if npm run test:financial > dist/remediation/alternate/financial.log 2>&1; then financial_status=0; else financial_status=$?; fi
+          if npm run test:integration > dist/remediation/alternate/integration.log 2>&1; then integration_status=0; else integration_status=$?; fi
           npm audit --json > dist/remediation/alternate/audit.json 2>&1 || true
           if npm audit --audit-level=moderate > dist/remediation/alternate/audit-gate.log 2>&1; then audit_status=0; else audit_status=$?; fi
           printf 'alternate_lint_exit=%s\nalternate_typecheck_exit=%s\nalternate_unit_exit=%s\nalternate_audit_exit=%s\n' "$lint_status" "$typecheck_status" "$unit_status" "$audit_status" | tee dist/remediation/alternate/gate-status.txt
+          printf 'alternate_financial_exit=%s\\nalternate_integration_exit=%s\\n' "$financial_status" "$integration_status" >> dist/remediation/alternate/gate-status.txt
           echo '### Alternate ESLint candidate validation' >> "$GITHUB_STEP_SUMMARY"
           cat dist/remediation/alternate/gate-status.txt >> "$GITHUB_STEP_SUMMARY"
           echo 'Alternate ESLint lint output (last 30 lines):'
@@ -158,7 +163,7 @@ jobs:
           cat dist/remediation/alternate/image-rule-status.txt >> "$GITHUB_STEP_SUMMARY"
           # Evaluate promotion only after all evidence, including the negative
           # control, exists. A passing audit alone never approves migration.
-          if [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
+          if [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
             echo 'promotion_readiness=eligible_for_review' > dist/remediation/alternate/promotion-status.txt
           else
             echo 'promotion_readiness=blocked' > dist/remediation/alternate/promotion-status.txt
