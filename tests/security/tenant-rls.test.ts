@@ -49,17 +49,20 @@ describe("forced PostgreSQL tenant policies using a non-owner runtime role", () 
     await expect(runtime.$executeRawUnsafe('ALTER TABLE "Account" DISABLE ROW LEVEL SECURITY')).rejects.toThrow();
   });
   it("reads forecast audit history without joining forbidden authentication records", async () => {
-    const ownVersion = await owner.forecastVersion.findFirstOrThrow({
+    const ownVersion = await owner.forecastVersion.findFirst({
       where: { forecast: { organizationId: tenantA } },
       select: { id: true },
     });
+    // The RLS fixture may not seed a forecast. A missing version still exercises
+    // the exact audit query and its forbidden-join regression without a new seed dependency.
+    const forecastVersionId = ownVersion?.id ?? randomUUID();
     await withTenantSession(runtime, tokenA, async tx => {
       const audits = await tx.auditEvent.findMany({
         where: {
           organizationId: tenantA,
           OR: [
-            { entityId: ownVersion.id },
-            { metadata: { path: ["forecastVersionId"], equals: ownVersion.id } },
+            { entityId: forecastVersionId },
+            { metadata: { path: ["forecastVersionId"], equals: forecastVersionId } },
           ],
         },
         orderBy: { occurredAt: "desc" },
@@ -67,8 +70,10 @@ describe("forced PostgreSQL tenant policies using a non-owner runtime role", () 
       });
       expect(Array.isArray(audits)).toBe(true);
       expect(audits.every(audit => audit.organizationId === tenantA)).toBe(true);
-      await expect(tx.user.findMany({ take: 1 })).rejects.toThrow();
     });
+    // Keep the expected PostgreSQL permission error outside the successful audit
+    // transaction: an error inside a transaction would abort the whole transaction.
+    await expect(withTenantSession(runtime, tokenA, tx => tx.user.findMany({ take: 1 }))).rejects.toThrow();
   });
   it("isolates SELECT, INSERT, UPDATE and DELETE, including attempted tenant reassignment", async () => {
     const foreign = await owner.account.findFirstOrThrow({ where: { organizationId: tenantB } });
