@@ -127,6 +127,14 @@ describe("forced PostgreSQL tenant policies using a non-owner runtime role", () 
       expect(result?.id).toBe(version.id);
       expect(result?.comments.some(item => item.id === comment.id && item.authorId === author.id && item.body === comment.body)).toBe(true);
     });
+    await withTenantSession(runtime, tokenB, async tx => {
+      const foreignVersion = await tx.forecastVersion.findFirst({
+        where: { id: version.id, forecast: { organizationId: tenantB } },
+        include: { comments: true },
+      });
+      expect(foreignVersion).toBeNull();
+      expect(await tx.forecastComment.findMany({ where: { id: comment.id } })).toEqual([]);
+    });
   });
   it("isolates SELECT, INSERT, UPDATE and DELETE, including attempted tenant reassignment", async () => {
     const foreign = await owner.account.findFirstOrThrow({ where: { organizationId: tenantB } });
