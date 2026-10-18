@@ -4,7 +4,6 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 const root = process.cwd();
 const ignored = new Set(['.git','node_modules','.next','dist','coverage','playwright-report','test-results']);
-const markers = /^(<<<<<<<(?: .*)?|=======$|>>>>>>>(?: .*)?)$/gm;
 const extensions = new Set(['.ts','.tsx','.js','.mjs','.cjs','.json','.prisma','.sql','.md','.yml','.yaml']);
 const hits = [];
 async function scan(dir) {
