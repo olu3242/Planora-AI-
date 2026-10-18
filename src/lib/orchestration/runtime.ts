@@ -113,6 +113,9 @@ export async function executeReadySteps(
     if (existing?.status === "RUNNING" || existing?.status === "RETRYING") {
       throw new Error("WORKFLOW_SCOPE_INFLIGHT_RECONCILIATION_REQUIRED");
     }
+    if (existing && (existing.runId !== runId || existing.stepId !== step.id)) {
+      throw new Error("WORKFLOW_SCOPE_IDEMPOTENCY_COLLISION");
+    }
     if (existing?.status === "SUCCEEDED" && !existing.evidenceId) {
       throw new Error("WORKFLOW_SCOPE_SUCCESS_EVIDENCE_REQUIRED");
     }
