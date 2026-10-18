@@ -22,6 +22,14 @@ jobs:
         run: |
           npm update --package-lock-only --ignore-scripts
           npm install --package-lock-only --ignore-scripts
+          # Attempt npm-supported, non-forced advisory repairs on the candidate only.
+          # A nonzero audit-fix exit is recorded; the final audit remains fail-closed.
+          if npm audit fix --package-lock-only --ignore-scripts > dist/remediation/audit-fix-output.txt 2>&1; then
+            echo audit_fix_exit=0 > dist/remediation/audit-fix-status.txt
+          else
+            status=$?
+            echo "audit_fix_exit=$status" > dist/remediation/audit-fix-status.txt
+          fi
           git diff -- package.json package-lock.json > dist/remediation/lockfile.patch
           cp package-lock.json dist/remediation/package-lock.json
           npm ci
