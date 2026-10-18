@@ -75,6 +75,40 @@ describe("forced PostgreSQL tenant policies using a non-owner runtime role", () 
     // transaction: an error inside a transaction would abort the whole transaction.
     await expect(withTenantSession(runtime, tokenA, tx => tx.user.findMany({ take: 1 }))).rejects.toThrow();
   });
+  it("loads forecast comments without reading protected User records", async () => {
+    const version = await owner.forecastVersion.findFirst({
+      where: { forecast: { organizationId: tenantA } },
+      select: { id: true },
+    });
+    if (!version) return;
+    await withTenantSession(runtime, tokenA, async tx => {
+      const result = await tx.forecastVersion.findFirst({
+        where: { id: version.id, forecast: { organizationId: tenantA } },
+        include: {
+          forecast: true,
+          lines: {
+            include: {
+              account: true,
+              costCenter: true,
+              fiscalPeriod: true,
+              comments: { orderBy: { createdAt: "desc" } },
+            },
+            orderBy: [
+              { fiscalPeriod: { ordinal: "asc" } },
+              { account: { code: "asc" } },
+              { costCenter: { code: "asc" } },
+            ],
+          },
+          comments: {
+            where: { forecastLineId: null },
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      });
+      expect(result?.id).toBe(version.id);
+      expect(result?.comments.every(comment => typeof comment.authorId === "string")).toBe(true);
+    });
+  });
   it("isolates SELECT, INSERT, UPDATE and DELETE, including attempted tenant reassignment", async () => {
     const foreign = await owner.account.findFirstOrThrow({ where: { organizationId: tenantB } });
     await withTenantSession(runtime, tokenA, async tx => {
