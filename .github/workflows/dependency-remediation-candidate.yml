@@ -175,6 +175,13 @@ jobs:
           printf 'candidate_experiment_only=true\n' >> dist/remediation/alternate/verification-provenance.txt
           printf 'release_certified=false\n' >> dist/remediation/alternate/verification-provenance.txt
           cat dist/remediation/alternate/gate-status.txt dist/remediation/alternate/coverage-status.txt dist/remediation/alternate/image-rule-status.txt dist/remediation/alternate/promotion-status.txt >> dist/remediation/alternate/verification-provenance.txt
+          # Provide an actionable, fail-closed summary for reviewers.
+          # Never conflate a zero-vulnerability alternate audit with a passing
+          # original security gate or completed release certification.
+          echo '### Candidate release decision' >> "$GITHUB_STEP_SUMMARY"
+          cat dist/remediation/alternate/promotion-status.txt >> "$GITHUB_STEP_SUMMARY"
+          echo 'Original security audit and exact-SHA certification must pass independently.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No production dependency changes are made by this workflow.' >> "$GITHUB_STEP_SUMMARY"
           # The experiment is evidence-only; it cannot pass or bypass the original candidate gate.
       - name: Upload candidate evidence
         if: always()
