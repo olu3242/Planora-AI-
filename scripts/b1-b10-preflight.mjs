@@ -11,6 +11,20 @@ for (const file of required) {
   const body = readFileSync(file, "utf8");
   check("merge-markers:" + file, !/^(<<<<<<< |=======\s*$|>>>>>>> )/m.test(body), "no unresolved Git conflict markers");
 }
+// Reject unresolved merge markers across tracked source, tests, migrations, and workflows.
+try {
+  const tracked = execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" }).split("\0").filter(Boolean);
+  const candidates = tracked.filter((file) => /\.(?:[cm]?[jt]sx?|json|jsonc|mjs|cjs|prisma|sql|ya?ml|md|css|scss|html)$/.test(file));
+  const affected = [];
+  for (const file of candidates) {
+    if (!existsSync(file)) continue;
+    const body = readFileSync(file, "utf8");
+    if (/^(<<<<<<< |=======\s*$|>>>>>>> )/m.test(body)) affected.push(file);
+  }
+  check("repository-wide-merge-markers", affected.length === 0, affected.length ? affected.join(", ") : `scanned ${candidates.length} tracked text files`);
+} catch (error) {
+  check("repository-wide-merge-markers", false, String(error.message));
+}
 try { JSON.parse(readFileSync("package.json", "utf8")); check("package-json", true, "valid JSON"); }
 catch (error) { check("package-json", false, String(error.message)); }
 try {
