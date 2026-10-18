@@ -80,5 +80,5 @@ export async function executeGovernedWorkflow(input: {
       expectedRun: existing,
     });
   }
-  return executeReadySteps(definition, envelope.runId, input.runs, input.executions, input.registry);
+  return executeReadySteps(definition, envelope.runId, input.runs, input.executions, input.registry, Boolean(input.claimDb));
 }
