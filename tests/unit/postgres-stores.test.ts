@@ -130,4 +130,57 @@ describe("persisted workflow snapshot CAS", () => {
     expect(updateMany).not.toHaveBeenCalled();
   });
 
+  it("rejects attempt-count regression before the database update", async () => {
+    const updateMany = vi.fn();
+    const db = {
+      workflowRunRecord: { findFirst: vi.fn(async () => ({ id: "run-1" })) },
+      workflowExecutionRecord: {
+        findUnique: vi.fn(async () => ({
+          runId: "run-1", stepId: "step", status: "RETRYING", attempts: 3,
+        })),
+        updateMany,
+      },
+    };
+    const store = new PostgresRuntimeExecutionStore(db as never, "tenant-a");
+    await expect(store.save({
+      idempotencyKey: "key-1", runId: "run-1", stepId: "step",
+      status: "RETRYING", attempts: 2,
+    })).rejects.toThrow("WORKFLOW_SCOPE_EXECUTION_ATTEMPT_REGRESSION");
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when another worker inserts the same execution key", async () => {
+    const db = {
+      workflowRunRecord: { findFirst: vi.fn(async () => ({ id: "run-1" })) },
+      workflowExecutionRecord: {
+        findUnique: vi.fn(async () => null),
+        create: vi.fn(async () => { throw Object.assign(new Error("Unique constraint"), { code: "P2002" }); }),
+      },
+    };
+    const store = new PostgresRuntimeExecutionStore(db as never, "tenant-a");
+    await expect(store.save({
+      idempotencyKey: "key-1", runId: "run-1", stepId: "step",
+      status: "RUNNING", attempts: 1,
+    })).rejects.toThrow("WORKFLOW_SCOPE_EXECUTION_CONCURRENT_INSERT");
+  });
+
+  it("rejects an existing key owned by a different run", async () => {
+    const updateMany = vi.fn();
+    const db = {
+      workflowRunRecord: { findFirst: vi.fn(async () => ({ id: "run-1" })) },
+      workflowExecutionRecord: {
+        findUnique: vi.fn(async () => ({
+          runId: "run-2", stepId: "step", status: "RUNNING", attempts: 1,
+        })),
+        updateMany,
+      },
+    };
+    const store = new PostgresRuntimeExecutionStore(db as never, "tenant-a");
+    await expect(store.save({
+      idempotencyKey: "key-1", runId: "run-1", stepId: "step",
+      status: "SUCCEEDED", attempts: 1, evidenceId: "proof",
+    })).rejects.toThrow("WORKFLOW_SCOPE_IDEMPOTENCY_COLLISION");
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
 });
