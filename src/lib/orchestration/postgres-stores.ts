@@ -114,32 +114,62 @@ export class PostgresRuntimeExecutionStore implements RuntimeExecutionStore {
       select: { id: true },
     });
     if (!run) throw new Error("WORKFLOW_SCOPE_EXECUTION_RUN_NOT_FOUND");
+    // Creation is guarded by the database unique idempotency key. An existing
+    // execution may only move forward through an atomic conditional update.
+    const attempts = record.attempts ?? 0;
+    const data = {
+      status: record.status,
+      attempts,
+      errorClass: record.errorClass ?? null,
+      evidenceId: record.evidenceId ?? null,
+      error: record.error ?? null,
+    };
     const existing = await this.db.workflowExecutionRecord.findUnique({
       where: { idempotencyKey: record.idempotencyKey },
-      select: { runId: true, stepId: true },
+      select: { runId: true, stepId: true, status: true, attempts: true },
     });
-    if (existing && (existing.runId !== record.runId || existing.stepId !== record.stepId)) {
+    if (!existing) {
+      try {
+        await this.db.workflowExecutionRecord.create({
+          data: {
+            idempotencyKey: record.idempotencyKey,
+            runId: record.runId,
+            stepId: record.stepId,
+            ...data,
+          },
+        });
+        return;
+      } catch (error) {
+        // Concurrent insertion: do not overwrite the winner. Caller must
+        // reload and reconcile instead of replaying financial side effects.
+        if (typeof error === "object" && error !== null && "code" in error &&
+            error.code === "P2002") {
+          throw new Error("WORKFLOW_SCOPE_EXECUTION_CONCURRENT_INSERT");
+        }
+        throw error;
+      }
+    }
+    if (existing.runId !== record.runId || existing.stepId !== record.stepId) {
       throw new Error("WORKFLOW_SCOPE_IDEMPOTENCY_COLLISION");
     }
-    await this.db.workflowExecutionRecord.upsert({
-      where: { idempotencyKey: record.idempotencyKey },
-      create: {
+    if (existing.status === "SUCCEEDED" || existing.status === "FAILED") {
+      throw new Error("WORKFLOW_SCOPE_EXECUTION_TERMINAL_IMMUTABLE");
+    }
+    if (attempts < existing.attempts) {
+      throw new Error("WORKFLOW_SCOPE_EXECUTION_ATTEMPT_REGRESSION");
+    }
+    const updated = await this.db.workflowExecutionRecord.updateMany({
+      where: {
         idempotencyKey: record.idempotencyKey,
         runId: record.runId,
         stepId: record.stepId,
-        status: record.status,
-        attempts: record.attempts ?? 0,
-        errorClass: record.errorClass ?? null,
-        evidenceId: record.evidenceId,
-        error: record.error,
+        status: existing.status,
+        attempts: existing.attempts,
       },
-      update: {
-        status: record.status,
-        attempts: record.attempts ?? 0,
-        errorClass: record.errorClass ?? null,
-        evidenceId: record.evidenceId ?? null,
-        error: record.error ?? null,
-      },
+      data,
     });
+    if (updated.count !== 1) {
+      throw new Error("WORKFLOW_SCOPE_EXECUTION_STALE_WRITE");
+    }
   }
 }
