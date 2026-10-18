@@ -66,11 +66,11 @@ jobs:
           cp package-lock.json dist/remediation/alternate/original-package-lock.json
           cp eslint.config.mjs dist/remediation/alternate/original-eslint.config.mjs
           if npm uninstall --save-dev eslint-config-next --ignore-scripts > dist/remediation/alternate/uninstall.log 2>&1; then uninstall_status=0; else uninstall_status=$?; fi
-          if npm install --save-dev --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y @next/eslint-plugin-next > dist/remediation/alternate/install.log 2>&1; then install_status=0; else install_status=$?; fi
+          if npm install --save-dev --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y @next/eslint-plugin-next@14.2.35 > dist/remediation/alternate/install.log 2>&1; then install_status=0; else install_status=$?; fi
           printf 'alternate_uninstall_exit=%s\nalternate_install_exit=%s\n' "$uninstall_status" "$install_status" > dist/remediation/alternate/dependency-operations-status.txt
-          # Audit reports a vulnerable braces -> micromatch -> fast-glob
-          # chain in the official Next.js lint plugin. Try only a compatible
-          # transitive override, then require a clean install and audit.
+          # Evaluate the audit-suggested plugin release only inside the isolated
+          # candidate; compatibility is determined by lint, tests and build.
+          # This is not an application dependency downgrade.
           npm pkg set 'overrides.braces=^3.0.3'
           if npm install --package-lock-only --ignore-scripts > dist/remediation/alternate/override-lock.log 2>&1; then override_status=0; else override_status=$?; fi
           printf 'alternate_override_lock_exit=%s\n' "$override_status" >> dist/remediation/alternate/dependency-operations-status.txt
