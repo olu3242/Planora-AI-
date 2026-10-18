@@ -29,6 +29,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - name: Use npm version matching lockfile generation
+        run: npm install --global npm@11.6.2
       - name: Validate manifests and public marketing safety
         run: |
           node scripts/check-dependency-conflicts.mjs
