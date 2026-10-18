@@ -161,6 +161,13 @@ jobs:
             echo 'image_rule_negative_control=INCONCLUSIVE' > dist/remediation/alternate/image-rule-status.txt
           fi
           cat dist/remediation/alternate/image-rule-status.txt >> "$GITHUB_STEP_SUMMARY"
+          # Capture an explicit negative-control pass/fail exit code, rather
+          # than relying on a human-readable summary alone.
+          if grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt; then
+            echo 'negative_control_exit=0' >> dist/remediation/alternate/gate-status.txt
+          else
+            echo 'negative_control_exit=1' >> dist/remediation/alternate/gate-status.txt
+          fi
           # Evaluate promotion only after all evidence, including the negative
           # control, exists. A passing audit alone never approves migration.
           if [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
