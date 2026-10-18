@@ -1112,6 +1112,8 @@ model WorkflowExecutionRecord {
   runId          String
   stepId         String
   status         String
+  attempts       Int               @default(0)
+  errorClass     String?
   evidenceId     String?
   error          String?
   createdAt      DateTime          @default(now())
