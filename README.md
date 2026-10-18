@@ -65,35 +65,17 @@ The stack below is the proposed baseline for a new implementation. If this repos
 ## Local setup
 
 ```bash
-npm install
-<<<<<<< HEAD
+npm ci
 docker compose up -d postgres
 cp .env.example .env.local
-cp .env.example .env
-=======
-<<<<<<< HEAD
-cp .env.example .env.local   # fill in DATABASE_URL and other required values
-=======
-docker compose up -d postgres
-cp .env.example .env.local
-cp .env.example .env
->>>>>>> main
->>>>>>> origin/main
+# Configure local-only DATABASE_URL and other required values.
 npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
-<<<<<<< HEAD
-The local seed creates `cfo@planora.local`, `director@planora.local`, and `analyst@planora.local` with password `Planora!2026`. These credentials are development fixtures only.
+The local seed contains development-only synthetic user fixtures. Never use demo credentials in a hosted or production environment.
 
-=======
-<<<<<<< HEAD
-=======
-The local seed creates `cfo@planora.local`, `director@planora.local`, and `analyst@planora.local` with password `Planora!2026`. These credentials are development fixtures only.
-
->>>>>>> main
->>>>>>> origin/main
 ## Common commands
 
 ```bash
@@ -126,21 +108,11 @@ Full spec: `docs/EXCEL-INTEROPERABILITY.md`.
 ## The full E2E demonstration journey
 
 ```
-<<<<<<< HEAD
 LOGIN → FORECAST CYCLE → EXCEL/CSV IMPORT → MAPPING → VALIDATION →
 FORECAST → VARIANCE → COMMENTARY → SUBMIT → REVISION → APPROVE →
 CFO VIEW → AUDIT → LOCK → EXPORT
-=======
-<<<<<<< HEAD
-LOGIN → COMMAND CENTER → EXCEL IMPORT → MAPPING → RECONCILIATION →
-FORECAST → VARIANCE → ROOT CAUSE → SCENARIO → RECOMMENDATION →
-DECISION → ACTION → OUTCOME → EXPORT
-=======
-LOGIN → FORECAST CYCLE → EXCEL/CSV IMPORT → MAPPING → VALIDATION →
-FORECAST → VARIANCE → COMMENTARY → SUBMIT → REVISION → APPROVE →
-CFO VIEW → AUDIT → LOCK → EXPORT
->>>>>>> main
->>>>>>> origin/main
+
+Extended command-center and agentic paths require separate E2E certification.
 ```
 
 This is the literal automated test path Planora must pass to be classified E2E complete. Full detail and a worked example: `docs/E2E-ACCEPTANCE.md`.
@@ -190,12 +162,4 @@ Planora/
 
 ## Current implementation status
 
-<<<<<<< HEAD
-See `docs/FINAL-MVP-CERTIFICATION.md` for the exact-SHA engineering record and `docs/PILOT-VALIDATION-PLAN.md` for the controlled FP&A test. The frozen forecast cycle is locally, in CI, and on its exact isolated Git Preview certified at `fdb419ee28fba0025a4f081b295e011393cc920f`. Engineering status is `READY_FOR_CONTROLLED_USER_VALIDATION`. Product status remains `MVP_PARTIALLY_VALIDATED`, real financial workbooks are prohibited, and Production promotion is unauthorized.
-=======
-<<<<<<< HEAD
-See `docs/IMPLEMENTATION-STATUS.md` for the live COMPLETE/PARTIAL/BLOCKED breakdown per capability, and `docs/TRACEABILITY-MATRIX.md` for the pain-point-to-evidence chain behind each entry. As of this document's writing, implementation has not yet begun — Iteration 0 (repository audit) is the next step per `CLAUDE.md` §3.
-=======
-See `docs/FINAL-MVP-CERTIFICATION.md` for the exact-SHA engineering record and `docs/PILOT-VALIDATION-PLAN.md` for the controlled FP&A test. The frozen forecast cycle is locally, in CI, and on its exact isolated Git Preview certified at `fdb419ee28fba0025a4f081b295e011393cc920f`. Engineering status is `READY_FOR_CONTROLLED_USER_VALIDATION`. Product status remains `MVP_PARTIALLY_VALIDATED`, real financial workbooks are prohibited, and Production promotion is unauthorized.
->>>>>>> main
->>>>>>> origin/main
+See `docs/FINAL-MVP-CERTIFICATION.md` for the historical exact-SHA frozen FP&A certification and `docs/B1-B10-E2E-EXECUTION-REGISTER.md` for current remediation. The historical Preview is not a certification of current `main`. Production promotion remains unauthorized.
