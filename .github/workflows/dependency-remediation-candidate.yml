@@ -330,6 +330,14 @@ jobs:
             echo 'isolation_uninstall_exit=1' > dist/remediation/no-next-plugin/status.txt
           fi
           (cd "$scratch" && npm audit --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/audit.json") || true
+          # Test a replacement ESLint plugin set against the isolated graph.
+          # This is an audit-only feasibility test, not Next.js rule parity.
+          if (cd "$scratch" && npm install --save-dev --package-lock-only --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-install.log" 2>&1); then
+            echo 'replacement_install_exit=0' >> dist/remediation/no-next-plugin/status.txt
+          else
+            echo 'replacement_install_exit=1' >> dist/remediation/no-next-plugin/status.txt
+          fi
+          (cd "$scratch" && npm audit --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-audit.json") || true
           node --input-type=module <<'NODE' > dist/remediation/no-next-plugin/summary.json
           import fs from 'node:fs';
           const path = 'dist/remediation/no-next-plugin/audit.json';
@@ -341,6 +349,15 @@ jobs:
           const auditParseValid = Boolean(report?.metadata?.vulnerabilities);
           const result = { diagnostic_only: true, isolation_valid: uninstallSucceeded && auditParseValid, isolation_uninstall_succeeded: uninstallSucceeded, audit_parse_valid: auditParseValid, severity_totals: report?.metadata?.vulnerabilities ?? null, vulnerable_packages: names, next_lint_chain_present: names.some(name => ['eslint-config-next', '@next/eslint-plugin-next', 'fast-glob', 'micromatch', 'braces'].includes(name)) };
           process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+          NODE
+          node --input-type=module <<'NODE' > dist/remediation/no-next-plugin/replacement-summary.json
+          import fs from 'node:fs';
+          let audit;
+          try { audit = JSON.parse(fs.readFileSync('dist/remediation/no-next-plugin/replacement-audit.json', 'utf8')); } catch { audit = null; }
+          const status = fs.readFileSync('dist/remediation/no-next-plugin/status.txt', 'utf8');
+          const installed = status.includes('replacement_install_exit=0');
+          const valid = installed && Boolean(audit?.metadata?.vulnerabilities);
+          process.stdout.write(JSON.stringify({ diagnostic_only: true, replacement_graph_valid: valid, severity_totals: valid ? audit.metadata.vulnerabilities : null, vulnerable_packages: valid ? Object.keys(audit.vulnerabilities ?? {}).sort() : [], next_framework_rule_parity_verified: false, production_migration_approved: false }, null, 2) + '\n');
           NODE
           printf 'diagnostic_only=true\nframework_lint_equivalence=false\nproduction_migration_approved=false\n' >> dist/remediation/no-next-plugin/status.txt
           rm -rf "$scratch"
