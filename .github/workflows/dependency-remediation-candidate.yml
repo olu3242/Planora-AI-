@@ -159,7 +159,7 @@ jobs:
           EOF
           if npx eslint --no-ignore "$fixture" > dist/remediation/alternate/image-rule-negative-control.log 2>&1; then
             echo 'image_rule_negative_control=FAILED_TO_DETECT' > dist/remediation/alternate/image-rule-status.txt
-          elif grep -q '@next/next/no-img-element' dist/remediation/alternate/image-rule-negative-control.log; then
+          elif grep -Eq '^[^[:space:]].*[@]next/next/no-img-element|[0-9]+:[0-9]+[[:space:]]+error[[:space:]].*[@]next/next/no-img-element' dist/remediation/alternate/image-rule-negative-control.log; then
             echo 'image_rule_negative_control=DETECTED' > dist/remediation/alternate/image-rule-status.txt
           else
             echo 'image_rule_negative_control=INCONCLUSIVE' > dist/remediation/alternate/image-rule-status.txt
