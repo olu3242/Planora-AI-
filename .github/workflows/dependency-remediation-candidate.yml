@@ -346,6 +346,14 @@ jobs:
             echo 'replacement_clean_install_exit=1' >> dist/remediation/no-next-plugin/status.txt
           fi
           (cd "$scratch" && npm ls --depth=0 --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-tree.json" 2> "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-tree-error.log") || true
+          # Preserve a reproducible patch for an explicitly reviewed source
+          # migration. It is evidence, not an automatic production change.
+          git show HEAD:package.json > dist/remediation/no-next-plugin/original-package.json
+          git show HEAD:package-lock.json > dist/remediation/no-next-plugin/original-package-lock.json
+          cp "$scratch/package.json" dist/remediation/no-next-plugin/replacement-package.json
+          cp "$scratch/package-lock.json" dist/remediation/no-next-plugin/replacement-package-lock.json
+          diff -u --label a/package.json --label b/package.json dist/remediation/no-next-plugin/original-package.json dist/remediation/no-next-plugin/replacement-package.json > dist/remediation/no-next-plugin/manifest.diff || true
+          sha256sum dist/remediation/no-next-plugin/replacement-package.json dist/remediation/no-next-plugin/replacement-package-lock.json > dist/remediation/no-next-plugin/replacement-sha256.txt
           node --input-type=module <<'NODE' > dist/remediation/no-next-plugin/summary.json
           import fs from 'node:fs';
           const path = 'dist/remediation/no-next-plugin/audit.json';
