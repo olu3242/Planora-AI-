@@ -106,7 +106,7 @@ jobs:
           npm audit --json > dist/remediation/alternate/audit.json 2>&1 || true
           if npm audit --audit-level=moderate > dist/remediation/alternate/audit-gate.log 2>&1; then audit_status=0; else audit_status=$?; fi
           printf 'alternate_lint_exit=%s\nalternate_typecheck_exit=%s\nalternate_unit_exit=%s\nalternate_audit_exit=%s\n' "$lint_status" "$typecheck_status" "$unit_status" "$audit_status" | tee dist/remediation/alternate/gate-status.txt
-          printf 'alternate_financial_exit=%s\\nalternate_integration_exit=%s\\n' "$financial_status" "$integration_status" >> dist/remediation/alternate/gate-status.txt
+          printf 'alternate_financial_exit=%s\nalternate_integration_exit=%s\n' "$financial_status" "$integration_status" >> dist/remediation/alternate/gate-status.txt
           echo '### Alternate ESLint candidate validation' >> "$GITHUB_STEP_SUMMARY"
           cat dist/remediation/alternate/gate-status.txt >> "$GITHUB_STEP_SUMMARY"
           echo 'Alternate ESLint lint output (last 30 lines):'
