@@ -329,8 +329,18 @@ jobs:
           else
             echo 'isolation_uninstall_exit=1' > dist/remediation/no-next-plugin/status.txt
           fi
-          (cd "$scratch" && npm audit --package-lock-only --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/audit.json") || true
-          printf 'diagnostic_only=true\\nframework_lint_equivalence=false\\nproduction_migration_approved=false\\n' >> dist/remediation/no-next-plugin/status.txt
+          (cd "$scratch" && npm audit --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/audit.json") || true
+          node --input-type=module <<'NODE' > dist/remediation/no-next-plugin/summary.json
+          import fs from 'node:fs';
+          const path = 'dist/remediation/no-next-plugin/audit.json';
+          let report;
+          try { report = JSON.parse(fs.readFileSync(path, 'utf8')); } catch { report = null; }
+          const findings = report?.vulnerabilities ?? {};
+          const names = Object.keys(findings).sort();
+          const result = { diagnostic_only: true, audit_parse_valid: Boolean(report?.metadata?.vulnerabilities), severity_totals: report?.metadata?.vulnerabilities ?? null, vulnerable_packages: names, next_lint_chain_present: names.some(name => ['eslint-config-next', '@next/eslint-plugin-next', 'fast-glob', 'micromatch', 'braces'].includes(name)) };
+          process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+          NODE
+          printf 'diagnostic_only=true\nframework_lint_equivalence=false\nproduction_migration_approved=false\n' >> dist/remediation/no-next-plugin/status.txt
           rm -rf "$scratch"
       - name: Upload isolation diagnostic
         if: always()
