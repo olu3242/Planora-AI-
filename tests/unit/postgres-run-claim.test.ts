@@ -1,3 +1,4 @@
+import { createWorkflowRun } from "../../src/lib/orchestration/engine";
 import { describe, expect, it, vi } from "vitest";
 import { claimReadyWorkflowRun } from "../../src/lib/orchestration/postgres-run-claim";
 
@@ -22,6 +23,25 @@ describe("atomic PostgreSQL run claim contract", () => {
         status: "READY",
       },
       data: { status: "RUNNING" },
+    });
+  });
+
+  it("atomically updates both status and JSON state for a verified snapshot", async () => {
+    const expectedRun = createWorkflowRun("run-1", {
+      id: "monthly-close", version: 1, steps: [],
+    }, { organizationId: "tenant-a", actorId: "actor-1", correlationId: "trace-1" });
+    const updateMany = vi.fn(async () => ({ count: 1 }));
+    await claimReadyWorkflowRun(
+      { workflowRunRecord: { updateMany } },
+      { ...request, expectedRun },
+    );
+    expect(updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "run-1", organizationId: "tenant-a",
+        definitionId: "monthly-close", definitionVersion: 1,
+        status: "READY", state: { equals: expectedRun },
+      },
+      data: { status: "RUNNING", state: { ...expectedRun, status: "RUNNING" } },
     });
   });
 
