@@ -161,8 +161,10 @@ jobs:
           if grep -q 'no-img-element.*create: () => ({})' dist/remediation/alternate/eslint.config.mjs; then
             printf 'framework_lint_equivalence=unverified_noop_rule\n' > dist/remediation/alternate/coverage-status.txt
             echo 'WARNING: alternate lint includes a no-op Next.js rule; do not promote as equivalent.' >> "$GITHUB_STEP_SUMMARY"
-          else
+          elif grep -q 'nextPlugin.configs.recommended.rules' dist/remediation/alternate/eslint.config.mjs && grep -q 'nextPlugin.configs\["core-web-vitals"\].rules' dist/remediation/alternate/eslint.config.mjs; then
             printf 'framework_lint_equivalence=requires_review\n' > dist/remediation/alternate/coverage-status.txt
+          else
+            printf 'framework_lint_equivalence=missing_next_rules\n' > dist/remediation/alternate/coverage-status.txt
           fi
           # Audit the scope of framework-specific lint suppressions before
           # considering migration. Keep the existing rules and source unchanged.
