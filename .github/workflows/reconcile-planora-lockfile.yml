@@ -31,12 +31,17 @@ jobs:
           node-version: '22'
       - name: Validate reconciled manifest
         run: node -e "const p=require('./package.json'); if(!p.dependencies?.next || !p.devDependencies?.prisma) process.exit(1)"
+      - name: Upgrade npm resolver and remove stale installation state
+        run: |
+          npm install --global npm@11.6.2
+          npm --version
+          rm -rf node_modules
       - name: Generate fresh lockfile from reviewed manifest
         run: |
           rm package-lock.json
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --legacy-peer-deps
           node scripts/check-dependency-conflicts.mjs
-          npm ci --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund --legacy-peer-deps
       - name: Commit generated lockfile to feature branch
         run: |
           if git diff --quiet -- package-lock.json; then
