@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { PostgresWorkflowRunStore } from "../../src/lib/orchestration/postgres-stores";
 import { createWorkflowRun } from "../../src/lib/orchestration/engine";
+import { executeReadySteps, MemoryRuntimeExecutionStore, RuntimeRegistry } from "../../src/lib/orchestration/runtime";
 
 const definition = { id: "close", version: 1, steps: [{ id: "step", kind: "DETERMINISTIC" as const }] };
 const context = { organizationId: "tenant-a", actorId: "actor-a", correlationId: "trace-a" };
@@ -43,4 +44,29 @@ describe("persisted workflow snapshot CAS", () => {
     })).rejects.toThrow("WORKFLOW_SCOPE_CAS_MISMATCH");
     expect(updateMany).not.toHaveBeenCalled();
   });
+  it("uses CAS for every runtime transition when supported", async () => {
+    const snapshots = new Map<string, ReturnType<typeof createWorkflowRun>>();
+    snapshots.set("run-1", structuredClone(old));
+    const saveIfUnchanged = vi.fn(async (next: typeof old, expected: typeof old) => {
+      const current = snapshots.get(next.id);
+      if (JSON.stringify(current) !== JSON.stringify(expected)) {
+        throw new Error("WORKFLOW_SCOPE_STALE_WRITE");
+      }
+      snapshots.set(next.id, structuredClone(next));
+    });
+    const runs = {
+      load: async (id: string) => snapshots.get(id) ?? null,
+      save: vi.fn(async () => { throw new Error("UNSAFE_SAVE_CALLED"); }),
+      saveIfUnchanged,
+    };
+    const registry = new RuntimeRegistry();
+    registry.register("step", async () => ({ evidenceId: "proof" }));
+    const result = await executeReadySteps(
+      definition, "run-1", runs, new MemoryRuntimeExecutionStore(), registry,
+    );
+    expect(result.status).toBe("SUCCEEDED");
+    expect(saveIfUnchanged).toHaveBeenCalled();
+    expect(runs.save).not.toHaveBeenCalled();
+  });
+
 });
