@@ -48,6 +48,22 @@ describe("atomic PostgreSQL run claim contract", () => {
     });
   });
 
+  it("allows only one winner among competing claims in a serialized store simulation", async () => {
+    let available = true;
+    const updateMany = vi.fn(async () => {
+      if (!available) return { count: 0 };
+      available = false;
+      return { count: 1 };
+    });
+    const outcomes = await Promise.allSettled(
+      Array.from({ length: 10 }, () =>
+        claimReadyWorkflowRun({ workflowRunRecord: { updateMany } }, request)),
+    );
+    expect(outcomes.filter((outcome) => outcome.status === "fulfilled")).toHaveLength(1);
+    expect(outcomes.filter((outcome) => outcome.status === "rejected")).toHaveLength(9);
+    expect(updateMany).toHaveBeenCalledTimes(10);
+  });
+
   it("fails closed when another worker has already claimed the run", async () => {
     const updateMany = vi.fn(async () => ({ count: 0 }));
     await expect(claimReadyWorkflowRun({ workflowRunRecord: { updateMany } }, request))
