@@ -354,6 +354,19 @@ jobs:
           cp "$scratch/package-lock.json" dist/remediation/no-next-plugin/replacement-package-lock.json
           diff -u --label a/package.json --label b/package.json dist/remediation/no-next-plugin/original-package.json dist/remediation/no-next-plugin/replacement-package.json > dist/remediation/no-next-plugin/manifest.diff || true
           sha256sum dist/remediation/no-next-plugin/replacement-package.json dist/remediation/no-next-plugin/replacement-package-lock.json > dist/remediation/no-next-plugin/replacement-sha256.txt
+          # Fail closed on a stale or incomplete candidate lockfile: compare
+          # the lockfile's root manifest against the exported package manifest.
+          node --input-type=module <<'NODE' > dist/remediation/no-next-plugin/lockfile-consistency.json
+          import fs from 'node:fs';
+          const manifest = JSON.parse(fs.readFileSync('dist/remediation/no-next-plugin/replacement-package.json', 'utf8'));
+          const lock = JSON.parse(fs.readFileSync('dist/remediation/no-next-plugin/replacement-package-lock.json', 'utf8'));
+          const root = lock.packages?.[''] ?? {};
+          const same = (a, b) => JSON.stringify(Object.entries(a ?? {}).sort()) === JSON.stringify(Object.entries(b ?? {}).sort());
+          const dependenciesMatch = same(manifest.dependencies, root.dependencies);
+          const devDependenciesMatch = same(manifest.devDependencies, root.devDependencies);
+          const result = { dependencies_match: dependenciesMatch, dev_dependencies_match: devDependenciesMatch, lockfile_version: lock.lockfileVersion, consistent: dependenciesMatch && devDependenciesMatch };
+          process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+          NODE
           node --input-type=module <<'NODE' > dist/remediation/no-next-plugin/summary.json
           import fs from 'node:fs';
           const path = 'dist/remediation/no-next-plugin/audit.json';
@@ -373,8 +386,9 @@ jobs:
           const status = fs.readFileSync('dist/remediation/no-next-plugin/status.txt', 'utf8');
           const installed = status.includes('replacement_install_exit=0');
           const cleanInstall = status.includes('replacement_clean_install_exit=0');
-          const valid = installed && cleanInstall && Boolean(audit?.metadata?.vulnerabilities);
-          process.stdout.write(JSON.stringify({ diagnostic_only: true, replacement_graph_valid: valid, replacement_clean_install_succeeded: cleanInstall, severity_totals: valid ? audit.metadata.vulnerabilities : null, vulnerable_packages: valid ? Object.keys(audit.vulnerabilities ?? {}).sort() : [], next_framework_rule_parity_verified: false, production_migration_approved: false }, null, 2) + '\n');
+          const consistency = JSON.parse(fs.readFileSync('dist/remediation/no-next-plugin/lockfile-consistency.json', 'utf8'));
+          const valid = installed && cleanInstall && consistency.consistent && Boolean(audit?.metadata?.vulnerabilities);
+          process.stdout.write(JSON.stringify({ diagnostic_only: true, replacement_graph_valid: valid, replacement_clean_install_succeeded: cleanInstall, lockfile_consistent: consistency.consistent, severity_totals: valid ? audit.metadata.vulnerabilities : null, vulnerable_packages: valid ? Object.keys(audit.vulnerabilities ?? {}).sort() : [], next_framework_rule_parity_verified: false, production_migration_approved: false }, null, 2) + '\n');
           NODE
           printf 'diagnostic_only=true\nframework_lint_equivalence=false\nproduction_migration_approved=false\n' >> dist/remediation/no-next-plugin/status.txt
           rm -rf "$scratch"
