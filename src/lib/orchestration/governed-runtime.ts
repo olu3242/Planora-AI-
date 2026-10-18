@@ -77,6 +77,7 @@ export async function executeGovernedWorkflow(input: {
       runId: envelope.runId,
       definitionId: envelope.workflowDefinitionId,
       definitionVersion: envelope.workflowDefinitionVersion,
+      expectedRun: existing,
     });
   }
   return executeReadySteps(definition, envelope.runId, input.runs, input.executions, input.registry);
