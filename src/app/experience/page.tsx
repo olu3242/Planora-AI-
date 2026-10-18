@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 type View = "Command Center" | "Accounting" | "Tax" | "FP&A" | "AI Agents";
 const dashboards: Record<View,{headline:string; metrics:[string,string][]; queue:string[]}> = {
@@ -64,8 +64,8 @@ export default function ExperiencePage(){
     <section id="video" style={{background:"#173C34",color:"#fff",padding:"76px 0"}}>
       <div style={shell}><p style={{color:"#A8DEC4",fontWeight:800}}>SEE HOW IT WORKS</p><h2 style={{fontSize:"clamp(30px,4vw,48px)",margin:"10px 0"}}>A guided product story.</h2><p style={{color:"#D0E0D6",maxWidth:680}}>See the journey from incoming finance data to an AI-assisted recommendation and a human approval.</p>
       <div style={{border:"1px solid #547469",borderRadius:22,overflow:"hidden",background:"#234D40",marginTop:26}}>
-        <video ref={video} controls playsInline preload="none" poster="/brand/planora-mark.svg" onPlay={()=>setPlaying(true)} onPause={()=>setPlaying(false)} style={{width:"100%",maxHeight:520,background:"#14362D"}}><source src="/media/planora-product-overview.mp4" type="video/mp4"/>Your browser does not support HTML video.</video>
-        <div style={{padding:20,display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><span>{playing?"Playing product video":"Product walkthrough — video pending publication"}</span><span style={{fontSize:12,color:"#D0E0D6"}}>Video player ready; no fabricated footage</span></div>
+        <div role="img" aria-label="Illustrated product walkthrough: import records, match transactions, review exceptions, approve changes" style={{padding:"42px 20px",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12}}>{["1. Connect records","2. Review matches","3. Resolve exceptions","4. Approve changes"].map(step=><div key={step} style={{padding:24,background:"#F6F7F3",color:"#173C34",borderRadius:14,fontWeight:700}}>{step}</div>)}</div>
+        <div style={{padding:20,display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><span>{"Product walkthrough storyboard — video pending publication"}</span><span style={{fontSize:12,color:"#D0E0D6"}}>No unavailable media request or fabricated footage</span></div>
       </div></div>
     </section>
     <section id="solutions" style={{...shell,paddingTop:86,paddingBottom:86}}>
