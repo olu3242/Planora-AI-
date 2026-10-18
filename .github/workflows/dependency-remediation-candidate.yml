@@ -251,7 +251,7 @@ jobs:
           printf 'source_sha=%s\n' "$GITHUB_SHA" > dist/remediation/alternate/verification-provenance.txt
           printf 'candidate_experiment_only=true\n' >> dist/remediation/alternate/verification-provenance.txt
           printf 'release_certified=false\n' >> dist/remediation/alternate/verification-provenance.txt
-          cat dist/remediation/alternate/gate-status.txt dist/remediation/alternate/coverage-status.txt dist/remediation/alternate/image-rule-status.txt dist/remediation/alternate/promotion-status.txt >> dist/remediation/alternate/verification-provenance.txt
+          cat dist/remediation/alternate/gate-status.txt dist/remediation/alternate/dependency-operations-status.txt dist/remediation/alternate/plugin-version-status.txt dist/remediation/alternate/coverage-status.txt dist/remediation/alternate/next-rule-mapping-status.txt dist/remediation/alternate/image-rule-status.txt dist/remediation/alternate/next-script-status.txt dist/remediation/alternate/migration-integrity.txt dist/remediation/alternate/migration-apply-status.txt dist/remediation/alternate/promotion-status.txt >> dist/remediation/alternate/verification-provenance.txt
           # Provide an actionable, fail-closed summary for reviewers.
           # Never conflate a zero-vulnerability alternate audit with a passing
           # original security gate or completed release certification.
