@@ -296,6 +296,8 @@ jobs:
           cat dist/remediation/alternate/promotion-status.txt >> "$GITHUB_STEP_SUMMARY"
           # Rebuild final provenance only after migration-integrity enforcement.
           # Earlier summaries may predate this final promotion verdict.
+          # Preserve a machine-readable digest of all evidence files for review.
+          find dist/remediation/alternate -type f ! -name 'verification-provenance.txt' -print0 | sort -z | xargs -0 sha256sum > dist/remediation/alternate/evidence-sha256.txt
           {
             printf 'source_sha=%s\n' "$GITHUB_SHA"
             printf 'candidate_experiment_only=true\nrelease_certified=false\n'
@@ -308,6 +310,7 @@ jobs:
             cat dist/remediation/alternate/next-script-status.txt
             cat dist/remediation/alternate/migration-integrity.txt
             cat dist/remediation/alternate/migration-apply-status.txt
+            printf 'evidence_sha256_manifest=evidence-sha256.txt\n'
             cat dist/remediation/alternate/promotion-status.txt
           } > dist/remediation/alternate/verification-provenance.txt
           # The experiment is evidence-only; it cannot pass or bypass the original candidate gate.
