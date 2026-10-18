@@ -119,7 +119,7 @@ jobs:
           if APP_ENV=test npm run test:integration > dist/remediation/alternate/integration.log 2>&1; then integration_status=0; else integration_status=$?; fi
           # Validate that the Next.js production build survives dependency
           # replacement; lint/unit tests alone do not exercise compilation.
-          if npm run build > dist/remediation/alternate/build.log 2>&1; then build_status=0; else build_status=$?; fi
+          if CI=1 NEXT_TELEMETRY_DISABLED=1 npm run build > dist/remediation/alternate/build.log 2>&1; then build_status=0; else build_status=$?; fi
           npm audit --json > dist/remediation/alternate/audit.json 2>&1 || true
           # Capture the exact installed vulnerable chain after clean install.
           # Do not infer remediation from package-lock-only changes.
