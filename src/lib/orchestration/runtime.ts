@@ -107,6 +107,16 @@ export async function executeReadySteps(
       continue;
     }
 
+    // A persisted in-flight attempt may have committed external effects before
+    // its completion evidence was saved. Never invoke a financial handler again
+    // merely because the worker restarted; require an operator reconciliation.
+    if (existing?.status === "RUNNING" || existing?.status === "RETRYING") {
+      throw new Error("WORKFLOW_SCOPE_INFLIGHT_RECONCILIATION_REQUIRED");
+    }
+    if (existing?.status === "SUCCEEDED" && !existing.evidenceId) {
+      throw new Error("WORKFLOW_SCOPE_SUCCESS_EVIDENCE_REQUIRED");
+    }
+
     const maxAttempts = Math.max(1, step.maxAttempts ?? 1);
     let attempt = existing?.attempts ?? 0;
     let result: StepExecutionResult | undefined;
