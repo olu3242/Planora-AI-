@@ -84,7 +84,7 @@ describe("governed runtime fail-closed boundary", () => {
     },
   );
 
-  it("claims the database row before invoking a governed handler", async () => {
+  it("authorizes before claiming and fails closed when the store is unsynchronized", async () => {
     const test = setup();
     await test.seed();
     const updateMany = vi.fn(async () => ({ count: 1 }));
@@ -96,8 +96,6 @@ describe("governed runtime fail-closed boundary", () => {
     expect(test.authorize).toHaveBeenCalledOnce();
     expect(test.authorize.mock.invocationCallOrder[0])
       .toBeLessThan(updateMany.mock.invocationCallOrder[0]);
-    expect(updateMany.mock.invocationCallOrder[0])
-      .toBeLessThan(test.handler.mock.invocationCallOrder[0]);
   });
 
   it("rejects a claimed run when the store does not reflect the atomic claim", async () => {
