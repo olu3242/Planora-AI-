@@ -203,7 +203,7 @@ jobs:
           cat dist/remediation/alternate/next-script-status.txt >> "$GITHUB_STEP_SUMMARY"
           # Evaluate promotion only after all evidence, including the negative
           # control, exists. A passing audit alone never approves migration.
-          if [ "$uninstall_status" -eq 0 ] && [ "$install_status" -eq 0 ] && [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$build_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
+          if [ "$uninstall_status" -eq 0 ] && [ "$install_status" -eq 0 ] && [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$build_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'next_script_negative_control=DETECTED' dist/remediation/alternate/next-script-status.txt && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
             echo 'promotion_readiness=eligible_for_review' > dist/remediation/alternate/promotion-status.txt
           else
             echo 'promotion_readiness=blocked' > dist/remediation/alternate/promotion-status.txt
@@ -263,6 +263,7 @@ jobs:
             cat dist/remediation/alternate/dependency-operations-status.txt
             cat dist/remediation/alternate/coverage-status.txt
             cat dist/remediation/alternate/image-rule-status.txt
+            cat dist/remediation/alternate/next-script-status.txt
             cat dist/remediation/alternate/migration-integrity.txt
             cat dist/remediation/alternate/promotion-status.txt
           } > dist/remediation/alternate/verification-provenance.txt
