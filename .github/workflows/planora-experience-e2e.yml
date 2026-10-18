@@ -37,7 +37,7 @@ jobs:
           node --test tests/security/public-experience-guard.test.mjs
           node scripts/check-public-experience.mjs
       - name: Install locked dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
       - name: Typecheck
         run: npm run typecheck
       - name: Build
