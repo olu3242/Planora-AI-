@@ -128,6 +128,13 @@ jobs:
             echo 'promotion_readiness=blocked' > dist/remediation/alternate/promotion-status.txt
           fi
           cat dist/remediation/alternate/promotion-status.txt >> "$GITHUB_STEP_SUMMARY"
+          # Audit the scope of framework-specific lint suppressions before
+          # considering migration. Keep the existing rules and source unchanged.
+          # This counts source files containing inline Next.js lint directives;
+          # those directives need real replacement rules, never dummy handlers.
+          git grep -n -E 'eslint-disable(-next-line|-line)?[[:space:]]+@next/next/' -- ':!package-lock.json' > dist/remediation/alternate/next-inline-directives.txt || true
+          printf 'next_inline_directives=%s\n' "$(wc -l < dist/remediation/alternate/next-inline-directives.txt | tr -d ' ')" > dist/remediation/alternate/next-inline-summary.txt
+          cat dist/remediation/alternate/next-inline-summary.txt >> "$GITHUB_STEP_SUMMARY"
           # The experiment is evidence-only; it cannot pass or bypass the original candidate gate.
       - name: Upload candidate evidence
         if: always()
