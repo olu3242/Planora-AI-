@@ -124,6 +124,15 @@ jobs:
           # Capture the exact installed vulnerable chain after clean install.
           # Do not infer remediation from package-lock-only changes.
           npm ls braces micromatch fast-glob @next/eslint-plugin-next --all --json > dist/remediation/alternate/dependency-tree.json 2>&1 || true
+          # Record whether the audited plugin matches the requested pinned
+          # release; npm's resolver may otherwise mask a version mismatch.
+          node --input-type=module <<'NODE' > dist/remediation/alternate/plugin-version-status.txt
+          import fs from 'node:fs';
+          const manifest = JSON.parse(fs.readFileSync('node_modules/@next/eslint-plugin-next/package.json', 'utf8'));
+          const actual = manifest.version;
+          process.stdout.write('next_plugin_version=' + actual + '\\n');
+          process.stdout.write('next_plugin_pin_verified=' + String(actual === '14.2.35') + '\\n');
+          NODE
           node --input-type=module <<'NODE' > dist/remediation/alternate/audit-findings.json
           import fs from 'node:fs';
           const raw = fs.readFileSync('dist/remediation/alternate/audit.json', 'utf8');
@@ -229,7 +238,7 @@ jobs:
           cat dist/remediation/alternate/next-script-status.txt >> "$GITHUB_STEP_SUMMARY"
           # Evaluate promotion only after all evidence, including the negative
           # control, exists. A passing audit alone never approves migration.
-          if [ "$uninstall_status" -eq 0 ] && [ "$install_status" -eq 0 ] && [ "$override_status" -eq 0 ] && [ "$clean_install_status" -eq 0 ] && [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$build_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'next_script_negative_control=DETECTED' dist/remediation/alternate/next-script-status.txt && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
+          if [ "$uninstall_status" -eq 0 ] && [ "$install_status" -eq 0 ] && [ "$override_status" -eq 0 ] && [ "$clean_install_status" -eq 0 ] && [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$build_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'next_plugin_pin_verified=true' dist/remediation/alternate/plugin-version-status.txt && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'next_script_negative_control=DETECTED' dist/remediation/alternate/next-script-status.txt && grep -qx 'framework_lint_equivalence=verified' dist/remediation/alternate/coverage-status.txt; then
             echo 'promotion_readiness=eligible_for_review' > dist/remediation/alternate/promotion-status.txt
           else
             echo 'promotion_readiness=blocked' > dist/remediation/alternate/promotion-status.txt
@@ -287,6 +296,7 @@ jobs:
             printf 'candidate_experiment_only=true\nrelease_certified=false\n'
             cat dist/remediation/alternate/gate-status.txt
             cat dist/remediation/alternate/dependency-operations-status.txt
+            cat dist/remediation/alternate/plugin-version-status.txt
             cat dist/remediation/alternate/coverage-status.txt
             cat dist/remediation/alternate/image-rule-status.txt
             cat dist/remediation/alternate/next-script-status.txt
