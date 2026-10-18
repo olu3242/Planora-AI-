@@ -88,7 +88,7 @@ test.describe.serial("canonical forecast cycle", () => {
     try {
       const accepted = await feedbackDb.agentRecommendation.findUnique({ where: { id: acceptedId! }, include: { feedback: true, run: { include: { agentDefinition: true } } } });
       expect(accepted?.status, "Accepted feedback must persist on the original recommendation").toBe("ACCEPTED");
-      expect(accepted?.feedback?.decision, "Accepted feedback decision must persist").toBe("ACCEPTED");
+      expect(accepted?.feedback.some(item => item.decision === "ACCEPTED"), "Accepted feedback decision must persist").toBe(true);
       const rendered = page.locator(".agent-result").filter({ hasText: accepted!.summary }).filter({ hasText: "ACCEPTED" }).first();
       await expect(rendered).toBeVisible();
     } finally { await feedbackDb.$disconnect(); }
