@@ -183,4 +183,34 @@ describe("persisted workflow snapshot CAS", () => {
     expect(updateMany).not.toHaveBeenCalled();
   });
 
+  it("refuses to persist success without evidence", async () => {
+    const findUnique = vi.fn();
+    const db = {
+      workflowRunRecord: { findFirst: vi.fn(async () => ({ id: "run-1" })) },
+      workflowExecutionRecord: { findUnique },
+    };
+    const store = new PostgresRuntimeExecutionStore(db as never, "tenant-a");
+    await expect(store.save({
+      idempotencyKey: "key-1", runId: "run-1", stepId: "step",
+      status: "SUCCEEDED", attempts: 1,
+    })).rejects.toThrow("WORKFLOW_SCOPE_SUCCESS_EVIDENCE_REQUIRED");
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it("refuses negative or fractional attempt counters", async () => {
+    const findUnique = vi.fn();
+    const db = {
+      workflowRunRecord: { findFirst: vi.fn(async () => ({ id: "run-1" })) },
+      workflowExecutionRecord: { findUnique },
+    };
+    const store = new PostgresRuntimeExecutionStore(db as never, "tenant-a");
+    for (const attempts of [-1, 1.5]) {
+      await expect(store.save({
+        idempotencyKey: "key-1", runId: "run-1", stepId: "step",
+        status: "RUNNING", attempts,
+      })).rejects.toThrow("WORKFLOW_SCOPE_INVALID_EXECUTION_ATTEMPTS");
+    }
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
 });
