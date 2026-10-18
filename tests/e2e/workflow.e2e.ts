@@ -71,7 +71,9 @@ test.describe.serial("canonical forecast cycle", () => {
       await expect(page.locator(".agent-results")).toBeVisible();
       const renderedSummaries = await page.locator(".agent-result h3").allTextContents();
       const fallbackMessage = await page.locator(".agent-results .subtle").allTextContents();
-      expect(renderedSummaries, `Redirected run ${workflowRunId} must render persisted recommendation. URL: ${page.url()}; rendered summaries: ${JSON.stringify(renderedSummaries)}; fallback: ${JSON.stringify(fallbackMessage)}`).toContain(recommendationSummary);
+      const pageAlerts = await page.locator("[role=alert]").allTextContents();
+      const pageHeading = await page.locator("h1").allTextContents();
+      expect(renderedSummaries, `Redirected run ${workflowRunId} must render persisted recommendation. URL: ${page.url()}; rendered summaries: ${JSON.stringify(renderedSummaries)}; fallback: ${JSON.stringify(fallbackMessage)}; alerts: ${JSON.stringify(pageAlerts)}; headings: ${JSON.stringify(pageHeading)}`).toContain(recommendationSummary);
       await expect(renderedRecommendation).toBeVisible();
       await expect(renderedRecommendation).toContainText(persistedRun!.recommendations[0].summary);
     } finally {
