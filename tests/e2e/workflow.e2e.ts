@@ -68,8 +68,10 @@ test.describe.serial("canonical forecast cycle", () => {
       expect(persistedRun?.recommendations.length, "Workflow Assistant must persist its recommendation").toBeGreaterThan(0);
       const recommendationSummary = persistedRun!.recommendations[0].summary;
       const renderedRecommendation = page.locator(".agent-result").filter({ hasText: recommendationSummary }).first();
+      await expect(page.locator(".agent-results")).toBeVisible();
       const renderedSummaries = await page.locator(".agent-result h3").allTextContents();
-      expect(renderedSummaries, `Redirected run ${workflowRunId} must render persisted recommendation. URL: ${page.url()}; rendered summaries: ${JSON.stringify(renderedSummaries)}`).toContain(recommendationSummary);
+      const fallbackMessage = await page.locator(".agent-results .subtle").allTextContents();
+      expect(renderedSummaries, `Redirected run ${workflowRunId} must render persisted recommendation. URL: ${page.url()}; rendered summaries: ${JSON.stringify(renderedSummaries)}; fallback: ${JSON.stringify(fallbackMessage)}`).toContain(recommendationSummary);
       await expect(renderedRecommendation).toBeVisible();
       await expect(renderedRecommendation).toContainText(persistedRun!.recommendations[0].summary);
     } finally {
