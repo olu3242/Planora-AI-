@@ -69,35 +69,65 @@ describe("persisted workflow snapshot CAS", () => {
     expect(runs.save).not.toHaveBeenCalled();
   });
 
-  it("round-trips retry attempts and terminal error classification", async () => {
-    const upsert = vi.fn(async () => ({}));
+  it("atomically advances a persisted execution without upsert", async () => {
+    const updateMany = vi.fn(async () => ({ count: 1 }));
     const db = {
       workflowRunRecord: { findFirst: vi.fn(async () => ({ id: "run-1" })) },
       workflowExecutionRecord: {
-        findUnique: vi.fn(async () => null),
-        upsert,
-        findFirst: vi.fn(async () => ({
-          idempotencyKey: "key-1", runId: "run-1", stepId: "step",
-          status: "FAILED", attempts: 3, errorClass: "TERMINAL",
-          error: "FORBIDDEN_POLICY", evidenceId: null,
+        findUnique: vi.fn(async () => ({
+          runId: "run-1", stepId: "step", status: "RUNNING", attempts: 1,
         })),
+        updateMany,
       },
     };
     const store = new PostgresRuntimeExecutionStore(db as never, "tenant-a");
     await store.save({
       idempotencyKey: "key-1", runId: "run-1", stepId: "step",
-      status: "FAILED", attempts: 3, errorClass: "TERMINAL",
-      error: "FORBIDDEN_POLICY",
+      status: "SUCCEEDED", attempts: 1, evidenceId: "proof",
     });
-    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({
-      create: expect.objectContaining({ attempts: 3, errorClass: "TERMINAL" }),
-      update: expect.objectContaining({ attempts: 3, errorClass: "TERMINAL" }),
+    expect(updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        idempotencyKey: "key-1", runId: "run-1",
+        stepId: "step", status: "RUNNING", attempts: 1,
+      }),
+      data: expect.objectContaining({ status: "SUCCEEDED", evidenceId: "proof" }),
     }));
-    await expect(store.load("key-1")).resolves.toEqual({
+  });
+
+  it("refuses stale execution writes", async () => {
+    const db = {
+      workflowRunRecord: { findFirst: vi.fn(async () => ({ id: "run-1" })) },
+      workflowExecutionRecord: {
+        findUnique: vi.fn(async () => ({
+          runId: "run-1", stepId: "step", status: "RUNNING", attempts: 1,
+        })),
+        updateMany: vi.fn(async () => ({ count: 0 })),
+      },
+    };
+    const store = new PostgresRuntimeExecutionStore(db as never, "tenant-a");
+    await expect(store.save({
       idempotencyKey: "key-1", runId: "run-1", stepId: "step",
-      status: "FAILED", attempts: 3, errorClass: "TERMINAL",
-      error: "FORBIDDEN_POLICY", evidenceId: undefined,
-    });
+      status: "SUCCEEDED", attempts: 1, evidenceId: "proof",
+    })).rejects.toThrow("WORKFLOW_SCOPE_EXECUTION_STALE_WRITE");
+  });
+
+  it("refuses terminal execution overwrite", async () => {
+    const updateMany = vi.fn();
+    const db = {
+      workflowRunRecord: { findFirst: vi.fn(async () => ({ id: "run-1" })) },
+      workflowExecutionRecord: {
+        findUnique: vi.fn(async () => ({
+          runId: "run-1", stepId: "step", status: "SUCCEEDED", attempts: 1,
+        })),
+        updateMany,
+      },
+    };
+    const store = new PostgresRuntimeExecutionStore(db as never, "tenant-a");
+    await expect(store.save({
+      idempotencyKey: "key-1", runId: "run-1", stepId: "step",
+      status: "RUNNING", attempts: 2,
+    })).rejects.toThrow("WORKFLOW_SCOPE_EXECUTION_TERMINAL_IMMUTABLE");
+    expect(updateMany).not.toHaveBeenCalled();
   });
 
 });
