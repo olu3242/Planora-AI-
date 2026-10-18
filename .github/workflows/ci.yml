@@ -21,10 +21,10 @@ jobs:
           npm audit --json > dist/security-audit/npm-audit.json || true
           npm audit --omit=dev --json > dist/security-audit/npm-audit-production.json || true
           if npm audit --omit=dev --audit-level=moderate > dist/security-audit/production-gate.txt 2>&1; then
-            printf 'production_audit_exit=0\\n' > dist/security-audit/gate-status.txt
+            printf 'production_audit_exit=0\n' > dist/security-audit/gate-status.txt
           else
             status=$?
-            printf 'production_audit_exit=%s\\n' "$status" > dist/security-audit/gate-status.txt
+            printf 'production_audit_exit=%s\n' "$status" > dist/security-audit/gate-status.txt
           fi
           npm audit fix --dry-run --json > dist/security-audit/fix-dry-run.json 2>&1 || true
           npm ls --omit=dev --all > dist/security-audit/production-dependency-tree.txt 2>&1 || true
