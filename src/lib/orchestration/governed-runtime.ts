@@ -1,3 +1,5 @@
+import { claimReadyWorkflowRun } from "./postgres-run-claim";
+import type { WorkflowClaimDatabase } from "./postgres-run-claim";
 import { assertExecutionBoundary, validateGovernedRunEnvelope } from "./catalog-contract";
 import type { CatalogScenarioContract, GovernedRunEnvelope } from "./catalog-contract";
 import { executeReadySteps } from "./runtime";
@@ -18,6 +20,8 @@ export async function executeGovernedWorkflow(input: {
   runs: WorkflowRunStore;
   executions: RuntimeExecutionStore;
   registry: RuntimeRegistry;
+  /** Optional atomic DB claim; requires the run store to share the same database. */
+  claimDb?: WorkflowClaimDatabase;
   authorize: (input: {
     envelope: GovernedRunEnvelope;
     scenario: CatalogScenarioContract;
@@ -61,5 +65,19 @@ export async function executeGovernedWorkflow(input: {
     scenario,
     approvalEvidenceId: input.approvalEvidenceId,
   });
+  if (input.claimDb) {
+    // Claim only after the core policy check. A losing worker never invokes handlers.
+    // The run store must persist to the same WorkflowRunRecord row. The existing
+    // runner is not crash-safe; this does not create a renewable lease.
+    if (existing.status !== "READY") {
+      throw new Error("WORKFLOW_SCOPE_CLAIM_REQUIRES_READY");
+    }
+    await claimReadyWorkflowRun(input.claimDb, {
+      organizationId: envelope.organizationId,
+      runId: envelope.runId,
+      definitionId: envelope.workflowDefinitionId,
+      definitionVersion: envelope.workflowDefinitionVersion,
+    });
+  }
   return executeReadySteps(definition, envelope.runId, input.runs, input.executions, input.registry);
 }
