@@ -72,11 +72,14 @@ jobs:
           # Evaluate npm's non-forced advisory remediation on the isolated
           # lockfile, without downgrading application dependencies or bypassing
           # the original security gate.
-          if npm audit fix --package-lock-only --ignore-scripts > dist/remediation/alternate/override-lock.log 2>&1; then override_status=0; else override_status=$?; fi
-          printf 'alternate_override_lock_exit=%s\n' "$override_status" >> dist/remediation/alternate/dependency-operations-status.txt
+          if npm audit fix --package-lock-only --ignore-scripts > dist/remediation/alternate/override-lock.log 2>&1; then audit_fix_status=0; else audit_fix_status=$?; fi
+          # npm audit fix may return nonzero for unresolved advisories even if
+          # it successfully writes a usable lockfile. Keep its exit code as
+          # evidence, but independently verify lockfile consistency via npm ci.
+          printf 'alternate_audit_fix_exit=%s\n' "$audit_fix_status" >> dist/remediation/alternate/dependency-operations-status.txt
           # A lockfile-only update does not update installed node_modules.
           # Reinstall from the candidate lockfile before running all gates.
-          if [ "$override_status" -eq 0 ] && npm ci --ignore-scripts > dist/remediation/alternate/override-clean-install.log 2>&1; then
+          if npm ci --ignore-scripts > dist/remediation/alternate/override-clean-install.log 2>&1; then
             clean_install_status=0
           else
             clean_install_status=1
@@ -240,7 +243,7 @@ jobs:
           cat dist/remediation/alternate/next-script-status.txt >> "$GITHUB_STEP_SUMMARY"
           # Evaluate promotion only after all evidence, including the negative
           # control, exists. A passing audit alone never approves migration.
-          if [ "$uninstall_status" -eq 0 ] && [ "$install_status" -eq 0 ] && [ "$override_status" -eq 0 ] && [ "$clean_install_status" -eq 0 ] && [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$build_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'next_plugin_pin_verified=true' dist/remediation/alternate/plugin-version-status.txt && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'next_script_negative_control=DETECTED' dist/remediation/alternate/next-script-status.txt && grep -qx 'framework_lint_equivalence=requires_review' dist/remediation/alternate/coverage-status.txt && grep -qx 'next_inline_rule_mapping=known_directives_only' dist/remediation/alternate/next-rule-mapping-status.txt; then
+          if [ "$uninstall_status" -eq 0 ] && [ "$install_status" -eq 0 ] && [ "$clean_install_status" -eq 0 ] && [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$build_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'next_plugin_pin_verified=true' dist/remediation/alternate/plugin-version-status.txt && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'next_script_negative_control=DETECTED' dist/remediation/alternate/next-script-status.txt && grep -qx 'framework_lint_equivalence=requires_review' dist/remediation/alternate/coverage-status.txt && grep -qx 'next_inline_rule_mapping=known_directives_only' dist/remediation/alternate/next-rule-mapping-status.txt; then
             echo 'promotion_readiness=eligible_for_manual_framework_review' > dist/remediation/alternate/promotion-status.txt
           else
             echo 'promotion_readiness=blocked' > dist/remediation/alternate/promotion-status.txt
