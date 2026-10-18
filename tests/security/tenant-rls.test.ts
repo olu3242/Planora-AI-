@@ -76,11 +76,21 @@ describe("forced PostgreSQL tenant policies using a non-owner runtime role", () 
     await expect(withTenantSession(runtime, tokenA, tx => tx.user.findMany({ take: 1 }))).rejects.toThrow();
   });
   it("loads forecast comments without reading protected User records", async () => {
-    const version = await owner.forecastVersion.findFirst({
+    // Create an isolated forecast version when the seed lacks one. Do not skip
+    // this security regression merely because fixture coverage changes.
+    let version = await owner.forecastVersion.findFirst({
       where: { forecast: { organizationId: tenantA } },
       select: { id: true },
     });
-    if (!version) return;
+    if (!version) {
+      const forecast = await owner.forecast.create({
+        data: { organizationId: tenantA, code: `RLS-${randomUUID()}`, name: "RLS comment hydration regression" },
+      });
+      version = await owner.forecastVersion.create({
+        data: { forecastId: forecast.id, version: 1 },
+        select: { id: true },
+      });
+    }
     await withTenantSession(runtime, tokenA, async tx => {
       const result = await tx.forecastVersion.findFirst({
         where: { id: version.id, forecast: { organizationId: tenantA } },
