@@ -307,6 +307,7 @@ jobs:
             cat dist/remediation/alternate/image-rule-status.txt
             cat dist/remediation/alternate/next-script-status.txt
             cat dist/remediation/alternate/migration-integrity.txt
+            cat dist/remediation/alternate/migration-apply-status.txt
             cat dist/remediation/alternate/promotion-status.txt
           } > dist/remediation/alternate/verification-provenance.txt
           # The experiment is evidence-only; it cannot pass or bypass the original candidate gate.
