@@ -1,6 +1,9 @@
 name: Dependency Remediation Candidate
 on:
   workflow_dispatch:
+  push:
+    branches: [work/bookkeeping-harmonization-b1-20261015]
+    paths: [.github/workflows/dependency-remediation-candidate.yml]
 jobs:
   candidate:
     runs-on: ubuntu-latest
