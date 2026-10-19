@@ -35,6 +35,8 @@ jobs:
         with: { node-version: 24, cache: npm }
       - run: node scripts/check-merge-conflicts.mjs
       - run: npm ci
+      - name: Verify vulnerable development dependencies stay outside production graph
+        run: node scripts/check-dev-dependency-boundary.mjs
       - name: Audit production dependency graph
         run: npm audit --omit=dev --audit-level=moderate
       - name: Audit complete dependency graph (release gate)
