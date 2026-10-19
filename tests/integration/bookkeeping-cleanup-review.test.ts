@@ -45,6 +45,8 @@ describe("bookkeeping cleanup PostgreSQL review", () => {
       action: "BOOKKEEPING.CLEANUP_REVIEW_DECIDED",
     } });
     expect(events).toBe(1);
+    const state = await getBookkeepingCleanupReviewState({ organizationId: f.org.id, role: "FPA_DIRECTOR" }, f.execution.id);
+    expect(state.findings[0].review.status).toBe("ACCEPT_FINDING");
   });
   it("rejects an ambiguous duplicate finding identity", async () => {
     const f = await fixture();
