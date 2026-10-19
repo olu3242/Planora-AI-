@@ -31,7 +31,7 @@ export function BookkeepingCleanupProposalForm() {
    if (!response.ok) { setError("Proposal was not accepted. Check the input or contact an administrator."); return; }
    const execution = body as { executionId?: string; duplicate?: boolean };
    setResult(execution.duplicate ? "Existing proposal returned." : "Proposal submitted.");
-   if (execution.executionId) router.push("/bookkeeping-cleanup/" + encodeURIComponent(execution.executionId));
+   if (execution.executionId) router.refresh();
   } catch { setError("Network error. Retry with the same request key to prevent duplicates."); }
   finally { setBusy(false); }
  }
