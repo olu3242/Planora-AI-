@@ -52,7 +52,8 @@ jobs:
           path: full-dependency-audit.json
           retention-days: 14
           if-no-files-found: warn
-      - name: Audit complete dependency graph (release gate)
-        run: npm audit --audit-level=moderate
       - run: npx playwright install --with-deps chromium
       - run: npm run certify
+      - name: Audit complete dependency graph (release gate)
+        if: ${{ !cancelled() }}
+        run: npm audit --audit-level=moderate
