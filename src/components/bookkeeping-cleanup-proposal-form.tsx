@@ -39,7 +39,7 @@ export function BookkeepingCleanupProposalForm() {
   <label>Batch identifier <input required maxLength={256} value={batchId} onChange={e => setBatchId(e.target.value)} /></label>
   <label>Transactions (JSON) <textarea required rows={8} spellCheck={false} value={raw} onChange={e => setRaw(e.target.value)} /></label>
   <button type="submit" disabled={busy || !batchId.trim()}>{busy ? "Submitting..." : "Analyze transactions"}</button>
-  <button type="button" disabled={busy} onClick={() => { setKey(crypto.randomUUID()); setResult(""); }}>Start new request</button>
+  <button type="button" disabled={busy} onClick={() => { setKey(""); setResult(""); }}>Start new request</button>
   {error && <p role="alert">{error}</p>}{result && <p role="status">{result}</p>}
  </form>;
 }
