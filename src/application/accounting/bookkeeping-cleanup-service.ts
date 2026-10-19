@@ -19,6 +19,7 @@ export async function runBookkeepingCleanup(context: CleanupRunContext, transact
   if (transactions.some(item => item.organizationId !== context.organizationId)) {
     throw new Error("Cross-tenant bookkeeping cleanup is forbidden.");
   }
+  const identity = cleanupRequestIdentity(context.batchId, transactions);
   return executeRuntimeCommand(
     {
       organizationId: context.organizationId,
