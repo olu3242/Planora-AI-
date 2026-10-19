@@ -3,6 +3,7 @@ import { requireApiSession } from "@/auth/session";
 import { listBookkeepingCleanupRuns } from "@/application/accounting/bookkeeping-cleanup-review";
 import { correlationId } from "@/lib/request";
 import { errorResponse } from "@/lib/errors";
+import { parseCleanupPageLimit } from "@/domain/accounting/bookkeeping-cleanup-pagination";
 async function handleGET(request: Request) {
   const cid = correlationId(request);
   try {
