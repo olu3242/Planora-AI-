@@ -23,7 +23,7 @@ export function BookkeepingCleanupProposalForm() {
   try {
    const response = await fetch("/api/accounting/bookkeeping-cleanup", {
     method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ batchId, idempotencyKey: key, transactions }),
+    body: JSON.stringify({ batchId, idempotencyKey: key || undefined, transactions }),
    });
    const body: unknown = await response.json();
    if (!response.ok) { setError("Proposal was not accepted. Check the input or contact an administrator."); return; }
