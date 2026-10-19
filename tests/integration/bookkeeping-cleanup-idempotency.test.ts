@@ -31,4 +31,9 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   expect(second.duplicate).toBe(true);
   expect(second.executionId).toBe(first.executionId);
  });
+ it("rejects reuse of a key with a changed amount", async () => {
+  const { context, rows } = await setup();
+  await runBookkeepingCleanup(context, rows);
+  await expect(runBookkeepingCleanup(context, [{ ...rows[0], amountMinor: 2000 }])).rejects.toMatchObject({ code: "CONFLICT", status: 409 });
+ });
 });
