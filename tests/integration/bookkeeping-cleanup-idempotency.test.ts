@@ -93,6 +93,7 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   await runBookkeepingCleanup(context, rows);
   const after = await db.journalEntry.count({ where: { organizationId: context.organizationId } });
   expect(after).toBe(before);
+  expect(await db.auditEvent.count({ where: { organizationId: context.organizationId, action: "RUNTIME.EXECUTION_SUCCEEDED", entityType: "RuntimeExecution" } })).toBeGreaterThan(0);
   expect(await db.runtimeExecution.count({ where: { organizationId: context.organizationId, idempotencyKey: context.idempotencyKey, command: "BOOKKEEPING.CLEANUP_PROPOSE" } })).toBe(1);
  });
 });
