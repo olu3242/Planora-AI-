@@ -6,7 +6,7 @@ export function BookkeepingCleanupProposalForm() {
  const router = useRouter();
  const [batchId, setBatchId] = useState("");
  const [raw, setRaw] = useState("[]");
- const [key, setKey] = useState(() => crypto.randomUUID());
+ const [key, setKey] = useState("");
  const [busy, setBusy] = useState(false);
  const [error, setError] = useState("");
  const [result, setResult] = useState("");
