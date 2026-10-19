@@ -28,7 +28,7 @@ export function BookkeepingCleanupProposalForm() {
     body: JSON.stringify({ batchId, idempotencyKey: requestKey, transactions }),
    });
    const body: unknown = await response.json();
-   if (!response.ok) { setError("Proposal was not accepted. Check the input or contact an administrator."); return; }
+   if (!response.ok) { setError(response.status === 409 ? "This request key was already used with different data. Start a new request." : "Proposal was not accepted. Check the input or contact an administrator."); return; }
    const execution = body as { executionId?: string; duplicate?: boolean };
    setResult(execution.duplicate ? "Existing proposal returned." : "Proposal submitted.");
    if (execution.executionId) router.refresh();
