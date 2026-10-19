@@ -14,7 +14,7 @@ async function CleanupExecutionPage({ params }: { params: Promise<{ executionId:
   const metrics = cleanupReviewMetrics(run.findings.map(finding => ({ finding, status: finding.review.status })));
   return <><Link href="/bookkeeping-cleanup">Back to review queue</Link>
     <h1 className="page-heading">Cleanup batch {run.batchId}</h1>
-    <p className="subtle">{run.findings.length} findings · No accounting changes are applied by reviewing.</p>
+    <p className="subtle">{metrics.total} findings · {metrics.pending} pending · {metrics.accepted} accepted · {metrics.rejected} rejected · No accounting changes are applied by reviewing.</p>
     <section className="panel" aria-label="Cleanup findings">
       {run.findings.length ? run.findings.map((finding, index) => <article key={`${finding.transactionId}:${finding.kind}:${index}`}>
         <h2>{finding.kind.replaceAll("_", " ")}</h2>
