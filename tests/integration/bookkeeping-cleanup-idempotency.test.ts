@@ -24,6 +24,7 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   const stored = await db.runtimeExecution.findUniqueOrThrow({ where: { id: result.executionId } });
   expect(stored.organizationId).toBe(context.organizationId);
   expect(stored.command).toBe("BOOKKEEPING.CLEANUP_PROPOSE");
+  expect(stored.result).toMatchObject({ batchId: context.batchId, findings: expect.any(Array) });
  });
  it("replays the same request without creating another execution", async () => {
   const { context, rows } = await setup();
