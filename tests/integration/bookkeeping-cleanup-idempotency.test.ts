@@ -41,4 +41,9 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   await runBookkeepingCleanup(context, rows);
   await expect(runBookkeepingCleanup({ ...context, batchId: context.batchId + "-other" }, rows)).rejects.toMatchObject({ code: "CONFLICT", status: 409 });
  });
+ it("rejects cross-tenant input before runtime persistence", async () => {
+  const { context, rows } = await setup();
+  await expect(runBookkeepingCleanup(context, [{ ...rows[0], organizationId: randomUUID() }])).rejects.toThrow(/Cross-tenant/);
+  expect(await db.runtimeExecution.count({ where: { organizationId: context.organizationId, command: "BOOKKEEPING.CLEANUP_PROPOSE", idempotencyKey: context.idempotencyKey } })).toBe(0);
+ });
 });
