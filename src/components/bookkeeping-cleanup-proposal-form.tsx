@@ -37,7 +37,7 @@ export function BookkeepingCleanupProposalForm() {
  }
  return <form onSubmit={submit} className="panel">
   <h2>Submit cleanup proposal</h2>
-  <p className="subtle">JSON transaction array. This creates findings only; it does not change your ledger.</p>
+  <p className="subtle">JSON transaction array. This creates findings only; it does not change your ledger. Completed runs appear in the review queue for authorized reviewers.</p>
   <label>Batch identifier <input required maxLength={256} value={batchId} onChange={e => setBatchId(e.target.value)} /></label>
   <label>Transactions (JSON) <textarea required rows={8} spellCheck={false} value={raw} onChange={e => setRaw(e.target.value)} /></label>
   <button type="submit" disabled={busy || !batchId.trim()}>{busy ? "Submitting..." : "Analyze transactions"}</button>
