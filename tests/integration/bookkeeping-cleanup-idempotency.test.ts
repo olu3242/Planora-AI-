@@ -46,4 +46,8 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   await expect(runBookkeepingCleanup(context, [{ ...rows[0], organizationId: randomUUID() }])).rejects.toThrow(/Cross-tenant/);
   expect(await db.runtimeExecution.count({ where: { organizationId: context.organizationId, command: "BOOKKEEPING.CLEANUP_PROPOSE", idempotencyKey: context.idempotencyKey } })).toBe(0);
  });
+ it("rejects oversized batches before runtime persistence", async () => {
+  const { context, rows } = await setup();
+  await expect(runBookkeepingCleanup(context, Array.from({ length: 10001 }, (_, index) => ({ ...rows[0], id: String(index) })))).rejects.toThrow(/exceeds 10000/);
+ });
 });
