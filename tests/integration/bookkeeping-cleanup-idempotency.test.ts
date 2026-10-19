@@ -50,4 +50,11 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   const { context, rows } = await setup();
   await expect(runBookkeepingCleanup(context, Array.from({ length: 10001 }, (_, index) => ({ ...rows[0], id: String(index) })))).rejects.toThrow(/exceeds 10000/);
  });
+ it("isolates identical idempotency keys by organization", async () => {
+  const { context, rows } = await setup();
+  const foreign = await db.organization.findUniqueOrThrow({ where: { code: "HORIZON" } });
+  const first = await runBookkeepingCleanup(context, rows);
+  const second = await runBookkeepingCleanup({ ...context, organizationId: foreign.id }, rows.map(row => ({ ...row, organizationId: foreign.id })));
+  expect(second.executionId).not.toBe(first.executionId);
+ });
 });
