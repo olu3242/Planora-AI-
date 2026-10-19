@@ -57,4 +57,10 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   const second = await runBookkeepingCleanup({ ...context, organizationId: foreign.id }, rows.map(row => ({ ...row, organizationId: foreign.id })));
   expect(second.executionId).not.toBe(first.executionId);
  });
+ it("retains a deterministic input fingerprint", async () => {
+  const { context, rows } = await setup();
+  const result = await runBookkeepingCleanup(context, rows);
+  const execution = await db.runtimeExecution.findUniqueOrThrow({ where: { id: result.executionId } });
+  expect(execution.request).toMatchObject({ batchId: context.batchId, transactionCount: 1, inputFingerprint: expect.stringMatching(/^[a-f0-9]{64}$/) });
+ });
 });
