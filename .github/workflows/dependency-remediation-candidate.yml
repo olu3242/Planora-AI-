@@ -1,0 +1,463 @@
+name: Dependency Remediation Candidate
+on:
+  workflow_dispatch:
+  push:
+    branches: [work/bookkeeping-harmonization-b1-20261015]
+    paths: [.github/workflows/dependency-remediation-candidate.yml]
+  pull_request:
+    paths: [.github/workflows/dependency-remediation-candidate.yml]
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - name: Establish baseline
+        run: |
+          mkdir -p dist/remediation
+          npm ci
+          npm audit --json > dist/remediation/baseline-audit.json || true
+      - name: Resolve compatible dependency updates without forced downgrades
+        run: |
+          npm update --package-lock-only --ignore-scripts
+          npm install --package-lock-only --ignore-scripts
+          # Attempt npm-supported, non-forced advisory repairs on the candidate only.
+          # A nonzero audit-fix exit is recorded; the final audit remains fail-closed.
+          if npm audit fix --package-lock-only --ignore-scripts > dist/remediation/audit-fix-output.txt 2>&1; then
+            echo audit_fix_exit=0 > dist/remediation/audit-fix-status.txt
+          else
+            status=$?
+            echo "audit_fix_exit=$status" > dist/remediation/audit-fix-status.txt
+          fi
+          git diff -- package.json package-lock.json > dist/remediation/lockfile.patch
+          cp package-lock.json dist/remediation/package-lock.json
+          npm ci
+          npm audit --json > dist/remediation/candidate-audit.json || true
+          npm audit --omit=dev --json > dist/remediation/candidate-production-audit.json || true
+          npm audit --omit=dev --audit-level=moderate > dist/remediation/candidate-production-gate.txt 2>&1 || true
+          npm explain braces > dist/remediation/candidate-braces-explain.txt 2>&1 || true
+          npm explain micromatch > dist/remediation/candidate-micromatch-explain.txt 2>&1 || true
+          npm ls braces micromatch fast-glob @next/eslint-plugin-next eslint-config-next --all > dist/remediation/candidate-tree.txt 2>&1 || true
+          printf 'source_sha=%s\n' "$GITHUB_SHA" > dist/remediation/provenance.txt
+      - name: Check candidate compatibility
+        run: |
+          npm run lint
+          npm run typecheck
+      - name: Investigate supported ESLint alternative without modifying candidate
+        if: always()
+        run: |
+          npm view @next/eslint-plugin-next version dependencies --json > dist/remediation/next-eslint-upstream.json 2>&1 || true
+          npm view braces version --json > dist/remediation/braces-upstream.json 2>&1 || true
+          npm view micromatch version --json > dist/remediation/micromatch-upstream.json 2>&1 || true
+          npm view fast-glob version --json > dist/remediation/fast-glob-upstream.json 2>&1 || true
+          npm view eslint-config-next version dependencies --json > dist/remediation/eslint-config-next-upstream.json 2>&1 || true
+          npm view @next/eslint-plugin-next@16.4.2 dependencies --json > dist/remediation/installed-next-eslint-dependencies.json 2>&1 || true
+          npm view fast-glob@3.3.1 dependencies --json > dist/remediation/installed-fast-glob-dependencies.json 2>&1 || true
+          npm view micromatch@4.0.8 dependencies --json > dist/remediation/installed-micromatch-dependencies.json 2>&1 || true
+      - name: Enforce candidate security gate
+        run: npm audit --audit-level=moderate
+      - name: Evaluate alternate ESLint stack in isolated candidate
+        if: always()
+        run: |
+          mkdir -p dist/remediation/alternate
+          # This experiment must not replace the existing production lint configuration.
+          cp package.json dist/remediation/alternate/original-package.json
+          cp package-lock.json dist/remediation/alternate/original-package-lock.json
+          cp eslint.config.mjs dist/remediation/alternate/original-eslint.config.mjs
+          if npm uninstall --save-dev eslint-config-next --ignore-scripts > dist/remediation/alternate/uninstall.log 2>&1; then uninstall_status=0; else uninstall_status=$?; fi
+          if npm install --save-dev --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y @next/eslint-plugin-next@16.4.2 > dist/remediation/alternate/install.log 2>&1; then install_status=0; else install_status=$?; fi
+          printf 'alternate_uninstall_exit=%s\nalternate_install_exit=%s\n' "$uninstall_status" "$install_status" > dist/remediation/alternate/dependency-operations-status.txt
+          # The braces-only override did not clear the candidate audit.
+          # Evaluate npm's non-forced advisory remediation on the isolated
+          # lockfile, without downgrading application dependencies or bypassing
+          # the original security gate.
+          if npm audit fix --package-lock-only --ignore-scripts > dist/remediation/alternate/override-lock.log 2>&1; then audit_fix_status=0; else audit_fix_status=$?; fi
+          # npm audit fix may return nonzero for unresolved advisories even if
+          # it successfully writes a usable lockfile. Keep its exit code as
+          # evidence, but independently verify lockfile consistency via npm ci.
+          printf 'alternate_audit_fix_exit=%s\n' "$audit_fix_status" >> dist/remediation/alternate/dependency-operations-status.txt
+          # A lockfile-only update does not update installed node_modules.
+          # Reinstall from the candidate lockfile before running all gates.
+          if npm ci --ignore-scripts > dist/remediation/alternate/override-clean-install.log 2>&1; then
+            clean_install_status=0
+          else
+            clean_install_status=1
+          fi
+          printf 'alternate_clean_install_exit=%s\n' "$clean_install_status" >> dist/remediation/alternate/dependency-operations-status.txt
+          cat > eslint.config.mjs <<'EOF'
+          import { defineConfig, globalIgnores } from "eslint/config";
+          import tseslint from "typescript-eslint";
+          import react from "eslint-plugin-react";
+          import reactHooks from "eslint-plugin-react-hooks";
+          import jsxA11y from "eslint-plugin-jsx-a11y";
+          import nextPlugin from "@next/eslint-plugin-next";
+          export default defineConfig([
+            ...tseslint.configs.recommended,
+            react.configs.flat.recommended,
+            react.configs.flat["jsx-runtime"],
+            reactHooks.configs.flat.recommended,
+            jsxA11y.flatConfigs.recommended,
+            {
+              // Use the actual Next.js rules rather than a hand-written shim.
+              plugins: { "@next/next": nextPlugin },
+              rules: {
+                ...nextPlugin.configs.recommended.rules,
+                ...nextPlugin.configs["core-web-vitals"].rules,
+                "jsx-a11y/no-autofocus": "off",
+                "jsx-a11y/media-has-caption": "off",
+              },
+            },
+            globalIgnores([".next/**", "coverage/**", "playwright-report/**", "test-results/**", "next-env.d.ts"]),
+          ]);
+          EOF
+          if npm run lint > dist/remediation/alternate/lint.log 2>&1; then lint_status=0; else lint_status=$?; fi
+          if npm run typecheck > dist/remediation/alternate/typecheck.log 2>&1; then typecheck_status=0; else typecheck_status=$?; fi
+          # Exercise application unit tests with the alternate dependency graph.
+          # Passing lint and audit alone is insufficient for promotion.
+          if npm run test:unit > dist/remediation/alternate/unit.log 2>&1; then unit_status=0; else unit_status=$?; fi
+          # Validate accounting invariants and financial calculation behavior
+          # against the alternate dependency graph, beyond generic unit tests.
+          if npm run test:financial > dist/remediation/alternate/financial.log 2>&1; then financial_status=0; else financial_status=$?; fi
+          if APP_ENV=test npm run test:integration > dist/remediation/alternate/integration.log 2>&1; then integration_status=0; else integration_status=$?; fi
+          # Validate that the Next.js production build survives dependency
+          # replacement; lint/unit tests alone do not exercise compilation.
+          if CI=1 NEXT_TELEMETRY_DISABLED=1 npm run build > dist/remediation/alternate/build.log 2>&1; then build_status=0; else build_status=$?; fi
+          npm audit --json > dist/remediation/alternate/audit.json 2>&1 || true
+          # Capture the exact installed vulnerable chain after clean install.
+          # Do not infer remediation from package-lock-only changes.
+          npm ls braces micromatch fast-glob @next/eslint-plugin-next --all --json > dist/remediation/alternate/dependency-tree.json 2>&1 || true
+          # Record whether the audited plugin matches the requested pinned
+          # release; npm's resolver may otherwise mask a version mismatch.
+          node --input-type=module <<'NODE' > dist/remediation/alternate/plugin-version-status.txt
+          import fs from 'node:fs';
+          const manifest = JSON.parse(fs.readFileSync('node_modules/@next/eslint-plugin-next/package.json', 'utf8'));
+          const actual = manifest.version;
+          process.stdout.write('next_plugin_version=' + actual + '\n');
+          process.stdout.write('next_plugin_pin_verified=' + String(actual === '16.4.2') + '\n');
+          NODE
+          node --input-type=module <<'NODE' > dist/remediation/alternate/audit-findings.json
+          import fs from 'node:fs';
+          const raw = fs.readFileSync('dist/remediation/alternate/audit.json', 'utf8');
+          let audit;
+          try { audit = JSON.parse(raw); } catch { audit = { parse_error: true }; }
+          const names = ['braces', 'micromatch', 'fast-glob', '@next/eslint-plugin-next'];
+          const findings = Object.fromEntries(names.map(name => [name, audit.vulnerabilities?.[name] ? { severity: audit.vulnerabilities[name].severity, range: audit.vulnerabilities[name].range, fixAvailable: audit.vulnerabilities[name].fixAvailable } : null]));
+          process.stdout.write(JSON.stringify({ findings, totals: audit.metadata?.vulnerabilities ?? null, parse_error: Boolean(audit.parse_error) }, null, 2) + '\n');
+          NODE
+          if npm audit --audit-level=moderate > dist/remediation/alternate/audit-gate.log 2>&1; then audit_status=0; else audit_status=$?; fi
+          printf 'alternate_lint_exit=%s\nalternate_typecheck_exit=%s\nalternate_unit_exit=%s\nalternate_audit_exit=%s\n' "$lint_status" "$typecheck_status" "$unit_status" "$audit_status" | tee dist/remediation/alternate/gate-status.txt
+          printf 'alternate_financial_exit=%s\nalternate_integration_exit=%s\n' "$financial_status" "$integration_status" >> dist/remediation/alternate/gate-status.txt
+          printf 'alternate_build_exit=%s\n' "$build_status" >> dist/remediation/alternate/gate-status.txt
+          echo '### Alternate ESLint candidate validation' >> "$GITHUB_STEP_SUMMARY"
+          cat dist/remediation/alternate/gate-status.txt >> "$GITHUB_STEP_SUMMARY"
+          echo 'Alternate ESLint lint output (last 30 lines):'
+          tail -n 30 dist/remediation/alternate/lint.log
+          echo 'Alternate ESLint audit output (last 30 lines):'
+          tail -n 30 dist/remediation/alternate/audit-gate.log
+          cp package.json dist/remediation/alternate/package.json
+          cp package-lock.json dist/remediation/alternate/package-lock.json
+          cp eslint.config.mjs dist/remediation/alternate/eslint.config.mjs
+          # Record whether the experimental config replaces any framework rule
+          # with a no-op. A zero-exit lint run is not equivalent to framework
+          # coverage when this marker is present.
+          if grep -q 'no-img-element.*create: () => ({})' dist/remediation/alternate/eslint.config.mjs; then
+            printf 'framework_lint_equivalence=unverified_noop_rule\n' > dist/remediation/alternate/coverage-status.txt
+            echo 'WARNING: alternate lint includes a no-op Next.js rule; do not promote as equivalent.' >> "$GITHUB_STEP_SUMMARY"
+          elif grep -q 'nextPlugin.configs.recommended.rules' dist/remediation/alternate/eslint.config.mjs && grep -q 'nextPlugin.configs\["core-web-vitals"\].rules' dist/remediation/alternate/eslint.config.mjs; then
+            printf 'framework_lint_equivalence=requires_review\n' > dist/remediation/alternate/coverage-status.txt
+          else
+            printf 'framework_lint_equivalence=missing_next_rules\n' > dist/remediation/alternate/coverage-status.txt
+          fi
+          # Audit the scope of framework-specific lint suppressions before
+          # considering migration. Keep the existing rules and source unchanged.
+          # This counts source files containing inline Next.js lint directives;
+          # those directives need real replacement rules, never dummy handlers.
+          git grep -n -E 'eslint-disable(-next-line|-line)?[[:space:]]+@next/next/' -- ':!package-lock.json' > dist/remediation/alternate/next-inline-directives.txt || true
+          printf 'next_inline_directives=%s\n' "$(wc -l < dist/remediation/alternate/next-inline-directives.txt | tr -d ' ')" > dist/remediation/alternate/next-inline-summary.txt
+          cat dist/remediation/alternate/next-inline-summary.txt >> "$GITHUB_STEP_SUMMARY"
+          # Compare framework-specific inline directives with rules implemented
+          # by the alternate config. Unknown directives remain a migration blocker.
+          if grep -E '@next/next/' dist/remediation/alternate/next-inline-directives.txt | grep -Ev '@next/next/no-img-element' > dist/remediation/alternate/unmapped-next-directives.txt; then
+            echo 'next_inline_rule_mapping=unverified' > dist/remediation/alternate/next-rule-mapping-status.txt
+          else
+            echo 'next_inline_rule_mapping=known_directives_only' > dist/remediation/alternate/next-rule-mapping-status.txt
+          fi
+          cat dist/remediation/alternate/next-rule-mapping-status.txt >> "$GITHUB_STEP_SUMMARY"
+          # Verify the alternate graph does not silently omit framework checks.
+          # Inspect whether the official Next.js plugin is installed and its
+          # recommended rule sets are configured; parity remains review-gated.
+          node --input-type=module <<'NODE' > dist/remediation/alternate/lint-parity.json
+          import fs from 'node:fs';
+          const config = fs.readFileSync('dist/remediation/alternate/eslint.config.mjs', 'utf8');
+          const result = {
+            nextPluginLoaded: config.includes('from "@next/eslint-plugin-next"'),
+            nextRecommendedRulesLoaded: config.includes('nextPlugin.configs.recommended.rules') && config.includes('nextPlugin.configs["core-web-vitals"].rules'),
+            noOpNextRule: config.includes('create: () => ({})'),
+            conclusion: 'requires_manual_framework_parity_review'
+          };
+          process.stdout.write(JSON.stringify(result, null, 2) + String.fromCharCode(10));
+          NODE
+          # Require a negative-control lint fixture to prove that the
+          # replacement image rule reports an actual violation. This does not
+          # establish full Next.js framework-rule parity.
+          # Place the fixture outside dist/, which is excluded from normal lint
+          # traversal. Remove it after evaluation, even when lint exits nonzero.
+          fixture=.planora-image-lint-negative-control.tsx
+          cat > "$fixture" <<'EOF'
+          export function RawImageNegativeControl() {
+            return <img src="/negative-control.png" alt="negative control" />;
+          }
+          EOF
+          if npx eslint --no-ignore "$fixture" > dist/remediation/alternate/image-rule-negative-control.log 2>&1; then
+            echo 'image_rule_negative_control=FAILED_TO_DETECT' > dist/remediation/alternate/image-rule-status.txt
+          elif grep -Eq '^[^[:space:]].*[@]next/next/no-img-element|[0-9]+:[0-9]+[[:space:]]+error[[:space:]].*[@]next/next/no-img-element' dist/remediation/alternate/image-rule-negative-control.log; then
+            echo 'image_rule_negative_control=DETECTED' > dist/remediation/alternate/image-rule-status.txt
+          else
+            echo 'image_rule_negative_control=INCONCLUSIVE' > dist/remediation/alternate/image-rule-status.txt
+          fi
+          rm -f "$fixture"
+          cat dist/remediation/alternate/image-rule-status.txt >> "$GITHUB_STEP_SUMMARY"
+          # Capture an explicit negative-control pass/fail exit code, rather
+          # than relying on a human-readable summary alone.
+          if grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt; then
+            echo 'negative_control_exit=0' >> dist/remediation/alternate/gate-status.txt
+          else
+            echo 'negative_control_exit=1' >> dist/remediation/alternate/gate-status.txt
+          fi
+          # The official Next.js plugin must actively reject a framework
+          # violation; a configured plugin name alone is insufficient.
+          cat > .planora-next-script-negative-control.tsx <<'EOF'
+          export function ScriptNegativeControl() {
+            return <script src="/unsafe-script.js" />;
+          }
+          EOF
+          if npx eslint --no-ignore .planora-next-script-negative-control.tsx > dist/remediation/alternate/next-script-negative-control.log 2>&1; then
+            echo 'next_script_negative_control=FAILED_TO_DETECT' > dist/remediation/alternate/next-script-status.txt
+          elif grep -Eq '[0-9]+:[0-9]+[[:space:]]+error.*@next/next/no-sync-scripts' dist/remediation/alternate/next-script-negative-control.log; then
+            echo 'next_script_negative_control=DETECTED' > dist/remediation/alternate/next-script-status.txt
+          else
+            echo 'next_script_negative_control=INCONCLUSIVE' > dist/remediation/alternate/next-script-status.txt
+          fi
+          rm -f .planora-next-script-negative-control.tsx
+          cat dist/remediation/alternate/next-script-status.txt >> "$GITHUB_STEP_SUMMARY"
+          # Evaluate promotion only after all evidence, including the negative
+          # control, exists. A passing audit alone never approves migration.
+          if [ "$uninstall_status" -eq 0 ] && [ "$install_status" -eq 0 ] && [ "$clean_install_status" -eq 0 ] && [ "$lint_status" -eq 0 ] && [ "$typecheck_status" -eq 0 ] && [ "$unit_status" -eq 0 ] && [ "$financial_status" -eq 0 ] && [ "$integration_status" -eq 0 ] && [ "$build_status" -eq 0 ] && [ "$audit_status" -eq 0 ] && grep -qx 'next_plugin_pin_verified=true' dist/remediation/alternate/plugin-version-status.txt && grep -qx 'image_rule_negative_control=DETECTED' dist/remediation/alternate/image-rule-status.txt && grep -qx 'next_script_negative_control=DETECTED' dist/remediation/alternate/next-script-status.txt && grep -qx 'framework_lint_equivalence=requires_review' dist/remediation/alternate/coverage-status.txt && grep -qx 'next_inline_rule_mapping=known_directives_only' dist/remediation/alternate/next-rule-mapping-status.txt; then
+            echo 'promotion_readiness=eligible_for_manual_framework_review' > dist/remediation/alternate/promotion-status.txt
+          else
+            echo 'promotion_readiness=blocked' > dist/remediation/alternate/promotion-status.txt
+          fi
+          cat dist/remediation/alternate/promotion-status.txt >> "$GITHUB_STEP_SUMMARY"
+          # Publish the complete candidate verdict, including negative-control
+          # and financial/integration outcomes, as a durable artifact.
+          printf 'source_sha=%s\n' "$GITHUB_SHA" > dist/remediation/alternate/verification-provenance.txt
+          printf 'candidate_experiment_only=true\n' >> dist/remediation/alternate/verification-provenance.txt
+          printf 'release_certified=false\n' >> dist/remediation/alternate/verification-provenance.txt
+          cat dist/remediation/alternate/gate-status.txt dist/remediation/alternate/dependency-operations-status.txt dist/remediation/alternate/plugin-version-status.txt dist/remediation/alternate/coverage-status.txt dist/remediation/alternate/next-rule-mapping-status.txt dist/remediation/alternate/image-rule-status.txt dist/remediation/alternate/next-script-status.txt dist/remediation/alternate/migration-integrity.txt dist/remediation/alternate/migration-apply-status.txt dist/remediation/alternate/promotion-status.txt >> dist/remediation/alternate/verification-provenance.txt
+          # Provide an actionable, fail-closed summary for reviewers.
+          # Never conflate a zero-vulnerability alternate audit with a passing
+          # original security gate or completed release certification.
+          echo '### Candidate release decision' >> "$GITHUB_STEP_SUMMARY"
+          cat dist/remediation/alternate/promotion-status.txt >> "$GITHUB_STEP_SUMMARY"
+          echo 'Original security audit and exact-SHA certification must pass independently.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No production dependency changes are made by this workflow.' >> "$GITHUB_STEP_SUMMARY"
+          # Preserve the complete, reproducible migration diff for a separate
+          # reviewed source change. Never auto-promote this experimental graph.
+          git diff -- package.json package-lock.json eslint.config.mjs > dist/remediation/alternate/migration.patch
+          sha256sum dist/remediation/alternate/package.json dist/remediation/alternate/package-lock.json dist/remediation/alternate/eslint.config.mjs dist/remediation/alternate/migration.patch > dist/remediation/alternate/migration-sha256.txt
+          echo 'migration_patch_requires_review=true' >> dist/remediation/alternate/verification-provenance.txt
+          # Ensure the exported migration patch actually contains the proposed
+          # manifest and lockfile edits; a checksum of an empty patch is not
+          # evidence of a reproducible dependency migration.
+          if [ -s dist/remediation/alternate/migration.patch ] && grep -q 'diff --git a/package.json b/package.json' dist/remediation/alternate/migration.patch && grep -q 'diff --git a/package-lock.json b/package-lock.json' dist/remediation/alternate/migration.patch; then
+            echo 'migration_patch_integrity=manifest_and_lockfile_present' > dist/remediation/alternate/migration-integrity.txt
+          else
+            echo 'migration_patch_integrity=incomplete' > dist/remediation/alternate/migration-integrity.txt
+          fi
+          cat dist/remediation/alternate/migration-integrity.txt >> "$GITHUB_STEP_SUMMARY"
+          # A migration patch is useful only if it is reversible against the
+          # candidate worktree. Validate its syntax and reverse applicability.
+          if git apply --check --reverse dist/remediation/alternate/migration.patch; then
+            echo 'migration_patch_reversible=true' > dist/remediation/alternate/migration-apply-status.txt
+          else
+            echo 'migration_patch_reversible=false' > dist/remediation/alternate/migration-apply-status.txt
+            echo 'migration_patch_integrity=incomplete' > dist/remediation/alternate/migration-integrity.txt
+          fi
+          cat dist/remediation/alternate/migration-apply-status.txt >> "$GITHUB_STEP_SUMMARY"
+          # Reject an incomplete migration artifact even if earlier checks
+          # happened to pass; do not promote a partial lockfile change.
+          if ! grep -qx 'migration_patch_integrity=manifest_and_lockfile_present' dist/remediation/alternate/migration-integrity.txt; then
+            echo 'promotion_readiness=blocked' > dist/remediation/alternate/promotion-status.txt
+            echo 'migration_integrity_exit=1' >> dist/remediation/alternate/gate-status.txt
+          else
+            echo 'migration_integrity_exit=0' >> dist/remediation/alternate/gate-status.txt
+          fi
+          cat dist/remediation/alternate/promotion-status.txt >> "$GITHUB_STEP_SUMMARY"
+          # Rebuild final provenance only after migration-integrity enforcement.
+          # Earlier summaries may predate this final promotion verdict.
+          # Preserve a machine-readable digest of all evidence files for review.
+          find dist/remediation/alternate -type f ! -name 'verification-provenance.txt' -print0 | sort -z | xargs -0 sha256sum > dist/remediation/alternate/evidence-sha256.txt
+          {
+            printf 'source_sha=%s\n' "$GITHUB_SHA"
+            printf 'candidate_experiment_only=true\nrelease_certified=false\n'
+            cat dist/remediation/alternate/gate-status.txt
+            cat dist/remediation/alternate/dependency-operations-status.txt
+            cat dist/remediation/alternate/plugin-version-status.txt
+            cat dist/remediation/alternate/coverage-status.txt
+            cat dist/remediation/alternate/next-rule-mapping-status.txt
+            cat dist/remediation/alternate/image-rule-status.txt
+            cat dist/remediation/alternate/next-script-status.txt
+            cat dist/remediation/alternate/migration-integrity.txt
+            cat dist/remediation/alternate/migration-apply-status.txt
+            printf 'evidence_sha256_manifest=evidence-sha256.txt\n'
+            cat dist/remediation/alternate/promotion-status.txt
+          } > dist/remediation/alternate/verification-provenance.txt
+          # The experiment is evidence-only; it cannot pass or bypass the original candidate gate.
+      - name: Diagnose Next.js lint dependency isolation
+        if: always()
+        run: |
+          mkdir -p dist/remediation/no-next-plugin
+          scratch="$(mktemp -d)"
+          git show HEAD:package.json > "$scratch/package.json"
+          git show HEAD:package-lock.json > "$scratch/package-lock.json"
+          # Diagnostic only: determine whether the Next.js lint packages
+          # account for the remaining advisories. Never use this reduced
+          # graph for application certification or candidate promotion.
+          if (cd "$scratch" && npm uninstall --package-lock-only --ignore-scripts eslint-config-next @next/eslint-plugin-next > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/uninstall.log" 2>&1); then
+            echo 'isolation_uninstall_exit=0' > dist/remediation/no-next-plugin/status.txt
+          else
+            echo 'isolation_uninstall_exit=1' > dist/remediation/no-next-plugin/status.txt
+          fi
+          (cd "$scratch" && npm audit --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/audit.json") || true
+          # Test a replacement ESLint plugin set against the isolated graph.
+          # This is an audit-only feasibility test, not Next.js rule parity.
+          if (cd "$scratch" && npm install --save-dev --package-lock-only --ignore-scripts typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-install.log" 2>&1); then
+            echo 'replacement_install_exit=0' >> dist/remediation/no-next-plugin/status.txt
+          else
+            echo 'replacement_install_exit=1' >> dist/remediation/no-next-plugin/status.txt
+          fi
+          (cd "$scratch" && npm audit --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-audit.json") || true
+          # Verify the candidate lockfile reproduces a clean installation;
+          # a lockfile-only zero-vulnerability audit is insufficient.
+          if (cd "$scratch" && npm ci --ignore-scripts > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-ci.log" 2>&1); then
+            echo 'replacement_clean_install_exit=0' >> dist/remediation/no-next-plugin/status.txt
+          else
+            echo 'replacement_clean_install_exit=1' >> dist/remediation/no-next-plugin/status.txt
+          fi
+          (cd "$scratch" && npm ls --depth=0 --json > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-tree.json" 2> "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/replacement-tree-error.log") || true
+          # Exercise the secure replacement lint engine against a known-bad
+          # React Hooks fixture. This tests rule execution, not Next.js parity.
+          cat > "$scratch/eslint.config.mjs" <<'EOF'
+          import tseslint from 'typescript-eslint';
+          import reactHooks from 'eslint-plugin-react-hooks';
+          // Preserve the existing inline Next.js rule directive without pulling
+          // the vulnerable Next lint dependency chain into this experiment.
+          // This narrow local rule is NOT certified as Next.js rule parity.
+          const nextImageRule = {
+            meta: { type: 'problem', schema: [], messages: { avoidImg: 'Prefer next/image instead of a raw img element.' } },
+            create(context) {
+              return { JSXOpeningElement(node) {
+                if (node.name.type === 'JSXIdentifier' && node.name.name === 'img') {
+                  context.report({ node, messageId: 'avoidImg' });
+                }
+              } };
+            },
+          };
+          export default [
+            ...tseslint.configs.recommended,
+            reactHooks.configs.flat.recommended,
+            { plugins: { '@next/next': { rules: { 'no-img-element': nextImageRule } } } },
+            { rules: { '@next/next/no-img-element': 'warn' } },
+          ];
+          EOF
+          cat > "$scratch/invalid-hooks.tsx" <<'EOF'
+          import { useState } from 'react';
+          export function InvalidHooks({ enabled }: { enabled: boolean }) {
+            if (enabled) { useState(0); }
+            return null;
+          }
+          EOF
+          if (cd "$scratch" && ./node_modules/.bin/eslint invalid-hooks.tsx > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/hooks-negative-control.log" 2>&1); then
+            echo 'replacement_hooks_negative_control=NOT_DETECTED' >> dist/remediation/no-next-plugin/status.txt
+          else
+            if grep -q 'react-hooks/rules-of-hooks' dist/remediation/no-next-plugin/hooks-negative-control.log; then
+              echo 'replacement_hooks_negative_control=DETECTED' >> dist/remediation/no-next-plugin/status.txt
+            else
+              echo 'replacement_hooks_negative_control=INCONCLUSIVE' >> dist/remediation/no-next-plugin/status.txt
+            fi
+          fi
+          # Lint the real Planora source using the secure replacement graph,
+          # not merely a synthetic fixture. The scratch config intentionally
+          # excludes Next.js-specific rules pending explicit parity review.
+          if [ -x "$scratch/node_modules/.bin/eslint" ]; then
+            if (cd "$scratch" && ./node_modules/.bin/eslint --config eslint.config.mjs --no-warn-ignored --ignore-pattern "dist/**" --ignore-pattern ".next/**" --ignore-pattern "coverage/**" "$GITHUB_WORKSPACE" > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/application-lint.log" 2>&1); then
+              echo 'replacement_application_lint_exit=0' >> dist/remediation/no-next-plugin/status.txt
+            else
+              echo 'replacement_application_lint_exit=1' >> dist/remediation/no-next-plugin/status.txt
+            fi
+          else
+            echo 'replacement_application_lint_exit=127' >> dist/remediation/no-next-plugin/status.txt
+          fi
+          # Preserve a reproducible patch for an explicitly reviewed source
+          # migration. It is evidence, not an automatic production change.
+          git show HEAD:package.json > dist/remediation/no-next-plugin/original-package.json
+          git show HEAD:package-lock.json > dist/remediation/no-next-plugin/original-package-lock.json
+          cp "$scratch/package.json" dist/remediation/no-next-plugin/replacement-package.json
+          cp "$scratch/package-lock.json" dist/remediation/no-next-plugin/replacement-package-lock.json
+          diff -u --label a/package.json --label b/package.json dist/remediation/no-next-plugin/original-package.json dist/remediation/no-next-plugin/replacement-package.json > dist/remediation/no-next-plugin/manifest.diff || true
+          sha256sum dist/remediation/no-next-plugin/replacement-package.json dist/remediation/no-next-plugin/replacement-package-lock.json > dist/remediation/no-next-plugin/replacement-sha256.txt
+          # Fail closed on a stale or incomplete candidate lockfile: compare
+          # the lockfile's root manifest against the exported package manifest.
+          node --input-type=module <<'NODE' > dist/remediation/no-next-plugin/lockfile-consistency.json
+          import fs from 'node:fs';
+          const manifest = JSON.parse(fs.readFileSync('dist/remediation/no-next-plugin/replacement-package.json', 'utf8'));
+          const lock = JSON.parse(fs.readFileSync('dist/remediation/no-next-plugin/replacement-package-lock.json', 'utf8'));
+          const root = lock.packages?.[''] ?? {};
+          const same = (a, b) => JSON.stringify(Object.entries(a ?? {}).sort()) === JSON.stringify(Object.entries(b ?? {}).sort());
+          const dependenciesMatch = same(manifest.dependencies, root.dependencies);
+          const devDependenciesMatch = same(manifest.devDependencies, root.devDependencies);
+          const result = { dependencies_match: dependenciesMatch, dev_dependencies_match: devDependenciesMatch, lockfile_version: lock.lockfileVersion, consistent: dependenciesMatch && devDependenciesMatch };
+          process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+          NODE
+          node --input-type=module <<'NODE' > dist/remediation/no-next-plugin/summary.json
+          import fs from 'node:fs';
+          const path = 'dist/remediation/no-next-plugin/audit.json';
+          let report;
+          try { report = JSON.parse(fs.readFileSync(path, 'utf8')); } catch { report = null; }
+          const findings = report?.vulnerabilities ?? {};
+          const names = Object.keys(findings).sort();
+          const uninstallSucceeded = fs.readFileSync('dist/remediation/no-next-plugin/status.txt', 'utf8').includes('isolation_uninstall_exit=0');
+          const auditParseValid = Boolean(report?.metadata?.vulnerabilities);
+          const result = { diagnostic_only: true, isolation_valid: uninstallSucceeded && auditParseValid, isolation_uninstall_succeeded: uninstallSucceeded, audit_parse_valid: auditParseValid, severity_totals: report?.metadata?.vulnerabilities ?? null, vulnerable_packages: names, next_lint_chain_present: names.some(name => ['eslint-config-next', '@next/eslint-plugin-next', 'fast-glob', 'micromatch', 'braces'].includes(name)) };
+          process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+          NODE
+          node --input-type=module <<'NODE' > dist/remediation/no-next-plugin/replacement-summary.json
+          import fs from 'node:fs';
+          let audit;
+          try { audit = JSON.parse(fs.readFileSync('dist/remediation/no-next-plugin/replacement-audit.json', 'utf8')); } catch { audit = null; }
+          const status = fs.readFileSync('dist/remediation/no-next-plugin/status.txt', 'utf8');
+          const installed = status.includes('replacement_install_exit=0');
+          const cleanInstall = status.includes('replacement_clean_install_exit=0');
+          const consistency = JSON.parse(fs.readFileSync('dist/remediation/no-next-plugin/lockfile-consistency.json', 'utf8'));
+          const hooksDetected = status.includes('replacement_hooks_negative_control=DETECTED');
+          const valid = installed && cleanInstall && consistency.consistent && hooksDetected && Boolean(audit?.metadata?.vulnerabilities);
+          process.stdout.write(JSON.stringify({ diagnostic_only: true, replacement_graph_valid: valid, replacement_clean_install_succeeded: cleanInstall, lockfile_consistent: consistency.consistent, hooks_negative_control_detected: hooksDetected, severity_totals: valid ? audit.metadata.vulnerabilities : null, vulnerable_packages: valid ? Object.keys(audit.vulnerabilities ?? {}).sort() : [], next_framework_rule_parity_verified: false, production_migration_approved: false }, null, 2) + '\n');
+          NODE
+          printf 'diagnostic_only=true\nframework_lint_equivalence=false\nproduction_migration_approved=false\n' >> dist/remediation/no-next-plugin/status.txt
+          rm -rf "$scratch"
+      - name: Upload isolation diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-lint-dependency-isolation-${{ github.sha }}
+          path: dist/remediation/no-next-plugin/
+          if-no-files-found: warn
+      - name: Upload candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-dependency-candidate-${{ github.sha }}
+          path: dist/remediation/
+          if-no-files-found: warn
+          retention-days: 14

@@ -6,6 +6,7 @@ import { withTenantSession } from "@/lib/tenant-database";
 import { requireIsolatedTestDatabaseUrl } from "../../scripts/test-database-url";
 
 const owner = new PrismaClient();
+// The RLS test must use a separate, non-owner PostgreSQL role. Never fall back to DATABASE_URL.
 const runtime = new PrismaClient({ datasourceUrl: requireIsolatedTestDatabaseUrl(process.env.TEST_RUNTIME_DATABASE_URL) });
 const tables: string[] = JSON.parse(readFileSync("docs/tenant-rls-manifest.json", "utf8")).tenantTables.map((x: { table: string }) => x.table);
 const tokenA = randomBytes(32).toString("base64url");
@@ -46,6 +47,98 @@ describe("forced PostgreSQL tenant policies using a non-owner runtime role", () 
     await expect(runtime.user.findMany()).rejects.toThrow();
     await expect(runtime.$executeRawUnsafe('SET ROLE planora_wave1_test')).rejects.toThrow();
     await expect(runtime.$executeRawUnsafe('ALTER TABLE "Account" DISABLE ROW LEVEL SECURITY')).rejects.toThrow();
+  });
+  it("reads forecast audit history without joining forbidden authentication records", async () => {
+    const ownVersion = await owner.forecastVersion.findFirst({
+      where: { forecast: { organizationId: tenantA } },
+      select: { id: true },
+    });
+    // The RLS fixture may not seed a forecast. A missing version still exercises
+    // the exact audit query and its forbidden-join regression without a new seed dependency.
+    const forecastVersionId = ownVersion?.id ?? randomUUID();
+    await withTenantSession(runtime, tokenA, async tx => {
+      const audits = await tx.auditEvent.findMany({
+        where: {
+          organizationId: tenantA,
+          OR: [
+            { entityId: forecastVersionId },
+            { metadata: { path: ["forecastVersionId"], equals: forecastVersionId } },
+          ],
+        },
+        orderBy: { occurredAt: "desc" },
+        take: 40,
+      });
+      expect(Array.isArray(audits)).toBe(true);
+      expect(audits.every(audit => audit.organizationId === tenantA)).toBe(true);
+    });
+    // Keep the expected PostgreSQL permission error outside the successful audit
+    // transaction: an error inside a transaction would abort the whole transaction.
+    await expect(withTenantSession(runtime, tokenA, tx => tx.user.findMany({ take: 1 }))).rejects.toThrow();
+  });
+  it("loads forecast comments without reading protected User records", async () => {
+    // Create an isolated forecast version when the seed lacks one. Do not skip
+    // this security regression merely because fixture coverage changes.
+    let version = await owner.forecastVersion.findFirst({
+      where: { forecast: { organizationId: tenantA } },
+      select: { id: true },
+    });
+    if (!version) {
+      const forecast = await owner.forecast.create({
+        data: { organizationId: tenantA, code: `RLS-${randomUUID()}`, name: "RLS comment hydration regression" },
+      });
+      version = await owner.forecastVersion.create({
+        data: { forecastId: forecast.id, version: 1 },
+        select: { id: true },
+      });
+    }
+    const author = await owner.user.findUniqueOrThrow({ where: { email: "cfo@planora.local" }, select: { id: true } });
+    const comment = await owner.forecastComment.create({
+      data: {
+        forecastVersionId: version.id,
+        authorId: author.id,
+        body: "Tenant RLS comment hydration regression",
+        context: { source: "rls-regression" },
+      },
+    });
+    try {
+    await withTenantSession(runtime, tokenA, async tx => {
+      const result = await tx.forecastVersion.findFirst({
+        where: { id: version.id },
+        include: {
+          forecast: true,
+          lines: {
+            include: {
+              account: true,
+              costCenter: true,
+              fiscalPeriod: true,
+              comments: { orderBy: { createdAt: "desc" } },
+            },
+            orderBy: [
+              { fiscalPeriod: { ordinal: "asc" } },
+              { account: { code: "asc" } },
+              { costCenter: { code: "asc" } },
+            ],
+          },
+          comments: {
+            where: { forecastLineId: null },
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      });
+      expect(result?.id).toBe(version.id);
+      expect(result?.comments.some(item => item.id === comment.id && item.authorId === author.id && item.body === comment.body)).toBe(true);
+    });
+    await withTenantSession(runtime, tokenB, async tx => {
+      const foreignVersion = await tx.forecastVersion.findFirst({
+        where: { id: version.id },
+        include: { comments: true },
+      });
+      expect(foreignVersion).toBeNull();
+      expect(await tx.forecastComment.findMany({ where: { id: comment.id } })).toEqual([]);
+    });
+    } finally {
+      await owner.forecastComment.delete({ where: { id: comment.id } });
+    }
   });
   it("isolates SELECT, INSERT, UPDATE and DELETE, including attempted tenant reassignment", async () => {
     const foreign = await owner.account.findFirstOrThrow({ where: { organizationId: tenantB } });

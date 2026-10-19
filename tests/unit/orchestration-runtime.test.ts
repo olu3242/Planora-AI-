@@ -107,3 +107,68 @@ describe("bounded retry policy", () => {
     expect(run.status).toBe("FAILED");
   });
 });
+
+
+describe("interrupted execution recovery guards", () => {
+  const singleStep: WorkflowDefinition = {
+    id: "restart-guard", version: 1,
+    steps: [{ id: "post", kind: "DATABASE" }],
+  };
+
+  it.each(["RUNNING", "RETRYING"] as const)(
+    "refuses to repeat a persisted %s attempt without reconciliation",
+    async (status) => {
+      const runs = new MemoryWorkflowRunStore();
+      const executions = new MemoryRuntimeExecutionStore();
+      const registry = new RuntimeRegistry();
+      const handler = vi.fn(async () => ({ evidenceId: "posted" }));
+      registry.register("post", handler);
+      const run = createWorkflowRun("interrupted-run", singleStep, context);
+      await runs.save(run);
+      await executions.save({
+        idempotencyKey: "org-1:interrupted-run:1:post",
+        runId: run.id, stepId: "post", status, attempts: 1,
+      });
+      await expect(
+        executeReadySteps(singleStep, run.id, runs, executions, registry),
+      ).rejects.toThrow("WORKFLOW_SCOPE_INFLIGHT_RECONCILIATION_REQUIRED");
+      expect(handler).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects an idempotency key mapped to another run or step", async () => {
+    const runs = new MemoryWorkflowRunStore();
+    const executions = new MemoryRuntimeExecutionStore();
+    const registry = new RuntimeRegistry();
+    const handler = vi.fn(async () => ({ evidenceId: "posted" }));
+    registry.register("post", handler);
+    const run = createWorkflowRun("collision-run", singleStep, context);
+    await runs.save(run);
+    await executions.save({
+      idempotencyKey: "org-1:collision-run:1:post",
+      runId: "another-run", stepId: "post", status: "FAILED", attempts: 1,
+    });
+    await expect(
+      executeReadySteps(singleStep, run.id, runs, executions, registry),
+    ).rejects.toThrow("WORKFLOW_SCOPE_IDEMPOTENCY_COLLISION");
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("rejects a persisted success without completion evidence", async () => {
+    const runs = new MemoryWorkflowRunStore();
+    const executions = new MemoryRuntimeExecutionStore();
+    const registry = new RuntimeRegistry();
+    const handler = vi.fn(async () => ({ evidenceId: "posted" }));
+    registry.register("post", handler);
+    const run = createWorkflowRun("missing-evidence", singleStep, context);
+    await runs.save(run);
+    await executions.save({
+      idempotencyKey: "org-1:missing-evidence:1:post",
+      runId: run.id, stepId: "post", status: "SUCCEEDED", attempts: 1,
+    });
+    await expect(
+      executeReadySteps(singleStep, run.id, runs, executions, registry),
+    ).rejects.toThrow("WORKFLOW_SCOPE_SUCCESS_EVIDENCE_REQUIRED");
+    expect(handler).not.toHaveBeenCalled();
+  });
+});

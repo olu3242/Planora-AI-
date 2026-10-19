@@ -15,14 +15,19 @@ export function createPrismaJournalPostingRepository(
 ): JournalPostingRepository {
   return {
     async postAtomically(input) {
-      if (!trustedActorId.trim() || !trustedOrganizationId.trim()) throw new Error("TRUSTED_CONTEXT_REQUIRED");
+      if (typeof trustedActorId !== "string" || typeof trustedOrganizationId !== "string" ||
+          !trustedActorId.trim() || !trustedOrganizationId.trim()) throw new Error("TRUSTED_CONTEXT_REQUIRED");
+      if (input === null || typeof input !== "object" || Array.isArray(input)) {
+        throw new Error("POSTING_CONTEXT_REQUIRED");
+      }
       if (input.actorId !== trustedActorId || input.organizationId !== trustedOrganizationId) {
         throw new Error("UNTRUSTED_POSTING_CONTEXT");
       }
       validateJournalLines(input.lines);
-      if (!input.organizationId || !input.actorId || !input.legalEntityId || !input.fiscalPeriodId) throw new Error("POSTING_CONTEXT_REQUIRED");
-      if (!input.sourceKey.trim()) throw new Error("IDEMPOTENCY_KEY_REQUIRED");
-      if (!/^[A-Z]{3}$/.test(input.currencyCode)) throw new Error("CURRENCY_CODE_INVALID");
+      if (typeof input.legalEntityId !== "string" || !input.legalEntityId.trim() ||
+          typeof input.fiscalPeriodId !== "string" || !input.fiscalPeriodId.trim()) throw new Error("POSTING_CONTEXT_REQUIRED");
+      if (typeof input.sourceKey !== "string" || !input.sourceKey.trim()) throw new Error("IDEMPOTENCY_KEY_REQUIRED");
+      if (typeof input.currencyCode !== "string" || !/^[A-Z]{3}$/.test(input.currencyCode)) throw new Error("CURRENCY_CODE_INVALID");
       return prisma.$transaction(async (tx) => {
         const membership = await tx.organizationMembership.findFirst({
           where: { organizationId: trustedOrganizationId, userId: trustedActorId, active: true },
@@ -85,9 +90,20 @@ export function createPrismaJournalPostingRepository(
           where: { id: journal.id },
           data: { status: "POSTED", postedAt: new Date() },
         });
+        const consumedAt = new Date();
         const consumption = await tx.accountingPostingApproval.updateMany({
-          where: { id: approval.id, decision: "APPROVED", consumedAt: null, journalId: null },
-          data: { consumedAt: new Date(), journalId: journal.id },
+          where: {
+            id: approval.id,
+            organizationId: trustedOrganizationId,
+            legalEntityId: input.legalEntityId,
+            fiscalPeriodId: input.fiscalPeriodId,
+            sourceKey: input.sourceKey,
+            decision: "APPROVED",
+            consumedAt: null,
+            journalId: null,
+            expiresAt: { gt: consumedAt },
+          },
+          data: { consumedAt, journalId: journal.id },
         });
         if (consumption.count !== 1) throw new Error("APPROVAL_ALREADY_CONSUMED");
         await tx.auditEvent.create({

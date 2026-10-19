@@ -1,0 +1,50 @@
+name: Lockfile recovery (isolated)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/bookkeeping-harmonization-b1-20261015
+    paths:
+      - .github/workflows/lockfile-recovery.yml
+      - package.json
+permissions:
+  contents: read
+jobs:
+  regenerate-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - name: Record exact source SHA and runtime
+        run: |
+          mkdir -p dist/lockfile-recovery
+          printf 'source_sha=%s\n' "$GITHUB_SHA" > dist/lockfile-recovery/provenance.txt
+          node --version >> dist/lockfile-recovery/provenance.txt
+          npm --version >> dist/lockfile-recovery/provenance.txt
+      - name: Generate lockfile from canonical manifest
+        run: |
+          cp package-lock.json dist/lockfile-recovery/original-conflicted-package-lock.json
+          rm package-lock.json
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          node -e 'const fs=require("node:fs"); const p=require("./package.json"); const l=JSON.parse(fs.readFileSync("package-lock.json","utf8")); for(const kind of ["dependencies","devDependencies","optionalDependencies"]){const a=p[kind]||{},b=l.packages[""][kind]||{};for(const [name,version] of Object.entries(a)){if(b[name]!==version)throw Error(kind+":"+name+" manifest mismatch")}} if(l.lockfileVersion<3)throw Error("lockfileVersion invalid");'
+      - name: Verify reproducible clean install
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Record lockfile checksum
+        run: sha256sum package-lock.json > dist/lockfile-recovery/sha256.txt
+      - name: Upload regenerated lockfile for reviewed commit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-lockfile-recovery-${{ github.sha }}
+          path: |
+            package-lock.json
+            dist/lockfile-recovery/provenance.txt
+            dist/lockfile-recovery/sha256.txt
+          if-no-files-found: warn
+          retention-days: 14

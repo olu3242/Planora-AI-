@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 const evidenceRoot = process.env.PLANORA_EVIDENCE_DIR ?? "evidence";
-=======
->>>>>>> origin/main
 import { expect, test } from "@playwright/test";
 import ExcelJS from "exceljs";
 import { PrismaClient } from "@prisma/client";
@@ -53,17 +50,48 @@ test.describe.serial("canonical forecast cycle", () => {
     await page.getByRole("link", { name: "Excel imports" }).click(); await expect(page).toHaveURL(/\/excel$/); await page.locator('input[type="file"]').setInputFiles(resolve("tests/fixtures/FY26_Forecast_Revision.xlsx")); await page.getByRole("button", { name: "Upload and profile" }).click();
     await expect(page.getByRole("heading", { name: "FY26_Forecast_Revision.xlsx" })).toBeVisible(); await expect(page.getByText("Reused approved template mapping", { exact: true }).first()).toBeVisible(); await expect(page.getByText("APPROVED", { exact: true }).first()).toBeVisible();
     await page.getByRole("button", { name: "Validate and import" }).click(); await expect(page).toHaveURL(/imported=1/); await expect(page.getByText("Canonical import completed with workbook lineage.")).toBeVisible();
-<<<<<<< HEAD
     await mkdir(`${evidenceRoot}/phase-4`, { recursive: true }); await page.screenshot({ path: `${evidenceRoot}/phase-4/import-mapping-1440.png` });
-=======
-    await mkdir("evidence/phase-4", { recursive: true }); await page.screenshot({ path: "evidence/phase-4/import-mapping-1440.png" });
->>>>>>> origin/main
     await page.getByRole("link", { name: "Forecasts" }).click(); await page.getByRole("link", { name: /FY26 Forecast Cycle/ }).click(); await expect(page).toHaveURL(/\/forecasts\/[0-9a-f-]+$/);
     const forecastUrl = page.url(); const versionId = forecastUrl.split("/").at(-1)!; const current = page.getByLabel("Current forecast for Revenue NA-IND"); const beforeAgentAmount = await current.inputValue();
-    await page.getByRole("button", { name: "What should I do next?" }).click(); await expect(page.locator(".agent-result").filter({ hasText: "Workflow Assistant" }).first()).toContainText("Add supported commentary");
+    await page.getByRole("button", { name: "What should I do next?" }).click();
+    await expect(page).toHaveURL(/agentRun=/);
+    const workflowRunId = new URL(page.url()).searchParams.get("agentRun");
+    expect(workflowRunId).toBeTruthy();
+    const workflowDb = new PrismaClient();
+    try {
+      const persistedRun = await workflowDb.agentRun.findUnique({
+        where: { id: workflowRunId! },
+        include: { recommendations: true, agentDefinition: true },
+      });
+      expect(persistedRun?.status, "Workflow Assistant run must complete successfully").toBe("SUCCEEDED");
+      expect(persistedRun?.agentDefinition.agentId).toBe("PLANORA.WORKFLOW.ASSISTANT.NEXT_ACTION.v1");
+      expect(persistedRun?.recommendations.length, "Workflow Assistant must persist its recommendation").toBeGreaterThan(0);
+      const recommendationSummary = persistedRun!.recommendations[0].summary;
+      const renderedRecommendation = page.locator(".agent-result").filter({ hasText: recommendationSummary }).first();
+      await expect(page.locator(".agent-results")).toBeVisible();
+      const renderedSummaries = await page.locator(".agent-result h3").allTextContents();
+      const fallbackMessage = await page.locator(".agent-results .subtle").allTextContents();
+      const pageAlerts = await page.locator("[role=alert]").allTextContents();
+      const pageHeading = await page.locator("h1").allTextContents();
+      expect(renderedSummaries, `Redirected run ${workflowRunId} must render persisted recommendation. URL: ${page.url()}; rendered summaries: ${JSON.stringify(renderedSummaries)}; fallback: ${JSON.stringify(fallbackMessage)}; alerts: ${JSON.stringify(pageAlerts)}; headings: ${JSON.stringify(pageHeading)}`).toContain(recommendationSummary);
+      await expect(renderedRecommendation).toBeVisible();
+      await expect(renderedRecommendation).toContainText(persistedRun!.recommendations[0].summary);
+    } finally {
+      await workflowDb.$disconnect();
+    }
     const agentPrisma = new PrismaClient(); const agentLines = await agentPrisma.forecastLine.findMany({ where: { forecastVersionId: versionId } }); const expectedMovement = agentLines.map((line) => Number(line.currentForecast) - Number(line.priorForecast)).sort((a, b) => Math.abs(b) - Math.abs(a))[0]; await agentPrisma.$disconnect();
     await page.getByRole("button", { name: "Show largest movements" }).click(); await expect(page.locator(".agent-result").filter({ hasText: "Variance Analyst" }).first()).toContainText(new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(expectedMovement));
-    await page.getByRole("button", { name: "Draft commentary" }).click(); let commentaryResult = page.locator(".agent-result").filter({ hasText: "Commentary Assistant" }).filter({ hasText: "PENDING" }).first(); await commentaryResult.getByRole("button", { name: "Accept" }).click(); await expect(page.locator(".agent-result").filter({ hasText: "Commentary Assistant" }).filter({ hasText: "ACCEPTED" }).first()).toBeVisible();
+    await page.getByRole("button", { name: "Draft commentary" }).click(); let commentaryResult = page.locator(".agent-result").filter({ hasText: "Commentary Assistant" }).filter({ hasText: "PENDING" }).first(); await commentaryResult.getByRole("button", { name: "Accept" }).click(); await expect(page).toHaveURL(/agentRecommendation=/);
+    const acceptedId = new URL(page.url()).searchParams.get("agentRecommendation");
+    expect(acceptedId).toBeTruthy();
+    const feedbackDb = new PrismaClient();
+    try {
+      const accepted = await feedbackDb.agentRecommendation.findUnique({ where: { id: acceptedId! }, include: { feedback: true, run: { include: { agentDefinition: true } } } });
+      expect(accepted?.status, "Accepted feedback must persist on the original recommendation").toBe("ACCEPTED");
+      expect(accepted?.feedback.some(item => item.decision === "ACCEPTED"), "Accepted feedback decision must persist").toBe(true);
+      const rendered = page.locator(".agent-result").filter({ hasText: accepted!.summary }).filter({ hasText: "ACCEPTED" }).first();
+      await expect(rendered).toBeVisible();
+    } finally { await feedbackDb.$disconnect(); }
     await page.getByRole("button", { name: "Draft commentary" }).click(); commentaryResult = page.locator(".agent-result").filter({ hasText: "Commentary Assistant" }).filter({ hasText: "PENDING" }).first(); const editedSuggestion = commentaryResult.getByRole("textbox"); await editedSuggestion.fill(`${await editedSuggestion.inputValue()} Human reviewer added supported context.`); await commentaryResult.getByRole("button", { name: "Save edited" }).click(); await expect(page.locator(".agent-result").filter({ hasText: "Commentary Assistant" }).filter({ hasText: "EDITED" }).first()).toBeVisible();
     await page.getByRole("button", { name: "Draft commentary" }).click(); commentaryResult = page.locator(".agent-result").filter({ hasText: "Commentary Assistant" }).filter({ hasText: "PENDING" }).first(); await commentaryResult.getByRole("button", { name: "Reject" }).click(); await expect(page.locator(".agent-result").filter({ hasText: "Commentary Assistant" }).filter({ hasText: "REJECTED" }).first()).toBeVisible();
     await expect(page.getByLabel("Current forecast for Revenue NA-IND")).toHaveValue(beforeAgentAmount);
@@ -98,11 +126,7 @@ test.describe.serial("canonical forecast cycle", () => {
     const audits = await reconciliationPrisma.auditEvent.findMany({ where: { organizationId: versionRecord.forecast.organizationId, occurredAt: { gte: journeyStartedAt } }, orderBy: { occurredAt: "asc" } }); const agentRuns = await reconciliationPrisma.agentRun.findMany({ where: { organizationId: versionRecord.forecast.organizationId, forecastVersionId: versionId }, include: { agentDefinition: true, recommendations: { include: { feedback: true } } } }); const executions = await reconciliationPrisma.runtimeExecution.findMany({ where: { organizationId: versionRecord.forecast.organizationId, forecastVersionId: versionId } }); await reconciliationPrisma.$disconnect();
     const actions = audits.map((event) => event.action); let auditCursor = -1; for (const required of ["WORKBOOK.PROFILED", "MAPPING.ACCOUNT_OVERRIDDEN", "MAPPING.REUSED", "WORKBOOK.CANONICAL_IMPORT_COMPLETED", "FORECAST.LINE_UPDATED", "FORECAST.COMMENT_ADDED", "FORECAST.SUBMIT", "FORECAST.REVIEW", "FORECAST.REVISE", "FORECAST.LINE_UPDATED", "FORECAST.SUBMIT", "FORECAST.REVIEW", "FORECAST.APPROVE", "FORECAST.LOCK", "FORECAST.EXPORTED"]) { auditCursor = actions.indexOf(required, auditCursor + 1); expect(auditCursor, `missing chronological audit action ${required}`).toBeGreaterThan(-1); }
     expect(agentRuns.map((run) => run.agentDefinition.agentId)).toEqual(expect.arrayContaining(["PLANORA.WORKFLOW.ASSISTANT.NEXT_ACTION.v1", "PLANORA.FORECAST.ANALYST.VARIANCE.v1", "PLANORA.FORECAST.ANALYST.COMMENTARY.v1", "PLANORA.REVIEW.DIRECTOR.EXCEPTION.v1"])); expect(agentRuns.every((run) => run.agentDefinition.version > 0 && Boolean(run.evidence) && Boolean(run.completedAt))).toBe(true); expect(agentRuns.flatMap((run) => run.recommendations.flatMap((recommendation) => recommendation.feedback)).map((feedback) => feedback.decision)).toEqual(expect.arrayContaining(["ACCEPTED", "EDITED", "REJECTED"])); expect(executions.length).toBeGreaterThan(0); expect(executions.every((execution) => execution.correlationId && execution.idempotencyKey)).toBe(true);
-<<<<<<< HEAD
     await mkdir(`${evidenceRoot}/phase-9`, { recursive: true }); await page.screenshot({ path: `${evidenceRoot}/phase-9/cfo-locked-audit-1440.png`, fullPage: true }); expect(consoleErrors).toEqual([]);
-=======
-    await mkdir("evidence/phase-9", { recursive: true }); await page.screenshot({ path: "evidence/phase-9/cfo-locked-audit-1440.png", fullPage: true }); expect(consoleErrors).toEqual([]);
->>>>>>> origin/main
   });
 
   test("invalid import persists blocking issues and does not progress", async ({ page }) => {
