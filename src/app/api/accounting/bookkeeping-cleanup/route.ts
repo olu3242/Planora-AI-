@@ -34,7 +34,7 @@ async function handlePOST(request: Request) {
       idempotencyKey: input.idempotencyKey ?? randomUUID(),
       batchId: input.batchId,
     }, scopeCleanupTransactions(session.organization.id, input.transactions));
-    return Response.json(result, { status: 201 });
+    return Response.json(result, { status: result.duplicate ? 200 : 201 });
   } catch (error) { return errorResponse(error, cid); }
 }
 export const POST = withTenantApi(handlePOST);
