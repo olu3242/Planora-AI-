@@ -391,7 +391,7 @@ jobs:
           # not merely a synthetic fixture. The scratch config intentionally
           # excludes Next.js-specific rules pending explicit parity review.
           if [ -x "$scratch/node_modules/.bin/eslint" ]; then
-            if (cd "$GITHUB_WORKSPACE" && "$scratch/node_modules/.bin/eslint" --config "$scratch/eslint.config.mjs" --ignore-pattern "dist/**" --ignore-pattern ".next/**" --ignore-pattern "coverage/**" . > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/application-lint.log" 2>&1); then
+            if (cd "$scratch" && ./node_modules/.bin/eslint --config eslint.config.mjs --no-warn-ignored --ignore-pattern "dist/**" --ignore-pattern ".next/**" --ignore-pattern "coverage/**" "$GITHUB_WORKSPACE" > "$GITHUB_WORKSPACE/dist/remediation/no-next-plugin/application-lint.log" 2>&1); then
               echo 'replacement_application_lint_exit=0' >> dist/remediation/no-next-plugin/status.txt
             else
               echo 'replacement_application_lint_exit=1' >> dist/remediation/no-next-plugin/status.txt
