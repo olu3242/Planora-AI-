@@ -2,7 +2,6 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { executeRuntimeCommand } from "@/runtime/execution-runtime";
 import { proposeBookkeepingCleanup, type CleanupTransaction } from "@/domain/accounting/bookkeeping-cleanup";
-import { cleanupBatchFingerprint } from "@/domain/accounting/bookkeeping-cleanup-fingerprint";
 import { cleanupRequestIdentity } from "@/domain/accounting/bookkeeping-cleanup-idempotency";
 
 export type CleanupRunContext = {
