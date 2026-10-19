@@ -63,7 +63,7 @@ export async function decideBookkeepingCleanupFinding(
       action: "BOOKKEEPING.CLEANUP_REVIEW_DECIDED",
       entityType: "BookkeepingCleanupFinding",
       entityId,
-      newState: { decision: input.decision, reason: input.reason.trim(), executionId: execution.id, transactionId: input.transactionId, kind: input.kind },
+      newState: { decision: input.decision, reason: validated.reason, executionId: execution.id, transactionId: input.transactionId, kind: input.kind },
       metadata: { batchId: execution.targetId, proposerId: execution.actorId },
     });
     return { reviewId: event.id, executionId: execution.id, transactionId: input.transactionId, decision: input.decision };
