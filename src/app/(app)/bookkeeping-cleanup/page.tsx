@@ -11,6 +11,7 @@ async function BookkeepingCleanupPage() {
   const runs = await listBookkeepingCleanupRuns({ organizationId: session.organization.id, role: session.membership.role });
   return <><h1 className="page-heading">Bookkeeping cleanup</h1>
     <p className="subtle">Review proposed anomalies. Nothing is automatically deleted or posted.</p>
+    {hasPermission(session.membership.role, "financial.import") && <BookkeepingCleanupProposalForm />}
     <section className="panel" aria-label="Cleanup review queue">
       <h2>Review queue</h2>
       {runs.length ? <ul>{runs.map(run => <li key={run.executionId}>
