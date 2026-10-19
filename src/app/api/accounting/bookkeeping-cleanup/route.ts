@@ -5,6 +5,7 @@ import { requireApiSession } from "@/auth/session";
 import { assertSameOrigin, correlationId } from "@/lib/request";
 import { errorResponse } from "@/lib/errors";
 import { runBookkeepingCleanup } from "@/application/accounting/bookkeeping-cleanup-service";
+import { scopeCleanupTransactions } from "@/domain/accounting/bookkeeping-cleanup-payload";
 
 const row = z.object({
   id: z.string().trim().min(1).max(256),
