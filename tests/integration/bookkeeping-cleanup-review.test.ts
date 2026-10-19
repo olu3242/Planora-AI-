@@ -47,6 +47,15 @@ describe("bookkeeping cleanup PostgreSQL review", () => {
     } });
     expect(events).toBe(1);
   });
+  it("rejects an ambiguous duplicate finding identity", async () => {
+    const f = await fixture();
+    await db.runtimeExecution.update({ where: { id: f.execution.id }, data: {
+      result: { batchId: "integration", findings: [findings[0], findings[0]] },
+    } });
+    await expect(decideBookkeepingCleanupFinding({
+      organizationId: f.org.id, actorId: f.reviewer.id, role: "FPA_DIRECTOR", correlationId: randomUUID(),
+    }, decision(f.execution.id))).rejects.toThrow(/exactly once/);
+  });
   it("prevents self-review", async () => {
     const f = await fixture();
     await expect(decideBookkeepingCleanupFinding({ organizationId: f.org.id, actorId: f.proposer.id, role: "FPA_DIRECTOR", correlationId: randomUUID() }, decision(f.execution.id))).rejects.toThrow(/Separation of duties/);
