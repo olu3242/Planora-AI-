@@ -36,4 +36,9 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   await runBookkeepingCleanup(context, rows);
   await expect(runBookkeepingCleanup(context, [{ ...rows[0], amountMinor: 2000 }])).rejects.toMatchObject({ code: "CONFLICT", status: 409 });
  });
+ it("rejects reuse of a key with a different batch", async () => {
+  const { context, rows } = await setup();
+  await runBookkeepingCleanup(context, rows);
+  await expect(runBookkeepingCleanup({ ...context, batchId: context.batchId + "-other" }, rows)).rejects.toMatchObject({ code: "CONFLICT", status: 409 });
+ });
 });
