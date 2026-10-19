@@ -71,6 +71,7 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   const result = await runBookkeepingCleanup(context, rows);
   const execution = await db.runtimeExecution.findUniqueOrThrow({ where: { id: result.executionId } });
   expect(execution.request).toMatchObject({ batchId: context.batchId, transactionCount: 1, inputFingerprint: expect.stringMatching(/^[a-f0-9]{64}$/) });
+  expect(execution.targetId).toBe(context.batchId);
  });
  it("does not create a second proposal on a concurrent identical replay", async () => {
   const { context, rows } = await setup();
