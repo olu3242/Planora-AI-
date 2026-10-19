@@ -40,7 +40,7 @@ export function BookkeepingCleanupProposalForm() {
   <p className="subtle">JSON transaction array. This creates findings only; it does not change your ledger. Completed runs appear in the review queue for authorized reviewers.</p>
   <label>Batch identifier <input required maxLength={256} value={batchId} onChange={e => setBatchId(e.target.value)} /></label>
   <label>Transactions (JSON) <textarea required rows={8} spellCheck={false} value={raw} onChange={e => setRaw(e.target.value)} aria-describedby="cleanup-json-example" /></label>
-  <p id="cleanup-json-example" className="subtle">Example: [{"id":"tx-1","date":"2026-10-19","amountMinor":1000,"currency":"NGN","description":"Invoice"}]</p>
+  <p id="cleanup-json-example" className="subtle">Example: <code>{'[{"id":"tx-1","date":"2026-10-19","amountMinor":1000,"currency":"NGN","description":"Invoice"}]'}</code></p>
   <button type="submit" disabled={busy || !batchId.trim() || !raw.trim()}>{busy ? "Submitting..." : "Analyze transactions"}</button>
   <button type="button" disabled={busy} onClick={() => { setKey(""); setResult(""); setError(""); setBatchId(""); setRaw("[]"); }}>Start new request</button>
   {error && <p role="alert">{error}</p>}{result && <p role="status">{result}</p>}
