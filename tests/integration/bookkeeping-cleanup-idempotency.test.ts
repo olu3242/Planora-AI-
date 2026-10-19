@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { runBookkeepingCleanup } from "@/application/accounting/bookkeeping-cleanup-service";
