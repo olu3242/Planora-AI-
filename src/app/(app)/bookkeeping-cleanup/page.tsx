@@ -19,6 +19,6 @@ async function BookkeepingCleanupPage() {
         <Link href={`/bookkeeping-cleanup/${run.executionId}`}>Batch {run.batchId}</Link>
         <span className="subtle"> · {run.findings.length} findings · {run.status}</span>
       </li>)}</ul> : <p className="subtle">No completed cleanup runs are available for review.</p>}
-    </section></>;
+    </section>}</>;
 }
 export default withTenantPage(BookkeepingCleanupPage);
