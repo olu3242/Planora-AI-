@@ -39,6 +39,19 @@ jobs:
         run: node scripts/check-dev-dependency-boundary.mjs
       - name: Audit production dependency graph
         run: npm audit --omit=dev --audit-level=moderate
+      - name: Capture complete dependency audit evidence
+        if: always()
+        run: |
+          npm audit --json > full-dependency-audit.json || true
+          node -e 'const fs=require("node:fs"); const a=JSON.parse(fs.readFileSync("full-dependency-audit.json","utf8")); console.log("Full audit severity summary:",JSON.stringify(a.metadata?.vulnerabilities ?? {}));'
+      - name: Upload dependency audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-dependency-audit
+          path: full-dependency-audit.json
+          retention-days: 14
+          if-no-files-found: warn
       - name: Audit complete dependency graph (release gate)
         run: npm audit --audit-level=moderate
       - run: npx playwright install --with-deps chromium
