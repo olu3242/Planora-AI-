@@ -25,6 +25,7 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   expect(stored.organizationId).toBe(context.organizationId);
   expect(stored.command).toBe("BOOKKEEPING.CLEANUP_PROPOSE");
   expect(stored.actorId).toBe(context.actorId);
+  expect(stored.status).toBe("SUCCEEDED");
   expect(stored.result).toMatchObject({ batchId: context.batchId, findings: expect.any(Array) });
  });
  it("replays the same request without creating another execution", async () => {
