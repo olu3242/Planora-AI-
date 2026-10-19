@@ -8,7 +8,8 @@ async function BookkeepingCleanupPage() {
   const session = await requirePageSession();
   if (!hasPermission(session.membership.role, "accounting.recommendation.review") && !hasPermission(session.membership.role, "financial.import"))
     return <section className="panel" role="alert"><h1>403 — Cleanup review unavailable</h1></section>;
-  const runs = await listBookkeepingCleanupRuns({ organizationId: session.organization.id, role: session.membership.role });
+  const canReview = hasPermission(session.membership.role, "accounting.recommendation.review");
+  const runs = canReview ? await listBookkeepingCleanupRuns({ organizationId: session.organization.id, role: session.membership.role }) : [];
   return <><h1 className="page-heading">Bookkeeping cleanup</h1>
     <p className="subtle">Review proposed anomalies. Nothing is automatically deleted or posted.</p>
     {hasPermission(session.membership.role, "financial.import") && <BookkeepingCleanupProposalForm />}
