@@ -6,7 +6,7 @@ import type { getSession } from "@/auth/session";
 type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;
 
 const baseNav = [
-  ["Command Center", "/command-center", Gauge, true], ["Actuals", "/actuals", Database, true], ["Accounting", "/accounting", BookOpen, true],
+  ["Command Center", "/command-center", Gauge, true], ["Actuals", "/actuals", Database, true], ["Accounting", "/accounting", BookOpen, true], ["Cleanup review", "/bookkeeping-cleanup", ShieldCheck, true],
   ["Planning", "/planning", SquareChartGantt, false], ["Forecasts", "/forecasts", WandSparkles, true],
   ["Excel", "/excel", FileSpreadsheet, true], ["Reconciliation", "/reconciliation", GitCompareArrows, false],
   ["Governance", "/governance", Landmark, false],
