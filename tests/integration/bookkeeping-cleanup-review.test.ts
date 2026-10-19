@@ -1,7 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
-import { inTenantTransaction } from "@/lib/prisma";
 import { decideBookkeepingCleanupFinding } from "@/application/accounting/bookkeeping-cleanup-decisions";
 import { getBookkeepingCleanupReviewState } from "@/application/accounting/bookkeeping-cleanup-review-state";
 
