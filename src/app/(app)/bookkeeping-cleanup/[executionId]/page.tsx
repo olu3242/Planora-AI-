@@ -4,6 +4,7 @@ import { requirePageSession } from "@/auth/session";
 import { hasPermission } from "@/permissions/permissions";
 import { getBookkeepingCleanupReviewState } from "@/application/accounting/bookkeeping-cleanup-review-state";
 import { CleanupDecisionForm } from "@/components/bookkeeping-cleanup-decision-form";
+import { cleanupReviewMetrics } from "@/domain/accounting/bookkeeping-cleanup-metrics";
 async function CleanupExecutionPage({ params }: { params: Promise<{ executionId: string }> }) {
   const session = await requirePageSession();
   if (!hasPermission(session.membership.role, "accounting.recommendation.review"))
