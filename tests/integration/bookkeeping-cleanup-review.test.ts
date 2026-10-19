@@ -31,6 +31,22 @@ describe("bookkeeping cleanup PostgreSQL review", () => {
     expect(state.findings[0].review.status).toBe("ACCEPT_FINDING");
     await expect(decideBookkeepingCleanupFinding(ctx, decision(f.execution.id))).rejects.toThrow();
   });
+  it("serializes concurrent decisions for the same finding", async () => {
+    const f = await fixture();
+    const ctx = { organizationId: f.org.id, actorId: f.reviewer.id, role: "FPA_DIRECTOR" as const, correlationId: randomUUID() };
+    const results = await Promise.allSettled([
+      decideBookkeepingCleanupFinding(ctx, decision(f.execution.id)),
+      decideBookkeepingCleanupFinding(ctx, decision(f.execution.id)),
+    ]);
+    expect(results.filter(result => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter(result => result.status === "rejected")).toHaveLength(1);
+    const events = await db.auditEvent.count({ where: {
+      organizationId: f.org.id, entityType: "BookkeepingCleanupFinding",
+      entityId: `${f.execution.id}:tx-1:DUPLICATE_CANDIDATE`,
+      action: "BOOKKEEPING.CLEANUP_REVIEW_DECIDED",
+    } });
+    expect(events).toBe(1);
+  });
   it("prevents self-review", async () => {
     const f = await fixture();
     await expect(decideBookkeepingCleanupFinding({ organizationId: f.org.id, actorId: f.proposer.id, role: "FPA_DIRECTOR", correlationId: randomUUID() }, decision(f.execution.id))).rejects.toThrow(/Separation of duties/);
