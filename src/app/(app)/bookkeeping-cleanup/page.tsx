@@ -13,7 +13,7 @@ async function BookkeepingCleanupPage() {
   return <><h1 className="page-heading">Bookkeeping cleanup</h1>
     <p className="subtle">Review proposed anomalies. Nothing is automatically deleted or posted.</p>
     {hasPermission(session.membership.role, "financial.import") && <BookkeepingCleanupProposalForm />}
-    <section className="panel" aria-label="Cleanup review queue">
+    {canReview && <section className="panel" aria-label="Cleanup review queue">
       <h2>Review queue</h2>
       {runs.length ? <ul>{runs.map(run => <li key={run.executionId}>
         <Link href={`/bookkeeping-cleanup/${run.executionId}`}>Batch {run.batchId}</Link>
