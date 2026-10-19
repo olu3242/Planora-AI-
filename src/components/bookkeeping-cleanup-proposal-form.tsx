@@ -19,6 +19,8 @@ export function BookkeepingCleanupProposalForm() {
    if (!Array.isArray(parsed) || parsed.length > 10000) throw new Error("Expected an array of up to 10,000 transactions.");
    transactions = parsed as InputRow[];
   } catch { setError("Enter a valid JSON array of transactions (maximum 10,000)."); return; }
+  const requestKey = key || crypto.randomUUID();
+  if (!key) setKey(requestKey);
   setBusy(true);
   try {
    const response = await fetch("/api/accounting/bookkeeping-cleanup", {
