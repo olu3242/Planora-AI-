@@ -9,7 +9,7 @@ async function handleGET(request: Request) {
   try {
     const session = await requireApiSession("accounting.recommendation.review");
     const raw = new URL(request.url).searchParams.get("limit");
-    const limit = raw === null ? 50 : Number(raw);
+    const limit = parseCleanupPageLimit(raw);
     const runs = await listBookkeepingCleanupRuns({ organizationId: session.organization.id, role: session.membership.role }, limit);
     return Response.json({ runs });
   } catch (error) { return errorResponse(error, cid); }
