@@ -32,6 +32,7 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   const second = await runBookkeepingCleanup(context, rows);
   expect(second.duplicate).toBe(true);
   expect(second.executionId).toBe(first.executionId);
+  expect(second.value).toBeNull();
  });
  it("rejects reuse of a key with a changed amount", async () => {
   const { context, rows } = await setup();
