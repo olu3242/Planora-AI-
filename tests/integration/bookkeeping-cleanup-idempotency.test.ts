@@ -59,6 +59,7 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   const first = await runBookkeepingCleanup(context, rows);
   const second = await runBookkeepingCleanup({ ...context, organizationId: foreign.id }, rows.map(row => ({ ...row, organizationId: foreign.id })));
   expect(second.executionId).not.toBe(first.executionId);
+  expect(second.duplicate).toBe(false);
  });
  it("retains a deterministic input fingerprint", async () => {
   const { context, rows } = await setup();
