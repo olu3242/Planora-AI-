@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { writeAudit } from "@/audit/audit";
 import { assertPermission } from "@/permissions/permissions";
 import type { CleanupFinding } from "@/domain/accounting/bookkeeping-cleanup";
+import { validateCleanupReviewInput } from "@/domain/accounting/bookkeeping-cleanup-review-policy";
 
 export type CleanupDecision = "ACCEPT_FINDING" | "REJECT_FINDING";
 export type CleanupDecisionContext = {
