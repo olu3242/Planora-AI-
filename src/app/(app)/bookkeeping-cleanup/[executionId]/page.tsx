@@ -11,6 +11,7 @@ async function CleanupExecutionPage({ params }: { params: Promise<{ executionId:
     return <section className="panel" role="alert"><h1>403 — Cleanup review unavailable</h1></section>;
   const { executionId } = await params;
   const run = await getBookkeepingCleanupReviewState({ organizationId: session.organization.id, role: session.membership.role }, executionId);
+  const metrics = cleanupReviewMetrics(run.findings.map(finding => ({ finding, status: finding.review.status })));
   return <><Link href="/bookkeeping-cleanup">Back to review queue</Link>
     <h1 className="page-heading">Cleanup batch {run.batchId}</h1>
     <p className="subtle">{run.findings.length} findings · No accounting changes are applied by reviewing.</p>
