@@ -49,7 +49,7 @@ export async function executeRuntimeCommand<T>(context: RuntimeContext, perform:
     if (typeof error === "object" && error && "code" in error && (error as { code?: string }).code === "P2002") {
       const existing = await prisma.runtimeExecution.findUniqueOrThrow({ where: { organizationId_command_idempotencyKey: { organizationId: context.organizationId, command: context.command, idempotencyKey: context.idempotencyKey } } });
       if (context.command === "BOOKKEEPING.CLEANUP_PROPOSE" && (existing.targetId !== context.targetId || JSON.stringify(existing.request) !== JSON.stringify(context.request))) {
-        throw new AppError("IDEMPOTENCY_CONFLICT", "Idempotency key already used for a different cleanup batch or payload.", 409);
+        throw new AppError("CONFLICT", "Idempotency key already used for a different cleanup batch or payload.", 409);
       }
       await writeAudit(prisma, { organizationId: context.organizationId, actorId: context.actorId, action: "RUNTIME.DUPLICATE_PREVENTED", entityType: "RuntimeExecution", entityId: existing.id, previousState: { status: existing.status, attempt: existing.attempt }, newState: { status: existing.status, duplicatePrevented: true }, metadata: { command: context.command, targetId: context.targetId, idempotencyKey: context.idempotencyKey }, correlationId: context.correlationId });
       return { value: null, duplicate: true, executionId: existing.id, status: existing.status };
