@@ -367,7 +367,7 @@ jobs:
           export default [
             ...tseslint.configs.recommended,
             reactHooks.configs.flat.recommended,
-            { plugins: { '@next/next': { rules: { 'no-img-element': nextImageRule } } },
+            { plugins: { '@next/next': { rules: { 'no-img-element': nextImageRule } } } },
             { rules: { '@next/next/no-img-element': 'warn' } },
           ];
           EOF
