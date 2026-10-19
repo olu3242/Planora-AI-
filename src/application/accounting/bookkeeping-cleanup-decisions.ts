@@ -49,8 +49,7 @@ export async function decideBookkeepingCleanupFinding(
     });
     if (!execution || !hasFindings(execution.result)) throw new Error("Cleanup execution is not reviewable.");
     if (execution.actorId === context.actorId) throw new Error("Separation of duties: proposer cannot review own findings.");
-    const finding = execution.result.findings.find(f => f.transactionId === input.transactionId && f.kind === input.kind);
-    if (!finding) throw new Error("Finding does not exist in this execution.");
+    const validated = validateCleanupReviewInput(input, execution.result.findings);
     const entityId = `${execution.id}:${input.transactionId}:${input.kind}`;
     const prior = await tx.auditEvent.findFirst({
       where: { organizationId: context.organizationId, entityType: "BookkeepingCleanupFinding", entityId, action: "BOOKKEEPING.CLEANUP_REVIEW_DECIDED" },
