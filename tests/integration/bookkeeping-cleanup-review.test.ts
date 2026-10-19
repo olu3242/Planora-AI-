@@ -28,6 +28,7 @@ describe("bookkeeping cleanup PostgreSQL review", () => {
     expect(result.reviewId).toBeTruthy();
     const state = await getBookkeepingCleanupReviewState({ organizationId: f.org.id, role: "FPA_DIRECTOR" }, f.execution.id);
     expect(state.findings[0].review.status).toBe("ACCEPT_FINDING");
+    expect(state.findings[0].review.reviewerId).toBe(f.reviewer.id);
     await expect(decideBookkeepingCleanupFinding(ctx, decision(f.execution.id))).rejects.toThrow();
     expect(await db.auditEvent.count({ where: { organizationId: f.org.id, entityType: "BookkeepingCleanupFinding", entityId: `${f.execution.id}:tx-1:DUPLICATE_CANDIDATE`, action: "BOOKKEEPING.CLEANUP_REVIEW_DECIDED" } })).toBe(1);
   });
