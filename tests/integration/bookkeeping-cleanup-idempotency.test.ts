@@ -33,6 +33,7 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   expect(second.duplicate).toBe(true);
   expect(second.executionId).toBe(first.executionId);
   expect(second.value).toBeNull();
+  expect(await db.runtimeExecution.count({ where: { organizationId: context.organizationId, command: "BOOKKEEPING.CLEANUP_PROPOSE", idempotencyKey: context.idempotencyKey } })).toBe(1);
  });
  it("rejects reuse of a key with a changed amount", async () => {
   const { context, rows } = await setup();
