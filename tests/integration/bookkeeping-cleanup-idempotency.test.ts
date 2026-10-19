@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { runBookkeepingCleanup } from "@/application/accounting/bookkeeping-cleanup-service";
 
 const db = new PrismaClient();
+afterAll(() => db.$disconnect());
 const row = { id: "tx-1", date: "2026-10-19", amountMinor: 1000, currency: "NGN", description: "Office rent" };
 async function setup() {
  const org = await db.organization.findUniqueOrThrow({ where: { code: "NORTHSTAR" } });
