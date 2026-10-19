@@ -59,3 +59,4 @@ jobs:
       - run: npx vitest run tests/integration/accounting-database-certification.test.ts
       - run: npx vitest run tests/unit/test-database-url.test.ts tests/unit/accounting-actuals-reconciliation.test.ts tests/unit/accounting-fpa-bridge.test.ts tests/unit/accounting-journal-validation.test.ts
       - run: npm run typecheck
+      - run: npm run test:integration
