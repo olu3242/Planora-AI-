@@ -351,9 +351,24 @@ jobs:
           cat > "$scratch/eslint.config.mjs" <<'EOF'
           import tseslint from 'typescript-eslint';
           import reactHooks from 'eslint-plugin-react-hooks';
+          // Preserve the existing inline Next.js rule directive without pulling
+          // the vulnerable Next lint dependency chain into this experiment.
+          // This narrow local rule is NOT certified as Next.js rule parity.
+          const nextImageRule = {
+            meta: { type: 'problem', schema: [], messages: { avoidImg: 'Prefer next/image instead of a raw img element.' } },
+            create(context) {
+              return { JSXOpeningElement(node) {
+                if (node.name.type === 'JSXIdentifier' && node.name.name === 'img') {
+                  context.report({ node, messageId: 'avoidImg' });
+                }
+              } };
+            },
+          };
           export default [
             ...tseslint.configs.recommended,
             reactHooks.configs.flat.recommended,
+            { plugins: { '@next/next': { rules: { 'no-img-element': nextImageRule } } },
+            { rules: { '@next/next/no-img-element': 'warn' } },
           ];
           EOF
           cat > "$scratch/invalid-hooks.tsx" <<'EOF'
