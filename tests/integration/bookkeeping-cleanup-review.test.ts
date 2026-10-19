@@ -64,6 +64,7 @@ describe("bookkeeping cleanup PostgreSQL review", () => {
   it("prevents cross-tenant review", async () => {
     const f = await fixture();
     await expect(decideBookkeepingCleanupFinding({ organizationId: f.foreign.id, actorId: f.reviewer.id, role: "FPA_DIRECTOR", correlationId: randomUUID() }, decision(f.execution.id))).rejects.toThrow();
+    expect(await db.auditEvent.count({ where: { entityId: `${f.execution.id}:tx-1:DUPLICATE_CANDIDATE`, action: "BOOKKEEPING.CLEANUP_REVIEW_DECIDED" } })).toBe(0);
   });
   it("rejects roles without review permission", async () => {
     const f = await fixture();
