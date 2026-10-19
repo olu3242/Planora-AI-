@@ -24,4 +24,11 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   expect(stored.organizationId).toBe(context.organizationId);
   expect(stored.command).toBe("BOOKKEEPING.CLEANUP_PROPOSE");
  });
+ it("replays the same request without creating another execution", async () => {
+  const { context, rows } = await setup();
+  const first = await runBookkeepingCleanup(context, rows);
+  const second = await runBookkeepingCleanup(context, rows);
+  expect(second.duplicate).toBe(true);
+  expect(second.executionId).toBe(first.executionId);
+ });
 });
