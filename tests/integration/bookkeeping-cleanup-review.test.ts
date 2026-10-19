@@ -62,6 +62,7 @@ describe("bookkeeping cleanup PostgreSQL review", () => {
   it("prevents self-review", async () => {
     const f = await fixture();
     await expect(decideBookkeepingCleanupFinding({ organizationId: f.org.id, actorId: f.proposer.id, role: "FPA_DIRECTOR", correlationId: randomUUID() }, decision(f.execution.id))).rejects.toThrow(/Separation of duties/);
+    expect(await db.auditEvent.count({ where: { organizationId: f.org.id, action: "BOOKKEEPING.CLEANUP_REVIEW_DECIDED", entityId: `${f.execution.id}:tx-1:DUPLICATE_CANDIDATE` } })).toBe(0);
   });
   it("prevents cross-tenant review", async () => {
     const f = await fixture();
