@@ -26,7 +26,7 @@ export async function runBookkeepingCleanup(context: CleanupRunContext, transact
       correlationId: context.correlationId,
       idempotencyKey: context.idempotencyKey,
       command: "BOOKKEEPING.CLEANUP_PROPOSE",
-      targetId: context.batchId,
+      targetId: identity.batchId,
       retrySafe: true,
       maxAttempts: 2,
       request: { batchId: identity.batchId, transactionCount: transactions.length, inputFingerprint: identity.fingerprint } satisfies Prisma.InputJsonValue,
