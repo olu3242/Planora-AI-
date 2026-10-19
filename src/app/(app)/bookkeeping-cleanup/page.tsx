@@ -3,6 +3,7 @@ import { withTenantPage } from "@/lib/tenant-request";
 import { requirePageSession } from "@/auth/session";
 import { hasPermission } from "@/permissions/permissions";
 import { listBookkeepingCleanupRuns } from "@/application/accounting/bookkeeping-cleanup-review";
+import { BookkeepingCleanupProposalForm } from "@/components/bookkeeping-cleanup-proposal-form";
 async function BookkeepingCleanupPage() {
   const session = await requirePageSession();
   if (!hasPermission(session.membership.role, "accounting.recommendation.review"))
