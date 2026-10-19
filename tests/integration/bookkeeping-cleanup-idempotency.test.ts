@@ -68,6 +68,7 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   const second = await runBookkeepingCleanup({ ...context, organizationId: foreign.id }, rows.map(row => ({ ...row, organizationId: foreign.id })));
   expect(second.executionId).not.toBe(first.executionId);
   expect(second.duplicate).toBe(false);
+  expect(second.status).toBe("SUCCEEDED");
   expect(await db.runtimeExecution.count({ where: { command: "BOOKKEEPING.CLEANUP_PROPOSE", idempotencyKey: context.idempotencyKey } })).toBe(2);
  });
  it("retains a deterministic input fingerprint", async () => {
