@@ -33,7 +33,7 @@ async function handlePOST(request: Request) {
       correlationId: cid,
       idempotencyKey: input.idempotencyKey ?? randomUUID(),
       batchId: input.batchId,
-    }, input.transactions.map(transaction => ({ ...transaction, organizationId: session.organization.id })));
+    }, scopeCleanupTransactions(session.organization.id, input.transactions));
     return Response.json(result, { status: 201 });
   } catch (error) { return errorResponse(error, cid); }
 }
