@@ -69,4 +69,11 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   expect(new Set(results.map(result => result.executionId)).size).toBe(1);
   expect(await db.runtimeExecution.count({ where: { organizationId: context.organizationId, command: "BOOKKEEPING.CLEANUP_PROPOSE", idempotencyKey: context.idempotencyKey } })).toBe(1);
  });
+ it("does not write journal records while proposing findings", async () => {
+  const { context, rows } = await setup();
+  const before = await db.journalEntry.count({ where: { organizationId: context.organizationId } });
+  await runBookkeepingCleanup(context, rows);
+  const after = await db.journalEntry.count({ where: { organizationId: context.organizationId } });
+  expect(after).toBe(before);
+ });
 });
