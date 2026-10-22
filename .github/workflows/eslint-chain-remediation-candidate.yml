@@ -18,7 +18,8 @@ jobs:
           node-version: '24'
       - name: Resolve compatible patched glob dependencies without changing PR lockfile
         run: |
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --save-dev --save-exact fast-glob@3.3.3
+          npm pkg set 'overrides.@next/eslint-plugin-next.fast-glob=^3.3.3'
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           npm ci --ignore-scripts --no-audit --no-fund
           mkdir -p dist/eslint-chain-candidate
           cp package.json package-lock.json dist/eslint-chain-candidate/
@@ -33,6 +34,9 @@ jobs:
           console.log('Full dependency audit:',v);
           if ((v.moderate ?? 0)+(v.high ?? 0)+(v.critical ?? 0)>0) process.exitCode=1;
           NODE
+      - name: Verify lint and test parity even if audit fails
+        if: always()
+        run: |
           npm run lint
           npm run typecheck
           npm run test:unit
