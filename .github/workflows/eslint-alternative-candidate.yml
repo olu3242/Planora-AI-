@@ -73,6 +73,22 @@ jobs:
         if: always()
         run: |
           npm run lint
+          echo 'Verify the replacement still detects unsafe JSX images and accessibility violations'
+          cat > .planora-lint-canary.tsx <<'EOF'
+          export const ImageCanary = () => <img src='/unsafe.png' alt='canary' />;
+          export const A11yCanary = () => <div onClick={() => {}}>click</div>;
+          EOF
+          npx eslint .planora-lint-canary.tsx --format json > dist/eslint-alternative/canary.json || true
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const result=JSON.parse(readFileSync('dist/eslint-alternative/canary.json','utf8'));
+          const rules=new Set(result.flatMap(file => file.messages.map(m => m.ruleId)));
+          for (const rule of ['@next/next/no-img-element','jsx-a11y/click-events-have-key-events']) {
+            if (!rules.has(rule)) throw new Error('Missing lint canary rule: '+rule);
+          }
+          console.log('Lint canaries triggered:',[...rules]);
+          NODE
+          rm .planora-lint-canary.tsx
           npm run typecheck
           npm run test:unit
       - name: Publish candidate only
