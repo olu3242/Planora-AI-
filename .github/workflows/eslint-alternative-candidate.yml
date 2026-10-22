@@ -28,11 +28,15 @@ jobs:
           import jsxA11y from 'eslint-plugin-jsx-a11y';
           import importPlugin from 'eslint-plugin-import';
           import globals from 'globals';
+          const nextImageRule = {
+            meta: { type: 'problem', docs: { description: 'Disallow raw img elements in Next.js components' }, schema: [], messages: { avoidImg: 'Use next/image instead of a raw img element.' } },
+            create(context) { return { JSXOpeningElement(node) { if (node.name.type === 'JSXIdentifier' && node.name.name === 'img') context.report({ node, messageId: 'avoidImg' }); } }; }
+          };
           export default defineConfig([
             ...tseslint.configs.recommended,
             {
               files: ['**/*.{js,jsx,ts,tsx,mjs,cjs}'],
-              plugins: { react, 'react-hooks': reactHooks, 'jsx-a11y': jsxA11y, import: importPlugin },
+              plugins: { react, 'react-hooks': reactHooks, 'jsx-a11y': jsxA11y, import: importPlugin, '@next/next': { rules: { 'no-img-element': nextImageRule } } },
               languageOptions: { globals: { ...globals.browser, ...globals.node }, parserOptions: { ecmaFeatures: { jsx: true } } },
               settings: { react: { version: 'detect' } },
               rules: {
@@ -40,7 +44,8 @@ jobs:
                 ...reactHooks.configs.recommended.rules,
                 ...jsxA11y.configs.recommended.rules,
                 'react/react-in-jsx-scope': 'off',
-                'react/prop-types': 'off'
+                'react/prop-types': 'off',
+                '@next/next/no-img-element': 'warn'
               }
             },
             globalIgnores(['.next/**', 'coverage/**', 'playwright-report/**', 'test-results/**', 'next-env.d.ts'])
