@@ -1,0 +1,35 @@
+name: Planora B1-B4 lint certification
+on:
+  push:
+    branches:
+      - work/b1-b10-release-certification-20261022
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lint-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Reject merge conflict markers
+        run: node scripts/check-merge-conflicts.mjs
+      - name: Install pinned dependency graph
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Validate baseline lint rules
+        run: npm run lint
+      - name: Verify negative lint canaries
+        run: node scripts/check-eslint-canaries.mjs
+      - name: Compare replacement configuration when provided
+        if: hashFiles('eslint.candidate.config.mjs') != ''
+        env:
+          PLANORA_CANDIDATE_ESLINT_CONFIG: eslint.candidate.config.mjs
+        run: node scripts/check-eslint-parity.mjs
+      - name: Audit complete dependency graph
+        run: npm audit --audit-level=moderate
