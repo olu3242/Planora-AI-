@@ -65,7 +65,8 @@ describe("bookkeeping cleanup PostgreSQL idempotency", () => {
   const { context, rows } = await setup();
   const foreign = await db.organization.findUniqueOrThrow({ where: { code: "HORIZON" } });
   const first = await runBookkeepingCleanup(context, rows);
-  const second = await runBookkeepingCleanup({ ...context, organizationId: foreign.id }, rows.map(row => ({ ...row, organizationId: foreign.id })));
+  const foreignActor = await db.user.findFirstOrThrow({ where: { memberships: { some: { organizationId: foreign.id, active: true } } } });
+  const second = await runBookkeepingCleanup({ ...context, actorId: foreignActor.id, organizationId: foreign.id }, rows.map(row => ({ ...row, organizationId: foreign.id })));
   expect(second.executionId).not.toBe(first.executionId);
   expect(second.duplicate).toBe(false);
   expect(second.status).toBe("SUCCEEDED");
