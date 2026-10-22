@@ -89,6 +89,7 @@ jobs:
           npm run db:seed:test
           npm run test:security
           npm run test:performance
+          npm run test:integration
       - name: Report isolated database gate status
         if: ${{ !cancelled() }}
         run: |
