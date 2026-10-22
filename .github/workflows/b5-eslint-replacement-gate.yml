@@ -1,0 +1,38 @@
+name: B5 isolated ESLint replacement gate
+on:
+  push:
+    branches: [work/b1-b10-release-certification-20261022]
+    paths: ['.github/workflows/b5-eslint-replacement-gate.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - name: Install baseline
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          node scripts/check-eslint-canaries.mjs
+      - name: Evaluate dependency replacement in CI workspace only
+        run: |
+          npm uninstall --save-dev eslint-config-next --ignore-scripts --no-audit --no-fund
+          npm install --save-dev typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y eslint-plugin-import globals --ignore-scripts --no-audit --no-fund
+          mkdir -p dist/b5
+          cp package.json package-lock.json dist/b5/
+      - name: Run full security audit on replacement graph
+        run: npm audit --audit-level=moderate
+      - name: Preserve manifest evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b5-eslint-replacement-evidence
+          path: dist/b5/
+          retention-days: 14
