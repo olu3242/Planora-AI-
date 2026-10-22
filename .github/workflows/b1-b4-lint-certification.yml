@@ -32,4 +32,5 @@ jobs:
           PLANORA_CANDIDATE_ESLINT_CONFIG: eslint.candidate.config.mjs
         run: node scripts/check-eslint-parity.mjs
       - name: Audit complete dependency graph
+        if: ${{ !cancelled() }}
         run: npm audit --audit-level=moderate
