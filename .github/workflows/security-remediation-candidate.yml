@@ -36,7 +36,9 @@ jobs:
           npm run test:unit
           npm run test:financial
           npm run test:excel
-          npm run test:security
+          # Database-backed security tests require the isolated PostgreSQL fixture.
+          # They are exercised by the main accounting/certify jobs with PostgreSQL.
+          node --test tests/security/public-experience-guard.test.mjs
           npm run test:performance
       - name: Publish candidate manifest, lockfile and audit evidence
         if: always()
