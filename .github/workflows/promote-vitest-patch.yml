@@ -1,9 +1,6 @@
 name: Promote verified Vitest patch
 on:
   workflow_dispatch:
-  push:
-    branches: [feat/public-experience-showcase-20261018]
-    paths: ['.github/workflows/promote-vitest-patch.yml']
 permissions:
   contents: write
 jobs:
