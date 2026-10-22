@@ -20,7 +20,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd 'pg_isready -U planora_test -d planora_test'
+          --health-cmd=pg_isready
           --health-interval 5s
           --health-timeout 5s
           --health-retries 12
@@ -94,8 +94,13 @@ jobs:
         run: |
           echo 'Database gate: isolated loopback PostgreSQL service configured; test outcomes reported separately' >> "$GITHUB_STEP_SUMMARY"
       - name: Run full security audit on replacement graph
-        if: ${{ !cancelled() }}
-        run: npm audit --audit-level=moderate
+        if: ${{ success() || failure() }}
+        run: |
+          if [ ! -f package-lock.json ]; then
+            echo 'BLOCKED: dependency graph was not installed; audit cannot run' >&2
+            exit 1
+          fi
+          npm audit --audit-level=moderate
       - name: Preserve manifest evidence
         if: always()
         uses: actions/upload-artifact@v4
