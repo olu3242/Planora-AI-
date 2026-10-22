@@ -1,0 +1,100 @@
+name: ESLint replacement candidate
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['.github/workflows/eslint-alternative-candidate.yml']
+permissions:
+  contents: read
+jobs:
+  replacement-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - name: Prepare alternative without mutating the PR
+        run: |
+          npm uninstall --save-dev eslint-config-next --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm install --save-dev typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y eslint-plugin-import globals --package-lock-only --ignore-scripts --no-audit --no-fund
+          cat > eslint.config.mjs <<'EOF'
+          import { defineConfig, globalIgnores } from 'eslint/config';
+          import tseslint from 'typescript-eslint';
+          import react from 'eslint-plugin-react';
+          import reactHooks from 'eslint-plugin-react-hooks';
+          import jsxA11y from 'eslint-plugin-jsx-a11y';
+          import importPlugin from 'eslint-plugin-import';
+          import globals from 'globals';
+          const nextImageRule = {
+            meta: { type: 'problem', docs: { description: 'Disallow raw img elements in Next.js components' }, schema: [], messages: { avoidImg: 'Use next/image instead of a raw img element.' } },
+            create(context) { return { JSXOpeningElement(node) { if (node.name.type === 'JSXIdentifier' && node.name.name === 'img') context.report({ node, messageId: 'avoidImg' }); } }; }
+          };
+          export default defineConfig([
+            ...tseslint.configs.recommended,
+            {
+              files: ['**/*.{js,jsx,ts,tsx,mjs,cjs}'],
+              plugins: { react, 'react-hooks': reactHooks, 'jsx-a11y': jsxA11y, import: importPlugin, '@next/next': { rules: { 'no-img-element': nextImageRule } } },
+              languageOptions: { globals: { ...globals.browser, ...globals.node }, parserOptions: { ecmaFeatures: { jsx: true } } },
+              settings: { react: { version: 'detect' } },
+              rules: {
+                ...react.configs.recommended.rules,
+                ...reactHooks.configs.recommended.rules,
+                ...jsxA11y.configs.recommended.rules,
+                'jsx-a11y/no-autofocus': 'warn',
+                'jsx-a11y/media-has-caption': 'warn',
+                'jsx-a11y/no-noninteractive-element-interactions': 'warn',
+                'jsx-a11y/no-noninteractive-tabindex': 'warn',
+                'jsx-a11y/click-events-have-key-events': 'warn',
+                'react/react-in-jsx-scope': 'off',
+                'react/prop-types': 'off',
+                '@next/next/no-img-element': 'warn'
+              }
+            },
+            globalIgnores(['.next/**', 'coverage/**', 'playwright-report/**', 'test-results/**', 'next-env.d.ts'])
+          ]);
+          EOF
+          npm ci --ignore-scripts --no-audit --no-fund
+          mkdir -p dist/eslint-alternative
+          cp package.json package-lock.json eslint.config.mjs dist/eslint-alternative/
+      - name: Capture full audit
+        if: always()
+        run: |
+          npm audit --json > dist/eslint-alternative/audit.json || true
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const a=JSON.parse(readFileSync('dist/eslint-alternative/audit.json','utf8'));
+          console.log('Full audit:',a.metadata?.vulnerabilities);
+          if ((a.metadata?.vulnerabilities?.moderate ?? 0)+(a.metadata?.vulnerabilities?.high ?? 0)+(a.metadata?.vulnerabilities?.critical ?? 0)>0) process.exitCode=1;
+          NODE
+      - name: Validate replacement lint and type compatibility
+        if: always()
+        run: |
+          npm run lint
+          echo 'Verify the replacement still detects unsafe JSX images and accessibility violations'
+          cat > .planora-lint-canary.tsx <<'EOF'
+          export const ImageCanary = () => <img src='/unsafe.png' alt='canary' />;
+          export const A11yCanary = () => <div onClick={() => {}}>click</div>;
+          EOF
+          npx eslint .planora-lint-canary.tsx --format json > dist/eslint-alternative/canary.json || true
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const result=JSON.parse(readFileSync('dist/eslint-alternative/canary.json','utf8'));
+          const rules=new Set(result.flatMap(file => file.messages.map(m => m.ruleId)));
+          for (const rule of ['@next/next/no-img-element','jsx-a11y/click-events-have-key-events']) {
+            if (!rules.has(rule)) throw new Error('Missing lint canary rule: '+rule);
+          }
+          console.log('Lint canaries triggered:',[...rules]);
+          NODE
+          rm .planora-lint-canary.tsx
+          npm run typecheck
+          npm run test:unit
+      - name: Publish candidate only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-eslint-alternative
+          path: dist/eslint-alternative/
+          retention-days: 14

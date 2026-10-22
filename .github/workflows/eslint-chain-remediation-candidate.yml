@@ -1,0 +1,50 @@
+name: ESLint chain remediation candidate
+on:
+  pull_request:
+    paths: ['.github/workflows/eslint-chain-remediation-candidate.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  patched-glob-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - name: Resolve compatible patched glob dependencies without changing PR lockfile
+        run: |
+          npm pkg set 'overrides.@next/eslint-plugin-next.fast-glob=^3.3.3'
+          npm pkg set 'overrides.braces=3.0.3'
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
+          mkdir -p dist/eslint-chain-candidate
+          cp package.json package-lock.json dist/eslint-chain-candidate/
+      - name: Verify complete audit and lint parity
+        run: |
+          npm audit --json > dist/eslint-chain-candidate/audit.json || true
+          npm audit --audit-level=moderate > dist/eslint-chain-candidate/audit.txt 2>&1 || true
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const a=JSON.parse(readFileSync('dist/eslint-chain-candidate/audit.json','utf8'));
+          const v=a.metadata?.vulnerabilities ?? {};
+          console.log('Full dependency audit:',v);
+          if ((v.moderate ?? 0)+(v.high ?? 0)+(v.critical ?? 0)>0) process.exitCode=1;
+          NODE
+      - name: Verify lint and test parity even if audit fails
+        if: always()
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run test:unit
+      - name: Upload exact candidate and audit for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-eslint-chain-candidate
+          path: dist/eslint-chain-candidate/
+          retention-days: 14

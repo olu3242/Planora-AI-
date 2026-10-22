@@ -27,6 +27,11 @@ export function parseEnvironment(input: Record<string, string | undefined>): Env
 let cached: Environment | undefined;
 export function env(): Environment {
   if (process.env.APP_ENV === "test") return parseEnvironment(process.env);
-  cached ??= parseEnvironment(process.env);
+  cached ??= parseEnvironment({
+    ...process.env,
+    // Vercel supplies the hostname for this exact deployment. Explicit URLs
+    // still take precedence for custom domains and non-Vercel environments.
+    APP_URL: process.env.APP_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined),
+  });
   return cached;
 }

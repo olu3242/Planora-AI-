@@ -1,19 +1,12 @@
 import Link from "next/link";
-<<<<<<< HEAD
+import { PlanoraLogo } from "./planora-logo";
 import { BarChart3, BookOpen, Database, FileSpreadsheet, Gauge, GitCompareArrows, Landmark, ShieldCheck, Settings, SquareChartGantt, Users, WandSparkles } from "lucide-react";
-=======
-import { BarChart3, Database, FileSpreadsheet, Gauge, GitCompareArrows, Landmark, ShieldCheck, Settings, SquareChartGantt, Users, WandSparkles } from "lucide-react";
->>>>>>> origin/main
 import type { getSession } from "@/auth/session";
 
 type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;
 
 const baseNav = [
-<<<<<<< HEAD
-  ["Command Center", "/command-center", Gauge, true], ["Actuals", "/actuals", Database, true], ["Accounting", "/accounting", BookOpen, true],
-=======
-  ["Command Center", "/command-center", Gauge, true], ["Actuals", "/actuals", Database, true],
->>>>>>> origin/main
+  ["Command Center", "/command-center", Gauge, true], ["Actuals", "/actuals", Database, true], ["Accounting", "/accounting", BookOpen, true], ["Cleanup review", "/bookkeeping-cleanup", ShieldCheck, true],
   ["Planning", "/planning", SquareChartGantt, false], ["Forecasts", "/forecasts", WandSparkles, true],
   ["Excel", "/excel", FileSpreadsheet, true], ["Reconciliation", "/reconciliation", GitCompareArrows, false],
   ["Governance", "/governance", Landmark, false],
@@ -23,10 +16,7 @@ const managementNav = [
   ["Command Center", "/command-center", Gauge, true],
   ["Executive Dashboard", "/dashboard", BarChart3, true],
   ["Actuals", "/actuals", Database, true],
-<<<<<<< HEAD
   ["Accounting", "/accounting", BookOpen, true],
-=======
->>>>>>> origin/main
   ["Excel", "/excel", FileSpreadsheet, true],
   ["Forecasts", "/forecasts", WandSparkles, true],
 ] as const;
@@ -42,5 +32,5 @@ const platformNav = [
 export function AppShell({ session, children }: { session: Session; children: React.ReactNode }) {
   const nav = session.membership.role === "PLATFORM_ADMIN" ? platformNav : session.membership.role === "CFO" ? managementNav : baseNav;
   const home = session.membership.role === "PLATFORM_ADMIN" ? "/platform-admin" : "/command-center";
-  return <div className="app-shell"><aside className="sidebar"><Link className="brand" href={home}><span className="brand-mark" />Planora</Link><div className="nav-group"><div className="nav-label">Workspace</div>{nav.map(([label, href, Icon, enabled]) => enabled ? <Link key={label} className="nav-link" href={href}><Icon size={17} />{label}</Link> : <span key={label} className="nav-link disabled" aria-disabled="true"><Icon size={17} />{label}<span className="soon">SOON</span></span>)}</div></aside><div className="main"><header className="topbar"><div><div className="org-name">{session.organization.name}</div><div className="subtle">{session.membership.role.replace("FPA_", "FP&A ").replace("PLATFORM_", "Platform ")}</div></div><div className="user-area"><span>{session.user.name}</span><form action="/api/auth/logout" method="post"><button className="button button-secondary" type="submit">Sign out</button></form></div></header><main className="content">{children}</main></div></div>;
+  return <div className="app-shell"><aside className="sidebar"><Link className="brand" href={home}><PlanoraLogo/></Link><div className="nav-group"><div className="nav-label">Workspace</div>{nav.map(([label, href, Icon, enabled]) => enabled ? <Link key={label} className="nav-link" href={href}><Icon size={17} />{label}</Link> : <span key={label} className="nav-link disabled" aria-disabled="true"><Icon size={17} />{label}<span className="soon">SOON</span></span>)}</div></aside><div className="main"><header className="topbar"><div><div className="org-name">{session.organization.name}</div><div className="subtle">{session.membership.role.replace("FPA_", "FP&A ").replace("PLATFORM_", "Platform ")}</div></div><div className="user-area"><span>{session.user.name}</span><form action="/api/auth/logout" method="post"><button className="button button-secondary" type="submit">Sign out</button></form></div></header><main className="content">{children}</main></div></div>;
 }

@@ -1,0 +1,65 @@
+name: Security remediation candidate
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/security-remediation-candidate.yml'
+permissions:
+  contents: read
+jobs:
+  vitest-patch-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Reconcile Vitest and coverage to patched versions in isolated candidate
+        run: |
+          npm install --save-dev --save-exact vitest@4.1.12 @vitest/coverage-v8@4.1.12 --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
+          mkdir -p dist/security-candidate
+          cp package.json package-lock.json dist/security-candidate/
+      - name: Audit candidate (do not suppress findings)
+        if: always()
+        run: |
+          npm audit --json > dist/security-candidate/audit.json || true
+          npm audit --audit-level=moderate > dist/security-candidate/audit.txt 2>&1 || true
+          node -e 'const fs=require("node:fs"); const p="dist/security-candidate/audit.json"; if(fs.existsSync(p)){const a=JSON.parse(fs.readFileSync(p,"utf8")); console.log("Candidate vulnerabilities:",JSON.stringify(a.metadata?.vulnerabilities ?? {}));}'
+      - name: Assert patched Vitest advisories are resolved
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const audit = JSON.parse(readFileSync('dist/security-candidate/audit.json', 'utf8'));
+          const vulnerable = audit.vulnerabilities ?? {};
+          const vitest = Object.keys(vulnerable).filter((name) => name === 'vitest' || name.startsWith('@vitest/'));
+          const summary = audit.metadata?.vulnerabilities ?? {};
+          if (vitest.length || (summary.moderate ?? 0) > 0 || (summary.critical ?? 0) > 0) {
+            console.error('Patched Vitest candidate has unexpected advisories:', { vitest, summary });
+            process.exit(1);
+          }
+          console.log('Vitest advisory family cleared. Remaining full-graph findings:', summary);
+          NODE
+      - name: Validate candidate test and lint compatibility
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run test:unit
+          npm run test:financial
+          npm run test:excel
+          # Database-backed security tests require the isolated PostgreSQL fixture.
+          # They are exercised by the main accounting/certify jobs with PostgreSQL.
+          node --test tests/security/public-experience-guard.test.mjs
+          # Database-backed volume tests are covered by the main certify job.
+          npx vitest run tests/performance/forecast-volume.test.ts -t 'parses, profiles, and maps 10,000 CSV rows within the interactive budget'
+      - name: Publish candidate manifest, lockfile and audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planora-vitest-patch-candidate
+          path: dist/security-candidate/
+          retention-days: 14
+          if-no-files-found: warn

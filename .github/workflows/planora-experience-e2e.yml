@@ -1,0 +1,57 @@
+name: Planora experience E2E validation
+on:
+  push:
+    branches:
+      - feat/public-experience-showcase-20261018
+    paths:
+      - 'src/app/experience/**'
+      - 'src/components/brand-landing.tsx'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tests/e2e/public-experience.spec.ts'
+      - 'tests/security/public-experience-guard.test.mjs'
+      - 'scripts/check-public-experience.mjs'
+      - 'scripts/check-dependency-conflicts.mjs'
+      - '.github/workflows/planora-experience-e2e.yml'
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      APP_ENV: test
+      APP_URL: http://127.0.0.1:3000
+      DATABASE_URL: postgresql://unused:unused@127.0.0.1:1/planora_public_test
+      SESSION_COOKIE_NAME: planora_session
+      SESSION_TTL_HOURS: 12
+      PLAYWRIGHT_PRODUCTION: "1"
+      PLAYWRIGHT_PUBLIC_ONLY: "1"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Use npm version matching lockfile generation
+        run: npm install --global npm@11.6.2
+      - run: node scripts/check-merge-conflicts.mjs
+      - name: Validate manifests and public marketing safety
+        run: |
+          node scripts/check-dependency-conflicts.mjs
+          node --test tests/security/public-experience-guard.test.mjs
+          node scripts/check-public-experience.mjs
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Browser E2E
+        run: npx playwright test tests/e2e/public-experience.spec.ts --project=chromium

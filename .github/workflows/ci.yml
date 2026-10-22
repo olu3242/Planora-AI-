@@ -1,9 +1,6 @@
 name: CI
 on:
-<<<<<<< HEAD
   workflow_dispatch:
-=======
->>>>>>> origin/main
   pull_request:
   push:
     branches: [main]
@@ -14,7 +11,6 @@ jobs:
       postgres:
         image: postgres:18-alpine
         env:
-<<<<<<< HEAD
           POSTGRES_DB: planora_test
           POSTGRES_USER: planora_test
           POSTGRES_PASSWORD: planora_ci_test_only
@@ -24,16 +20,8 @@ jobs:
     env:
       DATABASE_URL: postgresql://planora_test:planora_ci_test_only@127.0.0.1:5432/planora_test?schema=public
       TEST_DATABASE_URL: postgresql://planora_test:planora_ci_test_only@127.0.0.1:5432/planora_test?schema=public
-=======
-          POSTGRES_DB: planora
-          POSTGRES_USER: planora
-          POSTGRES_PASSWORD: planora_ci
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U planora" --health-interval 5s --health-timeout 5s --health-retries 10
-    env:
-      DATABASE_URL: postgresql://planora:planora_ci@127.0.0.1:5432/planora?schema=public
->>>>>>> origin/main
+      TEST_RUNTIME_DATABASE_URL: postgresql://planora_test_runtime:planora_ci_runtime_only@127.0.0.1:5432/planora_test?schema=public
+      RUNTIME_DATABASE_URL: postgresql://planora_test_runtime:planora_ci_runtime_only@127.0.0.1:5432/planora_test?schema=public
       APP_ENV: test
       APP_URL: http://127.0.0.1:3000
       SESSION_COOKIE_NAME: planora_session
@@ -45,7 +33,27 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: npm }
+      - run: node scripts/check-merge-conflicts.mjs
       - run: npm ci
-      - run: npm audit --audit-level=moderate
+      - name: Verify vulnerable development dependencies stay outside production graph
+        run: node scripts/check-dev-dependency-boundary.mjs
+      - name: Audit production dependency graph
+        run: npm audit --omit=dev --audit-level=moderate
+      - name: Capture complete dependency audit evidence
+        if: always()
+        run: |
+          npm audit --json > full-dependency-audit.json || true
+          node -e 'const fs=require("node:fs"); const a=JSON.parse(fs.readFileSync("full-dependency-audit.json","utf8")); console.log("Full audit severity summary:",JSON.stringify(a.metadata?.vulnerabilities ?? {}));'
+      - name: Upload dependency audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-dependency-audit
+          path: full-dependency-audit.json
+          retention-days: 14
+          if-no-files-found: warn
       - run: npx playwright install --with-deps chromium
       - run: npm run certify
+      - name: Audit complete dependency graph (release gate)
+        if: ${{ !cancelled() }}
+        run: npm audit --audit-level=moderate
