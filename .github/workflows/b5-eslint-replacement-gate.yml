@@ -10,6 +10,24 @@ jobs:
   evaluate:
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: planora_test
+          POSTGRES_PASSWORD: local_ci_only
+          POSTGRES_DB: planora_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd 'pg_isready -U planora_test -d planora_test'
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      APP_ENV: test
+      TEST_DATABASE_URL: postgresql://planora_test:local_ci_only@127.0.0.1:5432/planora_test?schema=public
+      DATABASE_URL: postgresql://planora_test:local_ci_only@127.0.0.1:5432/planora_test?schema=public
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -66,25 +84,14 @@ jobs:
           npm run test:financial
           npm run build
       - name: Require isolated database before security integration tests
-        env:
-          TEST_DATABASE_URL: ${{ secrets.PLANORA_CI_TEST_DATABASE_URL }}
         run: |
-          if [ -z "$TEST_DATABASE_URL" ]; then
-            echo 'BLOCKED: isolated PLANORA_CI_TEST_DATABASE_URL is not configured' >&2
-            exit 1
-          fi
+          npm run db:migrate:test
+          npm run db:seed:test
           npm run test:security
           npm run test:performance
       - name: Report isolated database gate status
         if: ${{ !cancelled() }}
-        env:
-          TEST_DATABASE_URL: ${{ secrets.PLANORA_CI_TEST_DATABASE_URL }}
-        run: |
-          if [ -z "$TEST_DATABASE_URL" ]; then
-            echo 'Database gate: BLOCKED (secret unavailable)' >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo 'Database gate: credential supplied (test outcome in job steps)' >> "$GITHUB_STEP_SUMMARY"
-          fi
+        run: echo 'Database gate: isolated loopback PostgreSQL service configured; test outcomes reported separately' >> "$GITHUB_STEP_SUMMARY"
       - name: Run full security audit on replacement graph
         if: ${{ !cancelled() }}
         run: npm audit --audit-level=moderate
