@@ -27,6 +27,38 @@ jobs:
           npm install --save-dev typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y eslint-plugin-import globals --ignore-scripts --no-audit --no-fund
           mkdir -p dist/b5
           cp package.json package-lock.json dist/b5/
+      - name: Verify replacement canary coverage and rule parity
+        run: |
+          node --input-type=module <<'NODE'
+          import { ESLint } from 'eslint';
+          import { writeFileSync } from 'node:fs';
+          import { createRequire } from 'node:module';
+          const require = createRequire(import.meta.url);
+          const ts = require('typescript-eslint');
+          const hooks = require('eslint-plugin-react-hooks');
+          const a11y = require('eslint-plugin-jsx-a11y');
+          const nextRule = {
+            meta: { type: 'problem', schema: [], messages: { raw: 'Use next/image.' } },
+            create(ctx) { return { JSXOpeningElement(n) { if(n.name.type === 'JSXIdentifier' && n.name.name === 'img') ctx.report({node:n,messageId:'raw'}); } }; }
+          };
+          const config = [
+            ...ts.configs.recommended,
+            { files: ['**/*.{tsx,jsx}'], plugins: { 'react-hooks': hooks, 'jsx-a11y': a11y, '@next/next': { rules: { 'no-img-element': nextRule } } }, rules: { ...hooks.configs.recommended.rules, ...a11y.configs.recommended.rules, '@next/next/no-img-element': 'warn' } }
+          ];
+          writeFileSync('eslint.candidate.config.mjs', 'export default [];\\n');
+          const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: config });
+          const fixtures = [
+            ['raw image', "export default function A(){return <img src='/x' alt='x'/>}", '@next/next/no-img-element'],
+            ['keyboard', 'export default function A(){return <div onClick={()=>{}}>A</div>}', 'jsx-a11y/click-events-have-key-events'],
+            ['hooks', "import {useState} from 'react'; export default function A({x}:{x:boolean}){if(x)useState(0);return null}", 'react-hooks/rules-of-hooks']
+          ];
+          for (const [name, code, rule] of fixtures) {
+            const [result] = await eslint.lintText(code,{filePath:'app/__candidate__.tsx'});
+            const observed = result.messages.map(m=>m.ruleId);
+            console.log(name, observed);
+            if(!observed.includes(rule)) throw new Error(name+' missing '+rule);
+          }
+          NODE
       - name: Run full security audit on replacement graph
         run: npm audit --audit-level=moderate
       - name: Preserve manifest evidence
