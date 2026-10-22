@@ -19,6 +19,7 @@ jobs:
       - name: Resolve compatible patched glob dependencies without changing PR lockfile
         run: |
           npm pkg set 'overrides.@next/eslint-plugin-next.fast-glob=^3.3.3'
+          npm pkg set 'overrides.braces=3.0.3'
           npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           npm ci --ignore-scripts --no-audit --no-fund
           mkdir -p dist/eslint-chain-candidate
