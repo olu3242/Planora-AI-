@@ -82,6 +82,7 @@ jobs:
           npm run typecheck
           npm run test:unit
           npm run test:financial
+          npm run test:excel
           npm run build
       - name: Require isolated database before security integration tests
         run: |
