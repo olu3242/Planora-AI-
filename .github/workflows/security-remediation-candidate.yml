@@ -39,7 +39,8 @@ jobs:
           # Database-backed security tests require the isolated PostgreSQL fixture.
           # They are exercised by the main accounting/certify jobs with PostgreSQL.
           node --test tests/security/public-experience-guard.test.mjs
-          npm run test:performance
+          # Database-backed volume tests are covered by the main certify job.
+          npx vitest run tests/performance/forecast-volume.test.ts -t 'parses, profiles, and maps 10,000 CSV rows within the interactive budget'
       - name: Publish candidate manifest, lockfile and audit evidence
         if: always()
         uses: actions/upload-artifact@v4
