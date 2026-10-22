@@ -11,7 +11,7 @@ const fixtures = [
   {
     name: "click without keyboard",
     source: "export default function Page(){ return <div onClick={() => {}}>Open</div>; }",
-    expected: ["jsx-a11y/click-events-have-key-events"]
+    expected: [process.env.PLANORA_CANDIDATE_ESLINT_CONFIG ? "jsx-a11y/click-events-have-key-events" : "planora/keyboard-interaction"]
   },
   {
     name: "hook in condition",
