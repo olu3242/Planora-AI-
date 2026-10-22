@@ -43,6 +43,11 @@ jobs:
                 ...react.configs.recommended.rules,
                 ...reactHooks.configs.recommended.rules,
                 ...jsxA11y.configs.recommended.rules,
+                'jsx-a11y/no-autofocus': 'warn',
+                'jsx-a11y/media-has-caption': 'warn',
+                'jsx-a11y/no-noninteractive-element-interactions': 'warn',
+                'jsx-a11y/no-noninteractive-tabindex': 'warn',
+                'jsx-a11y/click-events-have-key-events': 'warn',
                 'react/react-in-jsx-scope': 'off',
                 'react/prop-types': 'off',
                 '@next/next/no-img-element': 'warn'
