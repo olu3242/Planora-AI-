@@ -59,6 +59,14 @@ jobs:
             if(!observed.includes(rule)) throw new Error(name+' missing '+rule);
           }
           NODE
+      - name: Run application checks with replacement graph
+        run: |
+          npm run typecheck
+          npm run test:unit
+          npm run test:financial
+          npm run test:security
+          npm run test:performance
+          npm run build
       - name: Run full security audit on replacement graph
         run: npm audit --audit-level=moderate
       - name: Preserve manifest evidence
