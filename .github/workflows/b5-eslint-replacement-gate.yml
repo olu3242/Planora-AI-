@@ -68,6 +68,7 @@ jobs:
           npm run test:performance
           npm run build
       - name: Run full security audit on replacement graph
+        if: ${{ !cancelled() }}
         run: npm audit --audit-level=moderate
       - name: Preserve manifest evidence
         if: always()
