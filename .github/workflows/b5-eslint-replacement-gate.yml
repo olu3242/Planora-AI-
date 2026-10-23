@@ -98,6 +98,7 @@ jobs:
       - name: Verify candidate rule parity against baseline
         env:
           PLANORA_CANDIDATE_ESLINT_CONFIG: eslint.candidate.config.mjs
+          PLANORA_BASELINE_RULE_INVENTORY: dist/b5/baseline-eslint-rules.json
         run: |
           if [ ! -s eslint.candidate.config.mjs ]; then
             echo 'BLOCKED: real replacement ESLint configuration not supplied' >&2
