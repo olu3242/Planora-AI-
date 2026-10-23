@@ -6,6 +6,18 @@ import a11y from "eslint-plugin-jsx-a11y";
 import globals from "globals";
 import importPlugin from "eslint-plugin-import";
 
+const keyboardInteractionRule = {
+  meta: { type: "problem", schema: [], messages: { keyboard: "Clickable non-interactive elements must also support keyboard activation." } },
+  create(context) {
+    return { JSXOpeningElement(node) {
+      if (node.name.type !== "JSXIdentifier" || !["div", "span", "section", "article", "li"].includes(node.name.name)) return;
+      const attrs = node.attributes.filter(attr => attr.type === "JSXAttribute");
+      const has = name => attrs.some(attr => attr.name.name === name);
+      if (has("onClick") && !["onKeyDown", "onKeyUp", "onKeyPress"].some(has)) context.report({ node, messageId: "keyboard" });
+    } };
+  }
+};
+
 // Evaluation candidate only. Do not promote until all baseline rule parity,
 // Next.js-specific protections, and repository lint checks are certified.
 export default defineConfig([
@@ -20,6 +32,7 @@ export default defineConfig([
     plugins: {
       react,
       import: importPlugin,
+      planora: { rules: { "keyboard-interaction": keyboardInteractionRule } },
       "react-hooks": hooks,
       "jsx-a11y": a11y
     },
@@ -29,7 +42,8 @@ export default defineConfig([
       ...a11y.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
-      "import/no-anonymous-default-export": "warn"
+      "import/no-anonymous-default-export": "warn",
+      "planora/keyboard-interaction": "error"
     }
   },
   globalIgnores([".next/**", "coverage/**", "playwright-report/**", "test-results/**", "next-env.d.ts"])
