@@ -48,7 +48,7 @@ jobs:
           npm install --save-dev typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y eslint-plugin-import globals --ignore-scripts --no-audit --no-fund
           mkdir -p dist/b5
           cp package.json package-lock.json dist/b5/
-      - name: Verify replacement canary coverage and rule parity
+      - name: Verify replacement negative canary coverage (not full rule parity)
         run: |
           node --input-type=module <<'NODE'
           import { ESLint } from 'eslint';
@@ -80,6 +80,10 @@ jobs:
             if(!observed.includes(rule)) throw new Error(name+' missing '+rule);
           }
           NODE
+      - name: Record full rule-parity gate as pending
+        run: |
+          echo 'B5 negative canaries are smoke tests, NOT complete ESLint rule parity.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Full parity must compare a real replacement configuration against the baseline before dependency integration.' >> "$GITHUB_STEP_SUMMARY"
       - name: Run database-independent application checks
         run: |
           npm run typecheck
