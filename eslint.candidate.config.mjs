@@ -5,6 +5,7 @@ import hooks from "eslint-plugin-react-hooks";
 import a11y from "eslint-plugin-jsx-a11y";
 import globals from "globals";
 import importPlugin from "eslint-plugin-import";
+import nextPlugin from "@next/eslint-plugin-next";
 
 const keyboardInteractionRule = {
   meta: { type: "problem", schema: [], messages: { keyboard: "Clickable non-interactive elements must also support keyboard activation." } },
@@ -32,12 +33,15 @@ export default defineConfig([
     plugins: {
       react,
       import: importPlugin,
+      "@next/next": nextPlugin,
       planora: { rules: { "keyboard-interaction": keyboardInteractionRule } },
       "react-hooks": hooks,
       "jsx-a11y": a11y
     },
     rules: {
       ...react.configs.recommended.rules,
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
       ...hooks.configs.recommended.rules,
       ...a11y.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
