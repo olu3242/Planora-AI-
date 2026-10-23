@@ -26,6 +26,9 @@ jobs:
           --health-retries 12
     env:
       APP_ENV: test
+      APP_URL: http://127.0.0.1:3000
+      SESSION_COOKIE_NAME: planora_ci_session
+      SESSION_TTL_HOURS: '12'
       TEST_DATABASE_URL: postgresql://planora_test:local_ci_only@127.0.0.1:5432/planora_test?schema=public
       DATABASE_URL: postgresql://planora_test:local_ci_only@127.0.0.1:5432/planora_test?schema=public
     steps:
