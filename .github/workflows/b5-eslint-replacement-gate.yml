@@ -2,7 +2,7 @@ name: B5 isolated ESLint replacement gate
 on:
   push:
     branches: [work/b1-b10-release-certification-20261022]
-    paths: ['.github/workflows/b5-eslint-replacement-gate.yml']
+    paths: ['.github/workflows/b5-eslint-replacement-gate.yml', 'eslint.candidate.config.mjs', 'scripts/check-eslint-parity.mjs']
   workflow_dispatch:
 permissions:
   contents: read
