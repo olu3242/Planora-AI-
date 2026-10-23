@@ -2,7 +2,7 @@ name: B5 isolated ESLint replacement gate
 on:
   push:
     branches: [work/b1-b10-release-certification-20261022]
-    paths: ['.github/workflows/b5-eslint-replacement-gate.yml', 'eslint.candidate.config.mjs', 'scripts/check-eslint-parity.mjs']
+    paths: ['.github/workflows/b5-eslint-replacement-gate.yml', 'eslint.candidate.config.mjs', 'scripts/check-eslint-parity.mjs', 'src/components/**', 'public/media/planora/**']
   workflow_dispatch:
 permissions:
   contents: read
@@ -74,13 +74,10 @@ jobs:
           const ts = require('typescript-eslint');
           const hooks = require('eslint-plugin-react-hooks');
           const a11y = require('eslint-plugin-jsx-a11y');
-          const nextRule = {
-            meta: { type: 'problem', schema: [], messages: { raw: 'Use next/image.' } },
-            create(ctx) { return { JSXOpeningElement(n) { if(n.name.type === 'JSXIdentifier' && n.name.name === 'img') ctx.report({node:n,messageId:'raw'}); } }; }
-          };
+          const next = require('@next/eslint-plugin-next');
           const config = [
             ...ts.configs.recommended,
-            { files: ['**/*.{tsx,jsx}'], plugins: { 'react-hooks': hooks, 'jsx-a11y': a11y, '@next/next': { rules: { 'no-img-element': nextRule } } }, rules: { ...hooks.configs.recommended.rules, ...a11y.configs.recommended.rules, '@next/next/no-img-element': 'warn' } }
+            { files: ['**/*.{tsx,jsx}'], plugins: { 'react-hooks': hooks, 'jsx-a11y': a11y, '@next/next': next }, rules: { ...hooks.configs.recommended.rules, ...a11y.configs.recommended.rules, '@next/next/no-img-element': 'warn' } }
           ];
           const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: config });
           const fixtures = [
