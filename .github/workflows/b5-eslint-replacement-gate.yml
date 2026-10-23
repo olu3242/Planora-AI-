@@ -105,6 +105,9 @@ jobs:
             exit 1
           fi
           node scripts/check-eslint-parity.mjs
+      - name: Lint application with replacement configuration
+        run: |
+          npx eslint --config eslint.candidate.config.mjs app src pages components lib scripts --no-error-on-unmatched-pattern
       - name: Record full rule-parity gate as pending
         run: |
           echo 'B5 negative canaries are smoke tests, NOT complete ESLint rule parity.' >> "$GITHUB_STEP_SUMMARY"
