@@ -94,6 +94,9 @@ jobs:
           npm run test:security
           npm run test:performance
           npm run test:integration
+      - name: Validate isolated database schema after test execution
+        if: ${{ success() }}
+        run: npm run db:status:test
       - name: Report isolated database gate status
         if: ${{ !cancelled() }}
         run: |
