@@ -52,7 +52,7 @@ function VideoLightbox({ media, close }: { media: Walkthrough; close: () => void
   }, []);
   return <motion.dialog initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:reduced?0:0.2,ease:[0.16,1,0.3,1]}} ref={dialog} className="cluster-dialog" aria-label={media.title} onCancel={event => { event.preventDefault(); close(); }}>
     <div className="fc:mx-auto fc:flex fc:h-full fc:max-w-6xl fc:flex-col fc:justify-center fc:gap-6 fc:p-6">
-      <div className="fc:flex fc:items-center fc:justify-between fc:gap-4"><h2 className="fc:text-2xl fc:font-bold">{media.title}</h2><button autoFocus aria-label="Close video" onClick={close}><X /></button></div>
+      <div className="fc:flex fc:items-center fc:justify-between fc:gap-4"><h2 className="fc:text-2xl fc:font-bold">{media.title}</h2><button aria-label="Close video" onClick={close}><X /></button></div>
       <video src={media.src} poster={media.poster} autoPlay controls playsInline preload="metadata" aria-label={media.title}>{media.captions && <track kind="captions" src={media.captions} srcLang="en" label="English" default />}</video>
       <p>{media.description}</p>
     </div>
