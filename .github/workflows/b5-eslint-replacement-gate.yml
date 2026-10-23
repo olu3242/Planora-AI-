@@ -43,6 +43,22 @@ jobs:
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           node scripts/check-eslint-canaries.mjs
+      - name: Capture baseline ESLint rule inventory before dependency removal
+        run: |
+          mkdir -p dist/b5
+          node --input-type=module <<'NODE'
+          import { ESLint } from 'eslint';
+          import { writeFileSync } from 'node:fs';
+          const engine = new ESLint({ overrideConfigFile: 'eslint.config.mjs' });
+          const files = ['app/page.tsx', 'src/app/page.tsx', 'pages/index.tsx'];
+          const inventory = {};
+          for (const file of files) {
+            const config = await engine.calculateConfigForFile(file);
+            if (config?.rules) inventory[file] = config.rules;
+          }
+          if (!Object.keys(inventory).length) throw new Error('No baseline ESLint rules resolved');
+          writeFileSync('dist/b5/baseline-eslint-rules.json', JSON.stringify(inventory, null, 2));
+          NODE
       - name: Evaluate dependency replacement in CI workspace only
         run: |
           npm uninstall --save-dev eslint-config-next --ignore-scripts --no-audit --no-fund
