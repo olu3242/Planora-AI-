@@ -3,40 +3,37 @@ import { ESLint } from "eslint";
 const baseline = process.env.PLANORA_BASELINE_ESLINT_CONFIG ?? "eslint.config.mjs";
 const candidate = process.env.PLANORA_CANDIDATE_ESLINT_CONFIG;
 if (!candidate) {
-  console.error("Set PLANORA_CANDIDATE_ESLINT_CONFIG to the reviewed candidate configuration path.");
+  console.error("PLANORA_CANDIDATE_ESLINT_CONFIG is required");
   process.exit(2);
 }
-const representative = (process.env.PLANORA_ESLINT_PARITY_FILES ?? "app/page.tsx,src/app/page.tsx,pages/index.tsx").split(",").map(x => x.trim()).filter(Boolean);
-async function loadRules(configFile) {
-  const engine = new ESLint({ overrideConfigFile: configFile });
-  for (const file of representative) {
-    const config = await engine.calculateConfigForFile(file);
-    if (config?.rules && Object.keys(config.rules).length) return config.rules;
-  }
-  throw new Error("No ESLint configuration resolved for representative Next.js files");
-}
-const severity = (rule) => {
-  const v = Array.isArray(rule) ? rule[0] : rule;
-  return v === "error" || v === 2 ? 2 : v === "warn" || v === 1 ? 1 : 0;
+const files = (process.env.PLANORA_ESLINT_PARITY_FILES ?? "app/page.tsx,src/app/page.tsx,pages/index.tsx")
+  .split(",").map(value => value.trim()).filter(Boolean);
+const severity = setting => {
+  const value = Array.isArray(setting) ? setting[0] : setting;
+  return value === "error" || value === 2 ? 2 : value === "warn" || value === 1 ? 1 : 0;
 };
+
 try {
-  const original = await loadRules(baseline);
-  const replacement = await loadRules(candidate);
-  const regressions = Object.entries(original)
-    .filter(([, value]) => severity(value) > 0)
-    .filter(([name, value]) => severity(replacement[name]) < severity(value))
-    .map(([name, value]) => ({
-      rule: name,
-      baseline: severity(value),
-      candidate: severity(replacement[name])
-    }));
-  const summary = {
-    baselineRuleCount: Object.keys(original).length,
-    candidateRuleCount: Object.keys(replacement).length,
-    weakenedOrMissingRules: regressions
-  };
-  console.log(JSON.stringify(summary, null, 2));
-  if (regressions.length) process.exitCode = 1;
+  const original = new ESLint({ overrideConfigFile: baseline });
+  const replacement = new ESLint({ overrideConfigFile: candidate });
+  const results = [];
+  let covered = 0;
+  for (const file of files) {
+    const base = await original.calculateConfigForFile(file);
+    const next = await replacement.calculateConfigForFile(file);
+    if (!base?.rules || !next?.rules) {
+      results.push({ file, error: "Missing baseline or candidate rules" });
+      continue;
+    }
+    covered++;
+    const weakened = Object.entries(base.rules)
+      .filter(([, setting]) => severity(setting) > 0)
+      .filter(([rule, setting]) => severity(next.rules[rule]) < severity(setting))
+      .map(([rule, setting]) => ({ rule, baseline: severity(setting), candidate: severity(next.rules[rule]) }));
+    results.push({ file, baselineRuleCount: Object.keys(base.rules).length, candidateRuleCount: Object.keys(next.rules).length, weakened });
+  }
+  console.log(JSON.stringify({ covered, expected: files.length, results }, null, 2));
+  if (covered !== files.length || results.some(result => result.error || result.weakened?.length)) process.exitCode = 1;
 } catch (error) {
   console.error(error);
   process.exitCode = 2;
