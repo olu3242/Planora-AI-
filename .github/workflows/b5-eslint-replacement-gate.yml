@@ -53,7 +53,6 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import { ESLint } from 'eslint';
-          import { writeFileSync } from 'node:fs';
           import { createRequire } from 'node:module';
           const require = createRequire(import.meta.url);
           const ts = require('typescript-eslint');
@@ -67,7 +66,6 @@ jobs:
             ...ts.configs.recommended,
             { files: ['**/*.{tsx,jsx}'], plugins: { 'react-hooks': hooks, 'jsx-a11y': a11y, '@next/next': { rules: { 'no-img-element': nextRule } } }, rules: { ...hooks.configs.recommended.rules, ...a11y.configs.recommended.rules, '@next/next/no-img-element': 'warn' } }
           ];
-          writeFileSync('eslint.candidate.config.mjs', 'export default [];\\n');
           const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: config });
           const fixtures = [
             ['raw image', "export default function A(){return <img src='/x' alt='x'/>}", '@next/next/no-img-element'],
