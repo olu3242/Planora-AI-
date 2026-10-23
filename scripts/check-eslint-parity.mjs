@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { ESLint } from "eslint";
 
 const baseline = process.env.PLANORA_BASELINE_ESLINT_CONFIG ?? "eslint.config.mjs";
@@ -14,12 +15,14 @@ const severity = setting => {
 };
 
 try {
-  const original = new ESLint({ overrideConfigFile: baseline });
+  const inventoryPath = process.env.PLANORA_BASELINE_RULE_INVENTORY;
+  const inventory = inventoryPath ? JSON.parse(readFileSync(inventoryPath, "utf8")) : null;
+  const original = inventory ? null : new ESLint({ overrideConfigFile: baseline });
   const replacement = new ESLint({ overrideConfigFile: candidate });
   const results = [];
   let covered = 0;
   for (const file of files) {
-    const base = await original.calculateConfigForFile(file);
+    const base = inventory ? { rules: inventory[file] } : await original.calculateConfigForFile(file);
     const next = await replacement.calculateConfigForFile(file);
     if (!base?.rules || !next?.rules) {
       results.push({ file, error: "Missing baseline or candidate rules" });
