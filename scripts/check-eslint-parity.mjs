@@ -6,7 +6,7 @@ if (!candidate) {
   console.error("Set PLANORA_CANDIDATE_ESLINT_CONFIG to the reviewed candidate configuration path.");
   process.exit(2);
 }
-const representative = ["app/page.tsx", "src/app/page.tsx", "pages/index.tsx"];
+const representative = (process.env.PLANORA_ESLINT_PARITY_FILES ?? "app/page.tsx,src/app/page.tsx,pages/index.tsx").split(",").map(x => x.trim()).filter(Boolean);
 async function loadRules(configFile) {
   const engine = new ESLint({ overrideConfigFile: configFile });
   for (const file of representative) {
