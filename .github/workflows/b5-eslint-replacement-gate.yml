@@ -79,6 +79,15 @@ jobs:
             if(!observed.includes(rule)) throw new Error(name+' missing '+rule);
           }
           NODE
+      - name: Verify candidate rule parity against baseline
+        env:
+          PLANORA_CANDIDATE_ESLINT_CONFIG: eslint.candidate.config.mjs
+        run: |
+          if [ ! -s eslint.candidate.config.mjs ]; then
+            echo 'BLOCKED: real replacement ESLint configuration not supplied' >&2
+            exit 1
+          fi
+          node scripts/check-eslint-parity.mjs
       - name: Record full rule-parity gate as pending
         run: |
           echo 'B5 negative canaries are smoke tests, NOT complete ESLint rule parity.' >> "$GITHUB_STEP_SUMMARY"
