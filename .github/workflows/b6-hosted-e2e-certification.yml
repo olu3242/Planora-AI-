@@ -1,0 +1,57 @@
+name: B6 hosted E2E readiness and authentication smoke
+on:
+  push:
+    branches: [work/b1-b10-release-certification-20261022]
+    paths: ['.github/workflows/b6-hosted-e2e-certification.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  hosted-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ vars.PLANORA_STAGING_URL }}
+      PLANORA_E2E_EMAIL: ${{ secrets.PLANORA_E2E_EMAIL }}
+      PLANORA_E2E_PASSWORD: ${{ secrets.PLANORA_E2E_PASSWORD }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - name: Fail closed on missing hosted target and synthetic identity
+        run: |
+          if [ -z "$PLAYWRIGHT_BASE_URL" ] || [ -z "$PLANORA_E2E_EMAIL" ] || [ -z "$PLANORA_E2E_PASSWORD" ]; then
+            echo 'BLOCKED: configure PLANORA_STAGING_URL variable and PLANORA_E2E_EMAIL / PLANORA_E2E_PASSWORD secrets' >&2
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          const url=new URL(process.env.PLAYWRIGHT_BASE_URL);
+          if(url.protocol!=='https:' || /^(localhost|127\.0\.0\.1)$/i.test(url.hostname)) throw new Error('Staging target must be remote HTTPS');
+          NODE
+      - name: Install committed dependencies and Chromium
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Verify hosted target health
+        run: |
+          curl --fail --show-error --silent --location --retry 2 --max-time 20 "$PLAYWRIGHT_BASE_URL/api/health" > /tmp/planora-hosted-health.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const health=JSON.parse(fs.readFileSync('/tmp/planora-hosted-health.json','utf8'));
+          if(!health || typeof health!=='object') throw new Error('Invalid hosted health response');
+          NODE
+      - name: Run hosted browser E2E against configured staging
+        run: npm run test:e2e
+      - name: Preserve browser failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b6-hosted-e2e-evidence
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+          if-no-files-found: ignore
