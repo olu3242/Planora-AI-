@@ -1,0 +1,48 @@
+name: B5 promote certified ESLint dependency graph
+on:
+  push:
+    branches: [work/b1-b10-release-certification-20261022]
+    paths: ['.github/workflows/b5-promote-certified-graph.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: b5-certified-promotion
+  cancel-in-progress: false
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: work/b1-b10-release-certification-20261022
+          persist-credentials: true
+      - name: Verify source certification succeeded
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api repos/${{ github.repository }}/actions/runs/40048879361 --jq .conclusion)" = success
+          test "$(gh api repos/${{ github.repository }}/actions/runs/40048879361 --jq .head_sha)" = f53d848fe2ef296c2aeb10937a232b9f9e342459
+      - name: Download certified dependency manifests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/b5-certified
+          gh run download 40048879361 --repo "${{ github.repository }}" --name b5-eslint-replacement-evidence --dir /tmp/b5-certified
+          echo 'e4124543762a1c152b15ef1039221ad0acc3bc846805ff1b6227c9c571ef8945  /tmp/b5-certified/package.json' | sha256sum -c -
+          echo '8f670869b20db8f31de923f78d76265487f058aa46200045a9cb13cb6529bd54  /tmp/b5-certified/package-lock.json' | sha256sum -c -
+      - name: Promote certified graph and ESLint config
+        run: |
+          test -s eslint.candidate.config.mjs
+          cp /tmp/b5-certified/package.json package.json
+          cp /tmp/b5-certified/package-lock.json package-lock.json
+          cp eslint.candidate.config.mjs eslint.config.mjs
+          node -e "const p=require('./package.json'); if(p.devDependencies['eslint-config-next'])process.exit(1); if(p.dependencies.zod!=='^4.6.7')process.exit(1)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json package-lock.json eslint.config.mjs
+          git diff --cached --check
+          git commit -m 'build(b5): promote certified ESLint and patched dependency graph'
+          git push origin HEAD:work/b1-b10-release-certification-20261022
