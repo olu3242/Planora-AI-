@@ -144,6 +144,12 @@ jobs:
             exit 1
           fi
           npm audit --audit-level=moderate
+      - name: Record certified replacement manifest hashes
+        if: ${{ success() }}
+        run: |
+          sha256sum dist/b5/package.json dist/b5/package-lock.json > dist/b5/manifest-sha256.txt
+          printf 'B5 candidate dependency graph passed all gates; promotion requires committed manifests and a fresh npm ci run.\n' >> "$GITHUB_STEP_SUMMARY"
+          cat dist/b5/manifest-sha256.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve manifest evidence
         if: always()
         uses: actions/upload-artifact@v4
